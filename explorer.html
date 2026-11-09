@@ -137,8 +137,6 @@ button{cursor:pointer}
 .ex-carte-fac{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:border-color .12s,box-shadow .12s}
 .ex-carte-fac:hover,.ex-carte-fac.survol{border-color:var(--accent);box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 14%,transparent)}
 .ex-carte-fac.ouverte{border:2px solid var(--accent);padding:13px 15px}
-.ex-carte-fac.hors{border-style:dashed}
-.ex-hors{margin:0;font-size:12px;font-weight:600;color:var(--muted)}
 .ex-haut{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:14px;align-items:start}
 .ex-nom{all:unset;cursor:pointer;font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:700;color:var(--accent);line-height:1.2;overflow-wrap:anywhere}
 .ex-nom:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px;border-radius:4px}
@@ -981,10 +979,9 @@ function sousTitre(t) {
   const n = (t.players || []).length;
   return [divKey(t), [t.city, t.state].filter(Boolean).join(", "), n ? `${n} joueurs` : "", t.juco ? "cursus 2 ans" : ""].filter(Boolean).map(esc).join(" · ");
 }
-function carteFac(t, q, hors) {
+function carteFac(t, q) {
   const dans = SEL.has(t.name), vide = t.empty;
-  return `<article class="ex-carte-fac${FAC === t.name ? " ouverte" : ""}${hors ? " hors" : ""}" data-nom="${esc(t.name)}">
-  ${hors ? `<p class="ex-hors">Fiche ouverte · hors de tes filtres, elle quittera la liste quand tu la fermeras</p>` : ""}
+  return `<article class="ex-carte-fac${FAC === t.name ? " ouverte" : ""}" data-nom="${esc(t.name)}">
   <div class="ex-haut"><div><button type="button" class="ex-nom" data-ouvrir>${esc(t.name)}</button><div class="ex-sous">${sousTitre(t)}</div></div>
   <div class="ex-places${t.seniors ? "" : " zero"}"><b>${vide ? "—" : t.seniors || 0}</b><small>places 2027</small></div>
   <button type="button" class="ex-etoile" data-etoile aria-pressed="${dans}" aria-label="${dans ? "Retirer" : "Ajouter"} ${esc(t.name)} ${dans ? "de" : "à"} ma sélection">${ETOILE}</button></div>
@@ -998,13 +995,12 @@ function render() {
   const r = trier(filtrer());
   DERNIER = r;
   const liste = $("ex-liste");
-  // la fac dont la fiche est ouverte reste visible même si un filtre l'exclut
-  const hors = FAC != null && !r.some(t => t.name === FAC) ? PAR_NOM.get(FAC) : null;
-  const tete = hors ? carteFac(hors, q, true) : "";
+  // la fiche ouverte ne correspond plus aux critères : on la ferme et on revient à la carte
+  if (FAC != null && !r.some(t => t.name === FAC)) fermer();
   if (!r.length) {
-    liste.innerHTML = tete + `<p class="ex-vide">${S.sel && !SEL.size ? "Ta sélection est vide : clique sur l'étoile d'une fac pour l'y ajouter." : S.zone ? "Aucun programme dans cette partie de la carte : dézoome ou déplace-la." : "Aucun programme ne correspond. Retire un filtre pour élargir."}</p>`;
+    liste.innerHTML = `<p class="ex-vide">${S.sel && !SEL.size ? "Ta sélection est vide : clique sur l'étoile d'une fac pour l'y ajouter." : S.zone ? "Aucun programme dans cette partie de la carte : dézoome ou déplace-la." : "Aucun programme ne correspond. Retire un filtre pour élargir."}</p>`;
   } else {
-    liste.innerHTML = tete + r.slice(0, LIM).map(t => carteFac(t, q)).join("")
+    liste.innerHTML = r.slice(0, LIM).map(t => carteFac(t, q)).join("")
       + (r.length > LIM ? `<button type="button" class="ex-btn ex-plus" id="ex-plus">Afficher ${Math.min(40, r.length - LIM)} de plus (encore ${r.length - LIM})</button>` : "");
   }
   majActifs(r.length);
@@ -1088,7 +1084,6 @@ let cleCarte = "";
 function majCarte(force) {
   if (!carteFaite) return;
   const r = filtrer(false);
-  if (FAC != null && !r.some(t => t.name === FAC) && PAR_NOM.get(FAC)) r.push(PAR_NOM.get(FAC));   // fiche ouverte : son point reste
   const cle = r.map(t => t.name).join("|");
   if (!force && cle === cleCarte) return;
   cleCarte = cle;
@@ -1213,7 +1208,6 @@ function fermer() {
   if (FAC == null) return;
   const nom = FAC; FAC = null;
   $("ex-fiche").hidden = true;
-  if (document.querySelector(".ex-carte-fac.hors")) render();   // elle était gardée hors filtres : elle part maintenant
   document.body.classList.remove("ex-fiche-ouverte");
   history.replaceState(null, "", location.pathname);
   document.querySelectorAll(".ex-carte-fac.ouverte").forEach(c => c.classList.remove("ouverte"));
