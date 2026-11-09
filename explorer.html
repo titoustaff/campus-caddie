@@ -151,6 +151,7 @@ button{cursor:pointer}
 .ex-etoile[aria-pressed="true"] svg path{fill:currentColor}
 .ex-badges{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;font-weight:600}
 .ex-b{padding:4px 10px;border-radius:999px;background:var(--panel2);color:var(--muted)}
+.ex-b.ex-reco{background:var(--accent);color:#fff}
 .ex-b.note{background:color-mix(in srgb,var(--accent) 12%,var(--panel));color:var(--accent)}
 .ex-b.portee{background:var(--accent);color:var(--panel)}
 .ex-b.niveau{background:#FFF1DD;color:#8A4A00}
@@ -474,6 +475,7 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
     <button type="button" class="ex-btn fort" id="ex-ouvrir-filtres" aria-haspopup="dialog"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 4h14M5 9h8M7.5 14h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Filtres<span class="ex-pastille" id="ex-nfiltres" hidden></span></button>
     <button type="button" class="ex-btn" id="ex-masel" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 7.8l5-.7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Ma sélection<span class="ex-pastille" id="ex-nsel">0</span></button>
     <label class="ex-tri">Trier<select id="ex-tri">
+      <option value="reco">Recommandé</option>
       <option value="places">Places 2027</option>
       <option value="niveau">À ma portée d'abord</option>
       <option value="note">Note de la fac</option>
@@ -906,7 +908,7 @@ const prixTot = t => (t.prix && t.prix.tot != null) ? t.prix.tot : null;
 let MON_SCORE = lireScore((META.profil || {}).score), MON_BUDGET = lireBudget((META.profil || {}).budget);
 const SEL = new Set((META.selection || []).filter(n => DATA.some(t => t.name === n)));
 const DEF = () => ({ q: "", divs: new Set(DIVK), note: "", st: "", places: false, fr: false, intl: false, indoor: false,
-  proche: false, niveaux: new Set(), dansBudget: false, sel: false, zone: null, tri: "places" });
+  proche: false, niveaux: new Set(), dansBudget: false, sel: false, zone: null, tri: "reco" });
 let S = DEF(), LIM = 40, FAC = null, TOUT_EFFECTIF = false;
 let DETAIL = META.fiche === "detail";      // fiche détaillée (celle de la page Programmes) : choix gardé dans le compte
 const PAR_NOM = new Map(DATA.map(t => [t.name, t]));
@@ -944,9 +946,31 @@ function filtrer(avecZone = true) {
   });
 }
 const ORDRE_NIV = { portee: 0, niveau: 1, ambitieux: 2 };
+// « Recommandé » : un score 0-100 qui mélange les critères, pour ne pas classer sur les seules places
+//   places 35 · niveau 25 · note de la fac 25 · budget 15 ; roster pas lu = moitié du score
+function pertinence(t) {
+  const pl = Math.sqrt(Math.min(t.seniors || 0, 12) / 12);
+  let nv = 0.5;
+  const n = niveau(t);
+  if (n) {
+    nv = n.k === "portee" ? 1 : n.k === "niveau" ? 0.85 : 0.3;
+    const ec = t.team_avg != null ? t.team_avg - MON_SCORE : 0;   // équipe bien plus faible que toi : moins intéressant
+    if (n.k === "portee" && ec > 3) nv = Math.max(0.3, 1 - (ec - 3) * 0.12);
+  }
+  const g = noteGlobale(t);
+  const nt = g ? Math.max(0, (g.n - 1) / 4) * (g.partiel ? 0.8 : 1) : 0.4;
+  let bu = 0.5;
+  const p = prixTot(t);
+  if (MON_BUDGET != null && p != null) bu = p <= MON_BUDGET ? 1 : Math.max(0, 1 - (p - MON_BUDGET) / MON_BUDGET);
+  const sc = 35 * pl + 25 * nv + 25 * nt + 15 * bu;
+  return Math.round(t.empty ? sc / 2 : sc);
+}
 function trier(r) {
   const o = t => t._ordre ?? 0;
+  const P = new Map();
+  const pe = t => { if (!P.has(t.name)) P.set(t.name, pertinence(t)); return P.get(t.name); };
   const cmp = {
+    reco: (a, b) => pe(b) - pe(a) || (b.seniors || 0) - (a.seniors || 0) || o(a) - o(b),
     places: (a, b) => (b.seniors || 0) - (a.seniors || 0) || o(a) - o(b),
     note: (a, b) => (gNote(b) ?? -1) - (gNote(a) ?? -1) || o(a) - o(b),
     cout: (a, b) => (prixTot(a) ?? 1e9) - (prixTot(b) ?? 1e9) || o(a) - o(b),
@@ -985,7 +1009,7 @@ function carteFac(t, q) {
   <div class="ex-haut"><div><button type="button" class="ex-nom" data-ouvrir>${esc(t.name)}</button><div class="ex-sous">${sousTitre(t)}</div></div>
   <div class="ex-places${t.seniors ? "" : " zero"}"><b>${vide ? "—" : t.seniors || 0}</b><small>places 2027</small></div>
   <button type="button" class="ex-etoile" data-etoile aria-pressed="${dans}" aria-label="${dans ? "Retirer" : "Ajouter"} ${esc(t.name)} ${dans ? "de" : "à"} ma sélection">${ETOILE}</button></div>
-  <div class="ex-badges">${badges(t, q)}</div></article>`;
+  <div class="ex-badges">${S.tri === "reco" ? `<span class="ex-b ex-reco" title="Places, niveau, note de la fac et budget réunis">Pertinence ${pertinence(t)}</span>` : ""}${badges(t, q)}</div></article>`;
 }
 
 // ------------------------------------------------------------ rendu
