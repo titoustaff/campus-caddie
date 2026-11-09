@@ -1,0 +1,1110 @@
+<!doctype html><html lang="fr"><head>
+<script>try{document.documentElement.dataset.ccTheme=localStorage.getItem("cc-theme")==="neutre"?"neutre":"usa";}catch(e){document.documentElement.dataset.ccTheme="usa";}</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Campus Caddie</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<style>
+/* Explorer : la liste et la carte réunies. Couleurs = variables des thèmes Campus Caddie (construire.py). */
+*{box-sizing:border-box}
+html,body{height:100%}
+body.ex-page{margin:0;background:var(--ground);color:var(--ink);font:15px/1.45 "Inter",system-ui,sans-serif;display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+body.ex-page .cc-barre-in{max-width:none;padding:10px 24px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.ex-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#ex{flex:1;min-height:0;display:flex;flex-direction:column}
+#ex[hidden]{display:none}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+
+/* ---------- barre d'outils ---------- */
+.ex-outils{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 24px 8px}
+.ex-cherche{display:flex;align-items:center;gap:10px;flex:1 1 260px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:0 14px;height:46px;color:var(--muted)}
+.ex-cherche input{border:0;outline:0;flex:1;min-width:0;background:transparent;color:var(--ink);font-size:15px}
+.ex-divs{display:flex;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:3px;font-size:14px;font-weight:600}
+.ex-divs button{height:38px;padding:0 12px;border:0;border-radius:9px;background:transparent;color:var(--ink)}
+.ex-divs button[aria-pressed="true"]{background:var(--accent);color:var(--panel)}
+.ex-btn{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 15px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:14px;font-weight:600;white-space:nowrap}
+.ex-btn.fort{border-color:var(--accent);color:var(--accent)}
+.ex-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.ex-btn svg{flex-shrink:0}
+.ex-pastille{background:var(--accent);color:var(--panel);font-size:11px;padding:1px 7px;border-radius:999px}
+.ex-btn[aria-pressed="true"] .ex-pastille{background:var(--panel);color:var(--accent)}
+.ex-tri{display:flex;align-items:center;gap:6px;height:46px;padding:0 10px 0 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);font-size:14px;color:var(--muted)}
+.ex-tri select{border:0;background:transparent;font-weight:600;color:var(--ink);height:40px}
+
+.ex-actifs{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:0 24px 12px;font-size:13px}
+.ex-profil{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;border-radius:999px;border:0;background:color-mix(in srgb,var(--accent) 12%,var(--panel));color:var(--accent);font-weight:600}
+.ex-profil u{font-weight:500}
+.ex-sep{width:1px;height:20px;background:var(--line)}
+.ex-tag{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px 0 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.ex-lien{border:0;background:none;color:var(--muted);text-decoration:underline;min-height:36px;padding:0 6px}
+.ex-compte{margin-left:auto;color:var(--muted)}
+.ex-compte b{color:var(--ink);font-family:"Space Grotesk",sans-serif;font-size:15px}
+
+/* ---------- corps : liste + carte ---------- */
+.ex-corps{flex:1;min-height:0;display:grid;grid-template-columns:minmax(360px,580px) minmax(0,1fr);gap:18px;padding:0 24px 18px}
+.ex-liste{overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:2px 6px 24px 2px;overscroll-behavior:contain}
+.ex-carte-fac{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:border-color .12s,box-shadow .12s}
+.ex-carte-fac:hover,.ex-carte-fac.survol{border-color:var(--accent);box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 14%,transparent)}
+.ex-carte-fac.ouverte{border:2px solid var(--accent);padding:13px 15px}
+.ex-haut{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:14px;align-items:start}
+.ex-nom{all:unset;cursor:pointer;font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:700;color:var(--accent);line-height:1.2;overflow-wrap:anywhere}
+.ex-nom:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px;border-radius:4px}
+.ex-sous{font-size:13px;color:var(--muted);margin-top:3px}
+.ex-places{display:flex;flex-direction:column;align-items:flex-end;line-height:1}
+.ex-places b{font-family:"Space Grotesk",sans-serif;font-size:28px;color:var(--h5)}
+.ex-places small{font-size:11px;color:var(--muted);margin-top:3px}
+.ex-places.zero b{color:var(--faint)}
+.ex-etoile{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--panel);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.ex-etoile svg path{fill:none;stroke:currentColor}
+.ex-etoile[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.ex-etoile[aria-pressed="true"] svg path{fill:currentColor}
+.ex-badges{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;font-weight:600}
+.ex-b{padding:4px 10px;border-radius:999px;background:var(--panel2);color:var(--muted)}
+.ex-b.note{background:color-mix(in srgb,var(--accent) 12%,var(--panel));color:var(--accent)}
+.ex-b.portee{background:var(--accent);color:var(--panel)}
+.ex-b.niveau{background:#FFF1DD;color:#8A4A00}
+.ex-b.ambitieux{background:var(--panel2);color:var(--muted);border:1px dashed var(--faint);padding:3px 9px}
+.ex-b.dans{background:#E6F2EC;color:#1D5E3F}
+.ex-b.hors{background:#FDECEC;color:#9E1F24}
+.ex-b.fr{background:var(--panel2);color:var(--ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ex-b.niveau{background:#4A3315;color:#F5C98B}
+  :root:not([data-theme="light"]) .ex-b.dans{background:#16382A;color:#9BD8B6}:root:not([data-theme="light"]) .ex-b.hors{background:#43191B;color:#F4A9AC}}
+.ex-plus{margin:6px auto 0;min-height:44px}
+.ex-vide{padding:30px 10px;text-align:center;color:var(--muted)}
+
+.ex-droite{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--panel2);min-height:0}
+#ex-map{position:absolute;inset:0;background:var(--panel2)}
+#ex-map .leaflet-tile-pane{filter:grayscale(.9) contrast(.92) brightness(1.04)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #ex-map .leaflet-tile-pane{filter:grayscale(1) invert(.9) hue-rotate(180deg) brightness(.85)}}
+.ex-zone{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:600;height:44px;padding:0 18px;border-radius:999px;border:0;background:var(--panel);color:var(--accent);font-weight:600;font-size:14px;box-shadow:0 4px 14px #0B2A5530;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.ex-zone[hidden]{display:none}
+.ex-legende{position:absolute;left:12px;bottom:12px;z-index:600;background:color-mix(in srgb,var(--panel) 92%,transparent);border-radius:10px;padding:7px 11px;font-size:12px;color:var(--muted);pointer-events:none}
+/* points et regroupements */
+.ex-pt{background:var(--accent);border:2px solid var(--panel);border-radius:50%;box-shadow:0 1px 3px #0005}
+.ex-pt.zero{background:var(--faint)}
+.ex-pt.choisi{background:var(--h5);box-shadow:0 0 0 4px color-mix(in srgb,var(--h5) 35%,transparent)}
+.ex-grappe{background:color-mix(in srgb,var(--accent) 90%,transparent);border:2px solid var(--panel);border-radius:50%;color:var(--panel);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px #0004;font-family:"Space Grotesk",sans-serif}
+.ex-grappe.choisi{box-shadow:0 0 0 4px var(--h5)}
+.leaflet-popup-content-wrapper{border-radius:14px;background:var(--panel);color:var(--ink)}
+.leaflet-popup-tip{background:var(--panel)}
+.leaflet-popup-content{margin:12px 14px;min-width:210px;font:13px/1.4 "Inter",sans-serif}
+.ex-pop b{font-family:"Space Grotesk",sans-serif;font-size:16px;color:var(--accent)}
+.ex-pop .p{float:right;font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:700;color:var(--h5);margin-left:10px}
+.ex-pop p{margin:4px 0 8px;color:var(--muted)}
+.ex-pop button{border:0;background:none;padding:6px 0;color:var(--accent);font-weight:600;text-decoration:underline}
+
+/* ---------- fiche ---------- */
+#ex-fiche{position:absolute;inset:0;z-index:1100;background:var(--panel);display:flex;flex-direction:column}
+#ex-fiche[hidden]{display:none}
+.fi-barre{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);flex-shrink:0}
+.fi-barre .ex-btn{height:44px}
+.fi-barre .ex-etoile{margin-left:auto}
+.fi-corps{flex:1;overflow-y:auto;padding:20px 24px 28px;display:flex;flex-direction:column;gap:18px}
+.fi-sur{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--h5)}
+.fi-corps h2{margin:4px 0 4px;font-size:30px;line-height:1.1;color:var(--accent)}
+.fi-lieu{color:var(--muted);font-size:14px}
+.fi-chiffres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fi-ch{background:var(--panel2);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.fi-ch span{font-size:12px;color:var(--muted);font-weight:600}
+.fi-ch b{font-family:"Space Grotesk",sans-serif;font-size:28px;color:var(--accent);line-height:1.15}
+.fi-ch small{font-size:12px;color:var(--muted)}
+.fi-ch.fort{background:var(--cc-marque,var(--accent))}
+.fi-ch.fort span,.fi-ch.fort small{color:#FFFFFFC7}.fi-ch.fort b{color:#fff}
+.fi-deux{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+.fi-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.fi-titre{font-size:13px;font-weight:700;margin:0}
+.fi-titre small{font-weight:500;color:var(--muted)}
+.fi-axe{display:grid;grid-template-columns:96px 1fr 34px;align-items:center;gap:10px;font-size:13px}
+.fi-axe span{font-weight:600}.fi-axe b{text-align:right}
+.fi-jauge{height:8px;border-radius:999px;background:var(--panel2);overflow:hidden}
+.fi-jauge i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.fi-axe.nn b,.fi-axe.nn span{color:var(--faint)}
+.fi-cout{background:var(--panel2);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.fi-cout .l{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.fi-cout .l span{font-size:13px;color:var(--muted);font-weight:600}
+.fi-cout .l b{font-family:"Space Grotesk",sans-serif;font-size:24px;color:var(--accent)}
+.fi-cout .l b small{font-family:"Inter",sans-serif;font-size:12px;font-weight:500;color:var(--muted)}
+.fi-barres{height:10px;border-radius:999px;overflow:hidden;display:flex}
+.fi-barres i:nth-child(1){background:var(--accent)}.fi-barres i:nth-child(2){background:var(--h2)}.fi-barres i:nth-child(3){background:var(--h5)}
+.fi-cout p{margin:0;font-size:12px;color:var(--muted)}
+.fi-cout .ecart{font-weight:600;color:#9E1F24}.fi-cout .ecart.ok{color:#1D5E3F}
+.fi-texte{margin:0;font-size:14px;color:var(--ink)}
+.fi-joueurs{border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13px}
+.fi-j{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:9px 12px;border-bottom:1px solid var(--panel2)}
+.fi-j:last-child{border-bottom:0}
+.fi-j span{color:var(--muted)}
+.fi-j em{font-style:normal;font-size:11px;font-weight:700;color:var(--muted);margin-right:6px}
+.fi-j.sr em{color:var(--h5)}
+.fi-joueurs button{width:100%;min-height:44px;border:0;background:var(--panel2);color:var(--accent);font-weight:600}
+.fi-actions{display:flex;flex-direction:column;gap:8px}
+.fi-actions a.principal{text-align:center;background:var(--accent);color:var(--panel);text-decoration:none;font-weight:600;padding:13px 16px;border-radius:12px}
+.fi-actions a.second{text-align:center;font-size:13px;font-weight:600;padding:8px;color:var(--accent)}
+.fi-avert{font-size:12px;color:var(--muted);margin:0}
+
+/* ---------- panneau des filtres ---------- */
+#ex-filtres{border:0;padding:0;background:var(--panel);color:var(--ink);width:min(440px,100vw);max-width:100vw;height:100dvh;max-height:100dvh;margin:0 0 0 auto;display:none;flex-direction:column}
+#ex-filtres[open]{display:flex}
+#ex-filtres::backdrop{background:#101B2D80}
+.fl-tete{display:flex;align-items:center;justify-content:space-between;padding:8px 8px 8px 20px;border-bottom:1px solid var(--line)}
+.fl-tete h2{margin:0;font-size:20px;color:var(--accent)}
+.fl-x{width:44px;height:44px;border:0;background:transparent;border-radius:12px;color:var(--accent);font-size:22px;line-height:1}
+.fl-corps{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:20px;font-size:14px}
+.fl-bloc{display:flex;flex-direction:column;gap:8px;border:0;margin:0;padding:0}
+.fl-bloc legend,.fl-bloc>.fl-l{font-weight:700;padding:0;margin-bottom:8px}
+.fl-aide{margin:0;font-size:12px;color:var(--muted)}
+.fl-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fl-2 label,.fl-champ{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.fl-2 input{width:100%;min-width:0}
+.fl-2 input,.fl-champ select{font-size:16px;font-weight:600;color:var(--ink);height:44px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:var(--ground)}
+.fl-puces{display:flex;gap:6px;flex-wrap:wrap}
+.fl-puces button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:600}
+.fl-puces button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.fl-puces button:disabled{opacity:.45;cursor:not-allowed}
+.fl-seg{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:var(--panel2);border-radius:12px;padding:3px}
+.fl-seg button{height:38px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-weight:600}
+.fl-seg button[aria-pressed="true"]{background:var(--panel);color:var(--accent);box-shadow:0 1px 2px #0002}
+.fl-case{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:46px;border-bottom:1px solid var(--panel2);cursor:pointer}
+.fl-case input{width:22px;height:22px;accent-color:var(--accent);flex-shrink:0}
+.fl-case.off{opacity:.5}
+.fl-pied{display:flex;gap:10px;padding:12px 20px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.fl-pied .ex-lien{font-size:15px;color:var(--accent);min-height:48px}
+.fl-pied .voir{flex:1;height:48px;border:0;border-radius:12px;background:var(--accent);color:var(--panel);font-weight:600;font-size:15px}
+
+/* ---------- téléphone ---------- */
+.ex-bascule,.ex-basnav{display:none}
+@media (max-width:820px){
+  body.ex-page .cc-barre-in{padding:8px 12px}
+  body.ex-page .cc-nav{display:none}
+  .ex-outils{padding:10px 12px 6px;gap:8px}
+  .ex-cherche{flex-basis:100%}
+  .ex-outils .ex-divs{order:3;flex:1 1 100%;overflow-x:auto;scrollbar-width:none}
+  .ex-outils .ex-divs button{flex-shrink:0}
+  .ex-outils #ex-ouvrir-filtres{order:2}
+  .ex-outils .ex-tri{order:2;flex:1}
+  .ex-outils .ex-tri select{flex:1;min-width:0}
+  .ex-outils #ex-masel{display:none}
+  .ex-actifs{padding:0 12px 8px}
+  .ex-profil{font-size:12px;text-align:left}
+  .ex-actifs .ex-sep{display:none}
+  .ex-compte{width:100%;margin:0}
+  .ex-corps{grid-template-columns:1fr;padding:0 12px;gap:0}
+  .ex-liste{padding-bottom:150px}
+  .ex-droite{display:none;border-radius:14px;margin-bottom:76px}
+  body.ex-vue-carte .ex-liste{display:none}
+  body.ex-vue-carte .ex-droite{display:block}
+  body.ex-vue-carte .ex-actifs{display:none}
+  body.ex-fiche-ouverte .ex-droite{display:block}
+  .ex-legende{display:none}
+  body.ex-fiche-ouverte .ex-bascule,body.ex-fiche-ouverte .ex-basnav{display:none}
+  #ex-fiche{position:fixed;inset:0;z-index:4500}
+  .fi-corps{padding:16px 16px 100px}
+  .fi-corps h2{font-size:26px}
+  .fi-deux{grid-template-columns:1fr}
+  .fi-ch{padding:10px 12px}.fi-ch b{font-size:22px}
+  .ex-bascule{display:flex;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:900;height:46px;padding:0 20px;border-radius:999px;border:0;background:var(--accent);color:var(--panel);font-weight:600;font-size:14px;align-items:center;gap:8px;box-shadow:0 8px 20px #0B2A5559}
+  .ex-basnav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:950;background:var(--panel);border-top:1px solid var(--line);height:calc(64px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
+  .ex-basnav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:600;color:var(--muted)}
+  .ex-basnav button[aria-current="true"]{color:var(--accent)}
+  #ex-filtres{width:100vw;height:calc(100dvh - 28px);margin:auto 0 0;border-radius:20px 20px 0 0}
+}
+</style>
+<style>
+/* ---------- thèmes Campus Caddie : mêmes noms de variables que la page d'origine ---------- */
+:root[data-cc-theme="usa"]{
+  --ground:#F5F7FA; --panel:#FFFFFF; --panel2:#EEF2F7;
+  --ink:#101B2D; --muted:#5B6B82; --faint:#7E8BA0;
+  --line:#E1E6EE; --accent:#0B2A55; --accent-ink:#061A36;
+  --h5:#C1272D; --h4:#D2642C; --h3:#2F5D8A; --h2:#6E84A3; --h1:#A3AEBE;
+  --chip-d1:#8A2F4F; --chip-d2:#0B2A55; --chip-d3:#5A4A8A; --chip-naia:#7A5A2E; --chip-juco:#2F6F8A;
+  --shadow:0 1px 2px #101B2D0F,0 4px 16px #101B2D12;
+  --cc-marque:#0B2A55; --cc-marque2:#C1272D; --cc-etoile:#E4474E;
+  --cc-lisere:linear-gradient(90deg,#0B2A55 0 18%,transparent 18%),repeating-linear-gradient(180deg,#C1272D 0 2px,#FFFFFF 2px 4px);
+}
+:root[data-cc-theme="neutre"]{
+  --ground:#FAFAF8; --panel:#FFFFFF; --panel2:#F2F2EE;
+  --ink:#22272C; --muted:#6B7178; --faint:#8E9399;
+  --line:#ECECE7; --accent:#4F7A65; --accent-ink:#3B5E4D;
+  --h5:#C4663F; --h4:#D08A4E; --h3:#4F7A65; --h2:#7E9A8B; --h1:#AEB6B1;
+  --chip-d1:#8A5A6A; --chip-d2:#4F7A65; --chip-d3:#6A6A8A; --chip-naia:#8A6A44; --chip-juco:#4A7484;
+  --shadow:0 1px 2px #22272C0D,0 4px 16px #22272C0F;
+  --cc-marque:#4F7A65; --cc-marque2:#4F7A65; --cc-etoile:#FFFFFF00;
+  --cc-lisere:none;
+}
+@media (prefers-color-scheme:dark){
+  :root[data-cc-theme="usa"]:not([data-theme="light"]){
+    --ground:#0E1522; --panel:#151E2E; --panel2:#1C2738;
+    --ink:#E6EBF3; --muted:#9AA8BD; --faint:#6B7A90;
+    --line:#26324A; --accent:#8FB3E8; --accent-ink:#B9D0F2;
+    --h5:#F06A6F; --h4:#EE9A5C; --h3:#8FB3E8; --h2:#7F93B0; --h1:#56657C;
+    --chip-d1:#E08AA8; --chip-d2:#8FB3E8; --chip-d3:#AA9AE0; --chip-naia:#C9A76A; --chip-juco:#7FC4E0;
+    --shadow:0 1px 2px #0006,0 6px 20px #0004;
+    --cc-marque:#2A4E86; --cc-marque2:#F06A6F;
+  }
+  :root[data-cc-theme="neutre"]:not([data-theme="light"]){
+    --ground:#131614; --panel:#1A1E1B; --panel2:#222723;
+    --ink:#E8EBE8; --muted:#A0A8A2; --faint:#6E766F;
+    --line:#2C322D; --accent:#86B49C; --accent-ink:#B2D6C3;
+    --h5:#E59472; --h4:#E0B07A; --h3:#86B49C; --h2:#8FA597; --h1:#5E6760;
+    --shadow:0 1px 2px #0006,0 6px 20px #0004;
+    --cc-marque:#3F6B56; --cc-marque2:#86B49C;
+  }
+}
+/* ---------- typographie ---------- */
+body{font-family:"Inter",system-ui,sans-serif}
+h1,h2,.cc-titre,.tile .n{font-family:"Space Grotesk",system-ui,sans-serif!important;letter-spacing:-.02em}
+h1{color:var(--accent)}
+/* ---------- en-tête ---------- */
+#cc-barre{position:sticky;top:0;z-index:4000;background:var(--panel);border-bottom:1px solid var(--line)}
+#cc-barre[hidden]{display:none}
+.cc-lisere{height:6px;background:var(--cc-lisere)}
+.cc-barre-in{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 1.3rem;max-width:1080px;margin:0 auto;box-sizing:content-box}
+.cc-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.cc-logo-ic{width:38px;height:38px;border-radius:10px;background:var(--cc-marque);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cc-etoile{fill:var(--cc-etoile)}
+.cc-logo-txt{display:flex;flex-direction:column;line-height:1}
+.cc-logo-txt b{font-family:"Space Grotesk",sans-serif;font-size:21px;font-weight:700;letter-spacing:-.3px}
+.cc-logo-txt b span{color:var(--cc-marque2)}
+.cc-devise{font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-top:4px}
+:root[data-cc-theme="neutre"] .cc-devise{font-size:0}:root[data-cc-theme="neutre"] .cc-devise::after{content:"College golf";font-size:10px}
+.cc-nav{display:flex;gap:4px;background:var(--panel2);padding:4px;border-radius:12px;font-size:14px;font-weight:600}
+.cc-nav a{text-decoration:none;color:var(--muted);padding:9px 16px;border-radius:9px;min-height:20px}
+.cc-nav a[hidden]{display:none}
+.cc-neuf{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:var(--cc-marque2);color:#fff;padding:2px 6px;border-radius:999px;margin-left:4px;vertical-align:1px}
+.cc-nav a.ici{background:var(--panel);color:var(--accent);box-shadow:0 1px 2px #0000001f}
+#cc-maj{font-size:12px;color:var(--faint);flex:1}
+.cc-compte{position:relative}
+#cc-compte-btn{font:inherit;font-size:14px;display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 14px 4px 4px;color:var(--ink);cursor:pointer;min-height:44px;max-width:280px}
+#cc-qui{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cc-av{width:32px;height:32px;border-radius:50%;background:var(--cc-marque);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-transform:uppercase}
+#cc-menu{position:absolute;right:0;top:52px;width:300px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px #0000002e;padding:16px;display:flex;flex-direction:column;gap:12px;z-index:4100;color:var(--ink)}
+#cc-menu[hidden]{display:none}
+.cc-menu-mel{margin:0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.cc-menu-titre{margin:0;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.cc-themes{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--panel2);border-radius:10px;padding:4px}
+.cc-themes button{font:inherit;font-size:14px;font-weight:600;min-height:44px;border:0;border-radius:8px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer}
+.cc-themes button[aria-checked="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px #0000001f}
+.cc-pastille{width:14px;height:14px;border-radius:50%}
+.cc-p-usa{background:#0B2A55;box-shadow:6px 0 0 #C1272D}.cc-p-neutre{background:#4F7A65;box-shadow:6px 0 0 #C4663F}
+.cc-menu-liens{border-top:1px solid var(--line);padding-top:6px;display:flex;flex-direction:column}
+.cc-menu-liens>button{font:inherit;font-size:14px;text-align:left;background:none;border:0;padding:10px 4px;color:var(--ink);cursor:pointer;min-height:44px}
+#cc-mdp-form{display:flex;flex-direction:column;gap:8px;padding:4px 0 8px}
+#cc-mdp-form[hidden]{display:none}
+#cc-mdp-form label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+#cc-mdp-form input{font:inherit;padding:.55rem .6rem;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink)}
+#cc-mdp-form button{font:inherit;font-weight:600;padding:.6rem;border:0;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer}
+:root[data-cc-theme] #cc-mdp-form button{color:var(--panel)}
+#cc-mdp-msg{margin:0;font-size:12px;color:var(--muted)}
+@media (max-width:640px){#cc-maj{display:none}#cc-qui{display:none}#cc-compte-btn{padding:4px}.cc-barre-in{gap:10px;padding:10px .8rem}.cc-nav{order:3;width:100%}.cc-nav a{flex:1;text-align:center}.cc-compte{margin-left:auto}}
+/* ---------- écran de connexion ---------- */
+#cc-ecran{position:fixed;inset:0;z-index:5000;display:grid;place-items:center;padding:16px;background:var(--ground)}
+#cc-ecran[hidden]{display:none}
+.cc-boite{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--cc-marque);border-radius:14px;padding:28px 24px;box-shadow:var(--shadow);color:var(--ink);box-sizing:border-box}
+.cc-titre{margin:0;font-size:2rem;color:var(--accent)}.cc-titre span{color:var(--cc-marque2)}
+.cc-sous{margin:.2rem 0 1.4rem;color:var(--muted)}
+.cc-boite label{display:block;margin:0 0 .9rem;font-size:.9rem;color:var(--muted)}
+.cc-boite input{display:block;width:100%;box-sizing:border-box;margin-top:.3rem;padding:.65rem .75rem;font:inherit;border:1px solid var(--line);border-radius:10px;background:var(--ground);color:var(--ink);min-height:44px}
+.cc-boite button[type=submit]{width:100%;padding:.75rem;font:inherit;font-weight:600;border:0;border-radius:10px;background:var(--cc-marque);color:#fff;cursor:pointer;min-height:44px}
+.cc-liens{margin:.9rem 0 0;font-size:.85rem;color:var(--muted);text-align:center}
+.cc-liens button,.cc-liens a{font:inherit;background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline}
+#cc-msg{min-height:1.2em;margin:.8rem 0 0;font-size:.9rem;color:var(--h5)}#cc-msg.ok{color:var(--muted)}
+.cc-charge{color:var(--muted);font-style:italic}
+/* ---------- outils de l'atelier : réservés à l'administrateur ---------- */
+body:not(.cc-admin) label:has(#hideempty),body:not(.cc-admin) label:has(#saisoncourante),body:not(.cc-admin) label:has(#todofiche),
+body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(.cc-admin) .fscore{display:none!important}
+</style>
+</head>
+<body class="ex-page">
+<div id="cc-barre" hidden>
+  <div class="cc-lisere" aria-hidden="true"></div>
+  <div class="cc-barre-in">
+    <a class="cc-logo" href="index.html" aria-label="Campus Caddie, accueil">
+      <span class="cc-logo-ic"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M7 19V4l9 3.8L7 11.6" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><path class="cc-etoile" d="M16.5 13.2l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z"/></svg></span>
+      <span class="cc-logo-txt"><b>Campus<span>Caddie</span></b><small class="cc-devise">College golf · USA</small></span>
+    </a>
+    <nav class="cc-nav" aria-label="Navigation"><a class="ici" href="explorer.html">Explorer <span class="cc-neuf">nouveau</span></a><a href="index.html">Programmes</a><a href="carte.html">Carte</a><a class="cc-si-admin" href="admin.html" hidden>Accès</a></nav>
+    <span id="cc-maj"></span>
+    <div class="cc-compte">
+      <button type="button" id="cc-compte-btn" aria-expanded="false" aria-controls="cc-menu"><span class="cc-av" id="cc-av">·</span><span id="cc-qui"></span></button>
+      <div id="cc-menu" hidden>
+        <p class="cc-menu-mel" id="cc-menu-mel"></p>
+        <p class="cc-menu-titre" id="cc-theme-titre">Apparence</p>
+        <div class="cc-themes" role="radiogroup" aria-labelledby="cc-theme-titre">
+          <button type="button" role="radio" aria-checked="true" data-theme-choix="usa"><span class="cc-pastille cc-p-usa" aria-hidden="true"></span>USA</button>
+          <button type="button" role="radio" aria-checked="false" data-theme-choix="neutre"><span class="cc-pastille cc-p-neutre" aria-hidden="true"></span>Neutre</button>
+        </div>
+        <div class="cc-menu-liens">
+          <button type="button" id="cc-mdp-btn" aria-expanded="false">Changer mon mot de passe</button>
+          <form id="cc-mdp-form" hidden>
+            <label>Nouveau mot de passe (10 caractères au moins)<input id="cc-mdp2" type="password" autocomplete="new-password" minlength="10" required></label>
+            <button type="submit">Enregistrer</button>
+            <p id="cc-mdp-msg" role="status"></p>
+          </form>
+          <button type="button" id="cc-sortir">Se déconnecter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="cc-ecran">
+  <div class="cc-boite">
+    <h1 class="cc-titre">Campus <span>Caddie</span></h1>
+    <p class="cc-sous">Les facs US de golf, sur invitation.</p>
+    <div data-vue="chargement"><p>Chargement…</p></div>
+    <form data-vue="connexion" id="cc-form-mdp" hidden>
+      <label>E-mail<input id="cc-mel" type="email" autocomplete="username" required></label>
+      <label>Mot de passe<input id="cc-mdp" type="password" autocomplete="current-password"></label>
+      <button type="submit">Se connecter</button>
+      <p class="cc-liens"><button type="button" id="cc-lien">Recevoir un lien de connexion</button> · <button type="button" id="cc-oubli">Mot de passe oublié</button></p>
+    </form>
+    <form data-vue="nouveau" id="cc-form-nouveau" hidden>
+      <p>Bienvenue ! Choisis ton mot de passe (10 caractères au moins).</p>
+      <label>Nouveau mot de passe<input id="cc-nouveau" type="password" autocomplete="new-password" required minlength="10"></label>
+      <button type="submit">Enregistrer et entrer</button>
+    </form>
+    <div data-vue="refuse" hidden><p>Le compte <b id="cc-refuse-mel"></b> n'a pas accès à cette page.</p><p class="cc-liens"><a href="index.html">Retour à la liste</a></p></div>
+    <p id="cc-msg" role="status"></p>
+  </div>
+</div>
+
+<main id="ex" hidden>
+  <div class="ex-outils">
+    <label class="ex-cherche"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="ex-vh">Rechercher</span><input id="ex-q" type="search" placeholder="Fac, ville, État ou joueur…" autocomplete="off"></label>
+    <div class="ex-divs" id="ex-divs" role="group" aria-label="Divisions">
+      <button type="button" data-div="" aria-pressed="true">Toutes</button>
+      <button type="button" data-div="D1" aria-pressed="false">D1</button>
+      <button type="button" data-div="D2" aria-pressed="false">D2</button>
+      <button type="button" data-div="D3" aria-pressed="false">D3</button>
+      <button type="button" data-div="NAIA" aria-pressed="false">NAIA</button>
+      <button type="button" data-div="JUCO" aria-pressed="false">JUCO</button>
+    </div>
+    <button type="button" class="ex-btn fort" id="ex-ouvrir-filtres" aria-haspopup="dialog"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 4h14M5 9h8M7.5 14h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Filtres<span class="ex-pastille" id="ex-nfiltres" hidden></span></button>
+    <button type="button" class="ex-btn" id="ex-masel" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 7.8l5-.7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Ma sélection<span class="ex-pastille" id="ex-nsel">0</span></button>
+    <label class="ex-tri">Trier<select id="ex-tri">
+      <option value="places">Places 2027</option>
+      <option value="niveau">À ma portée d'abord</option>
+      <option value="note">Note de la fac</option>
+      <option value="cout">Coût, du moins cher</option>
+      <option value="nom">Nom</option>
+    </select></label>
+  </div>
+  <div class="ex-actifs" id="ex-actifs"></div>
+  <div class="ex-corps">
+    <section class="ex-liste" id="ex-liste" aria-label="Programmes" aria-live="polite" aria-busy="false"></section>
+    <section class="ex-droite" aria-label="Carte et fiche">
+      <div id="ex-map" role="region" aria-label="Carte des programmes"></div>
+      <button type="button" class="ex-zone" id="ex-zone" hidden><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.6M13 2.5v2.5h-2.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Rechercher dans cette zone</button>
+      <div class="ex-legende">Chiffre = programmes dans la zone · clique pour zoomer</div>
+      <div id="ex-fiche" hidden role="dialog" aria-modal="false" aria-labelledby="fi-nom"></div>
+    </section>
+  </div>
+  <button type="button" class="ex-bascule" id="ex-bascule"></button>
+  <nav class="ex-basnav" aria-label="Navigation">
+    <button type="button" data-nav="explorer" aria-current="true"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 15l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Explorer</button>
+    <button type="button" data-nav="selection" aria-current="false"><svg width="22" height="22" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 7.8l5-.7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Ma sélection</button>
+    <button type="button" data-nav="profil" aria-current="false"><svg width="22" height="22" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5.5" r="2.8" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 14c.8-2.8 3-4 5.5-4s4.7 1.2 5.5 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Mon profil</button>
+  </nav>
+</main>
+
+<dialog id="ex-filtres" aria-labelledby="fl-titre">
+  <div class="fl-tete"><h2 id="fl-titre">Filtres</h2><button type="button" class="fl-x" id="fl-fermer" aria-label="Fermer les filtres">×</button></div>
+  <div class="fl-corps">
+    <div class="fl-bloc" id="fl-profil">
+      <span class="fl-l">Mon profil</span>
+      <div class="fl-2">
+        <label>Moyenne sur 18 trous<input id="fl-score" inputmode="decimal" placeholder="ex. 76 ou +4" autocomplete="off"></label>
+        <label>Budget par an ($)<input id="fl-budget" inputmode="numeric" placeholder="ex. 35 000" autocomplete="off"></label>
+      </div>
+      <p class="fl-aide">Gardé dans ton compte. Sert à dire si une équipe est à ta portée et si la fac tient dans ton budget.</p>
+    </div>
+    <fieldset class="fl-bloc"><legend>Niveau visé</legend>
+      <div class="fl-puces" id="fl-niveaux">
+        <button type="button" data-niv="portee" aria-pressed="false">À ta portée</button>
+        <button type="button" data-niv="niveau" aria-pressed="false">Au niveau</button>
+        <button type="button" data-niv="ambitieux" aria-pressed="false">Ambitieux</button>
+      </div>
+      <p class="fl-aide" id="fl-niv-aide">À ta portée : tu serais dans les 5 premiers des joueurs qui restent (ou l'équipe joue 2 coups au-dessus de toi). Au niveau : 6e à 8e (ou ±2 coups).</p>
+    </fieldset>
+    <label class="fl-case" id="fl-budget-case"><span>Seulement dans mon budget</span><input type="checkbox" id="fl-dansbudget"></label>
+    <fieldset class="fl-bloc"><legend>Note de la fac, au moins</legend>
+      <div class="fl-seg" id="fl-note">
+        <button type="button" data-note="" aria-pressed="true">Toutes</button>
+        <button type="button" data-note="2" aria-pressed="false">2</button>
+        <button type="button" data-note="2.5" aria-pressed="false">2,5</button>
+        <button type="button" data-note="3" aria-pressed="false">3</button>
+        <button type="button" data-note="3.5" aria-pressed="false">3,5</button>
+      </div>
+    </fieldset>
+    <label class="fl-champ"><span class="fl-l" style="font-size:14px;color:var(--ink);font-weight:700">État</span><select id="fl-etat"><option value="">Tous les États</option></select></label>
+    <div class="fl-bloc">
+      <span class="fl-l">Plus</span>
+      <label class="fl-case"><span>Avec des places 2027</span><input type="checkbox" id="fl-places"></label>
+      <label class="fl-case"><span>Avec un joueur français</span><input type="checkbox" id="fl-fr"></label>
+      <label class="fl-case"><span>Avec des internationaux</span><input type="checkbox" id="fl-intl"></label>
+      <label class="fl-case"><span>Golf indoor (pour l'hiver)</span><input type="checkbox" id="fl-indoor"></label>
+      <label class="fl-case"><span>Parcours à 10 km ou moins</span><input type="checkbox" id="fl-proche"></label>
+    </div>
+  </div>
+  <div class="fl-pied"><button type="button" class="ex-lien" id="fl-effacer">Tout effacer</button><button type="button" class="voir" id="fl-voir">Voir les programmes</button></div>
+</dialog>
+<script type="text/plain" id="cc-app">
+/* explorer.js */
+/* Explorer — la liste des programmes et la carte réunies, mêmes filtres pour les deux.
+   Démarré par cc.js une fois la personne connectée : DATA = window.CC_DATA (liste légère de chaque fac),
+   la fiche et le roster complets d'une fac arrivent à son ouverture (window.ccCharger).
+   Profil (moyenne, budget) et « Ma sélection » sont gardés dans le compte (user_metadata). */
+(() => {
+const DATA = window.CC_DATA || [];
+const sb = window.ccSb;
+const META = (window.CC_USER && window.CC_USER.user_metadata) || {};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const virg = (n, d = 1) => n.toFixed(d).replace(".", ",");
+const moy = n => (Number.isInteger(n) ? String(n) : virg(n));
+const fmt = n => Math.round(n).toLocaleString("fr-FR");
+const sansAcc = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const ETOILE = '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 7.8l5-.7z" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+const MOBILE = matchMedia("(max-width:820px)");
+
+// ------------------------------------------------------------ règles (mêmes que la page Programmes)
+const DIVK = ["D1", "D2", "D3", "NAIA", "JUCO"];
+const divKey = t => t.juco ? "JUCO" : (["D1", "D2", "D3"].includes(t.division) ? t.division : "NAIA");
+const DIV_NOM = { D1: "NCAA Division I", D2: "NCAA Division II", D3: "NCAA Division III", NAIA: "NAIA", JUCO: "NJCAA · cursus 2 ans" };
+const AXES = [["golf", "Golf"], ["etudes", "Études"], ["securite", "Sécurité"], ["cadre", "Cadre de vie"]];
+const POIDS = { golf: 3, etudes: 3, securite: 2, cadre: 2 };
+const noteAxe = (t, k) => ((t.notes || {})[k] || {}).note;
+function noteGlobale(t) {          // moyenne pondérée des seuls axes notés ; « partielle » si moins de la moitié du poids
+  let s = 0, p = 0, tot = 0;
+  for (const [k] of AXES) { tot += POIDS[k]; const n = noteAxe(t, k); if (n == null) continue; s += n * POIDS[k]; p += POIDS[k]; }
+  return p ? { n: Math.round(10 * s / p) / 10, partiel: p / tot < 0.5 } : null;
+}
+const gNote = t => { const g = noteGlobale(t); return g ? g.n : null; };
+function lireScore(txt) {          // « 75,4 » = moyenne sur 18 trous ; « +4 » ou « 4 » = coups au-dessus du par 72
+  const v = String(txt || "").trim().replace(",", "."); if (!v) return null;
+  const n = parseFloat(v); if (!isFinite(n)) return null;
+  return (v.startsWith("+") || n < 40) ? 72 + n : (n >= 55 && n <= 130 ? n : null);
+}
+function lireBudget(txt) {         // « 35000 », « 35 000 », « 35k »
+  const v = String(txt || "").trim().toLowerCase().replace(/[\s  $]/g, "").replace(",", "."); if (!v) return null;
+  const n = parseFloat(v) * (v.endsWith("k") ? 1000 : 1); return isFinite(n) && n > 0 ? n : null;
+}
+// rang parmi les joueurs qui RESTENT l'an prochain et ont une moyenne ; pas en JUCO, ni sous 3 moyennes
+function rangJoueur(t, s) {
+  if (s == null || t.juco || t.empty) return null;
+  const reste = (t.players || []).filter(p => !p.dep && p.score != null).map(p => p.score);
+  if (reste.length < 3) return null;
+  const rang = 1 + reste.filter(x => x < s).length;
+  return { rang, n: reste.length, dernier: rang > reste.length };
+}
+// À ta portée / Au niveau / Ambitieux : le rang d'abord, sinon l'écart avec la moyenne de l'équipe
+function niveau(t) {
+  if (MON_SCORE == null) return null;
+  const r = rangJoueur(t, MON_SCORE);
+  if (r) {
+    const k = r.dernier ? "ambitieux" : r.rang <= 5 ? "portee" : r.rang <= 8 ? "niveau" : "ambitieux";
+    return { k, txt: r.dernier ? `derrière les ${r.n} joueurs qui restent` : `tu serais n°${r.rang} sur ${r.n + 1}` };
+  }
+  if (t.team_avg == null) return null;
+  const ec = t.team_avg - MON_SCORE;
+  const k = ec >= 2 ? "portee" : ec > -2 ? "niveau" : "ambitieux";
+  return { k, txt: ec >= 0 ? `équipe à +${virg(ec)} coups de toi` : `équipe meilleure de ${virg(-ec)} coups` };
+}
+const NIV_TXT = { portee: "À ta portée", niveau: "Au niveau", ambitieux: "Ambitieux" };
+const prixTot = t => (t.prix && t.prix.tot != null) ? t.prix.tot : null;
+
+// ------------------------------------------------------------ état
+let MON_SCORE = lireScore((META.profil || {}).score), MON_BUDGET = lireBudget((META.profil || {}).budget);
+const SEL = new Set((META.selection || []).filter(n => DATA.some(t => t.name === n)));
+const DEF = () => ({ q: "", divs: new Set(DIVK), note: "", st: "", places: false, fr: false, intl: false, indoor: false,
+  proche: false, niveaux: new Set(), dansBudget: false, sel: false, zone: null, tri: "places" });
+let S = DEF(), LIM = 40, FAC = null, TOUT_EFFECTIF = false;
+const PAR_NOM = new Map(DATA.map(t => [t.name, t]));
+
+let attenteMeta = null;
+function garderMeta(data) {        // enregistré dans le compte, groupé (une écriture pour plusieurs clics)
+  Object.assign(garderMeta.lot || (garderMeta.lot = {}), data);
+  clearTimeout(attenteMeta);
+  attenteMeta = setTimeout(() => { const lot = garderMeta.lot; garderMeta.lot = null; if (sb) sb.auth.updateUser({ data: lot }); }, 700);
+}
+
+// ------------------------------------------------------------ filtrer, trier
+function joueursTrouves(t, q) { return (t.players || []).filter(p => sansAcc(p.name).includes(q)); }
+function filtrer(avecZone = true) {
+  const q = sansAcc(S.q.trim());
+  return DATA.filter(t => {
+    if (!S.divs.has(divKey(t))) return false;
+    if (S.sel && !SEL.has(t.name)) return false;
+    if (S.places && !(t.seniors > 0)) return false;
+    if (S.fr && !(t.french > 0)) return false;
+    if (S.intl && !(t.intl > 0)) return false;
+    if (S.indoor && t.indoor_oui !== true) return false;
+    if (S.proche && !(t.course_km != null && t.course_km <= 10)) return false;
+    if (S.st && t.state !== S.st) return false;
+    if (S.note !== "") { const g = gNote(t); if (g == null || g < +S.note) return false; }
+    if (S.niveaux.size && MON_SCORE != null) { const n = niveau(t); if (!n || !S.niveaux.has(n.k)) return false; }
+    if (S.dansBudget && MON_BUDGET != null) { const p = prixTot(t); if (p == null || p > MON_BUDGET) return false; }
+    if (avecZone && S.zone && !(t.lat != null && S.zone.contains([t.lat, t.lon]))) return false;
+    if (q) {
+      const ok = sansAcc(t.name).includes(q) || sansAcc(t.city).includes(q) || sansAcc(t.state) === q
+        || (q.length >= 3 && joueursTrouves(t, q).length > 0);
+      if (!ok) return false;
+    }
+    return true;
+  });
+}
+const ORDRE_NIV = { portee: 0, niveau: 1, ambitieux: 2 };
+function trier(r) {
+  const o = t => t._ordre ?? 0;
+  const cmp = {
+    places: (a, b) => (b.seniors || 0) - (a.seniors || 0) || o(a) - o(b),
+    note: (a, b) => (gNote(b) ?? -1) - (gNote(a) ?? -1) || o(a) - o(b),
+    cout: (a, b) => (prixTot(a) ?? 1e9) - (prixTot(b) ?? 1e9) || o(a) - o(b),
+    nom: (a, b) => a.name.localeCompare(b.name, "fr"),
+    niveau: (a, b) => {
+      const na = niveau(a), nb = niveau(b);
+      return (na ? ORDRE_NIV[na.k] : 3) - (nb ? ORDRE_NIV[nb.k] : 3) || (b.seniors || 0) - (a.seniors || 0) || o(a) - o(b);
+    },
+  }[S.tri] || (() => 0);
+  return r.slice().sort(cmp);
+}
+
+// ------------------------------------------------------------ cartes de la liste
+function badges(t, q) {
+  const b = [];
+  const n = niveau(t); if (n) b.push(`<span class="ex-b ${n.k}" title="${esc(n.txt)}">${NIV_TXT[n.k]}</span>`);
+  const g = noteGlobale(t); if (g) b.push(`<span class="ex-b note"${g.partiel ? ' title="Note partielle : peu d\'axes renseignés"' : ""}>Note ${virg(g.n)}${g.partiel ? "·" : ""}</span>`);
+  const p = prixTot(t);
+  if (p != null) {
+    if (MON_BUDGET == null) b.push(`<span class="ex-b">${fmt(p)} $/an</span>`);
+    else b.push(`<span class="ex-b ${p <= MON_BUDGET ? "dans" : "hors"}">${fmt(p)} $/an · ${p <= MON_BUDGET ? "dans le budget" : "au-dessus du budget"}</span>`);
+  }
+  if (t.french > 0) b.push(`<span class="ex-b fr">Joueur français</span>`);
+  if (t.intl > 0 && !(t.french > 0)) b.push(`<span class="ex-b">${t.intl} international${t.intl > 1 ? "aux" : ""}</span>`);
+  if (t.indoor_oui === true) b.push(`<span class="ex-b">Golf indoor</span>`);
+  if (q && q.length >= 3) { const j = joueursTrouves(t, q); if (j.length) b.push(`<span class="ex-b note">Joueur : ${esc(j.map(x => x.name).join(", "))}</span>`); }
+  return b.join("");
+}
+function sousTitre(t) {
+  const n = (t.players || []).length;
+  return [divKey(t), [t.city, t.state].filter(Boolean).join(", "), n ? `${n} joueurs` : "", t.juco ? "cursus 2 ans" : ""].filter(Boolean).map(esc).join(" · ");
+}
+function carteFac(t, q) {
+  const dans = SEL.has(t.name), vide = t.empty;
+  return `<article class="ex-carte-fac${FAC === t.name ? " ouverte" : ""}" data-nom="${esc(t.name)}">
+  <div class="ex-haut"><div><button type="button" class="ex-nom" data-ouvrir>${esc(t.name)}</button><div class="ex-sous">${sousTitre(t)}</div></div>
+  <div class="ex-places${t.seniors ? "" : " zero"}"><b>${vide ? "—" : t.seniors || 0}</b><small>places 2027</small></div>
+  <button type="button" class="ex-etoile" data-etoile aria-pressed="${dans}" aria-label="${dans ? "Retirer" : "Ajouter"} ${esc(t.name)} ${dans ? "de" : "à"} ma sélection">${ETOILE}</button></div>
+  <div class="ex-badges">${badges(t, q)}</div></article>`;
+}
+
+// ------------------------------------------------------------ rendu
+let DERNIER = [];
+function render() {
+  const q = sansAcc(S.q.trim());
+  const r = trier(filtrer());
+  DERNIER = r;
+  const liste = $("ex-liste");
+  if (!r.length) {
+    liste.innerHTML = `<p class="ex-vide">${S.sel && !SEL.size ? "Ta sélection est vide : clique sur l'étoile d'une fac pour l'y ajouter." : "Aucun programme ne correspond. Retire un filtre pour élargir."}</p>`;
+  } else {
+    liste.innerHTML = r.slice(0, LIM).map(t => carteFac(t, q)).join("")
+      + (r.length > LIM ? `<button type="button" class="ex-btn ex-plus" id="ex-plus">Afficher ${Math.min(40, r.length - LIM)} de plus (encore ${r.length - LIM})</button>` : "");
+  }
+  majActifs(r.length);
+  majCarte();
+  $("fl-voir").textContent = `Voir ${r.length.toLocaleString("fr-FR")} programme${r.length > 1 ? "s" : ""}`;
+  $("ex-nsel").textContent = SEL.size;
+  $("ex-masel").setAttribute("aria-pressed", S.sel);
+  document.querySelectorAll(".ex-basnav [data-nav]").forEach(b => b.setAttribute("aria-current",
+    b.dataset.nav === (S.sel ? "selection" : "explorer")));
+}
+let attenteRendu = null;
+const renderBientot = () => { clearTimeout(attenteRendu); attenteRendu = setTimeout(() => { LIM = 40; render(); }, 140); };
+const relancer = () => { LIM = 40; $("ex-liste").scrollTop = 0; render(); };
+
+function majActifs(n) {
+  const tags = [];
+  const tag = (cle, txt) => tags.push(`<button type="button" class="ex-tag" data-retirer="${cle}" aria-label="Retirer le filtre ${esc(txt)}">${esc(txt)}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>`);
+  if (S.sel) tag("sel", "Ma sélection");
+  if (S.zone) tag("zone", "Zone de la carte");
+  if (S.niveaux.size && MON_SCORE != null) tag("niveaux", [...S.niveaux].map(k => NIV_TXT[k]).join(" ou "));
+  if (S.dansBudget && MON_BUDGET != null) tag("dansBudget", "Dans mon budget");
+  if (S.note !== "") tag("note", `Note ≥ ${S.note.replace(".", ",")}`);
+  if (S.st) tag("st", S.st);
+  if (S.places) tag("places", "Avec places 2027");
+  if (S.fr) tag("fr", "Joueur français");
+  if (S.intl) tag("intl", "Internationaux");
+  if (S.indoor) tag("indoor", "Golf indoor");
+  if (S.proche) tag("proche", "Parcours à 10 km");
+  const nPanneau = tags.length - (S.sel ? 1 : 0) - (S.zone ? 1 : 0);
+  $("ex-nfiltres").hidden = !nPanneau; $("ex-nfiltres").textContent = nPanneau;
+  const prof = MON_SCORE != null || MON_BUDGET != null
+    ? `Mon profil : ${[MON_SCORE != null ? "moyenne " + moy(MON_SCORE) : "", MON_BUDGET != null ? "budget " + fmt(MON_BUDGET) + " $/an" : ""].filter(Boolean).join(" · ")} <u>modifier</u>`
+    : "Indique ta moyenne et ton budget <u>ici</u>";
+  const tout = S.divs.size === DIVK.length ? "tous les USA" : [...S.divs].join(", ");
+  $("ex-actifs").innerHTML = `<button type="button" class="ex-profil" id="ex-profil"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5.5" r="2.8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 14c.8-2.8 3-4 5.5-4s4.7 1.2 5.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>${prof}</button>`
+    + (tags.length ? `<span class="ex-sep"></span>${tags.join("")}<button type="button" class="ex-lien" id="ex-effacer">Tout effacer</button>` : "")
+    + `<span class="ex-compte"><b>${n.toLocaleString("fr-FR")}</b> programme${n > 1 ? "s" : ""}${S.zone ? " dans la zone" : " · " + esc(tout)}</span>`;
+}
+
+// ------------------------------------------------------------ carte
+let map = null, grappes = null, carteFaite = false, mouvementCode = false;
+const USA = [[25, -124], [49, -67]];
+const MARQ = new Map();
+function iconePoint(t) {
+  const s = t.seniors >= 10 ? 18 : t.seniors >= 5 ? 15 : t.seniors > 0 ? 12 : 10;
+  return L.divIcon({ className: "ex-pt" + (t.seniors ? "" : " zero") + (FAC === t.name ? " choisi" : ""), iconSize: [s, s] });
+}
+function initCarte() {
+  if (carteFaite || typeof L === "undefined") return;
+  carteFaite = true;
+  map = L.map("ex-map", { zoomSnap: 0.5, minZoom: 3, worldCopyJump: true }).setView([39, -96], 4);
+  mouvementCode = true; map.fitBounds(USA);
+  // fond OpenStreetMap (comme la page Carte), passé en gris par le CSS pour que les points ressortent
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(map);
+  grappes = L.markerClusterGroup({
+    showCoverageOnHover: false, maxClusterRadius: 52, spiderfyOnMaxZoom: true, chunkedLoading: true,
+    iconCreateFunction: c => { const n = c.getChildCount(), s = n < 10 ? 34 : n < 50 ? 42 : n < 150 ? 50 : 58;
+      return L.divIcon({ html: `<span>${n}</span>`, className: "ex-grappe", iconSize: [s, s] }); },
+  });
+  map.addLayer(grappes);
+  for (const t of DATA) {
+    if (t.lat == null || t.lon == null) continue;
+    const m = L.marker([t.lat, t.lon], { icon: iconePoint(t), keyboard: false, title: t.name });
+    m.on("click", () => {
+      const g = noteGlobale(t);
+      m.bindPopup(`<div class="ex-pop"><span class="p">${t.empty ? "—" : t.seniors || 0}</span><b>${esc(t.name)}</b>
+        <p>${esc(divKey(t))} · ${esc([t.city, t.state].filter(Boolean).join(", "))}${g ? " · note " + virg(g.n) : ""}<br>places 2027</p>
+        <button type="button" data-pop="${esc(t.name)}">Voir la fiche →</button></div>`).openPopup();
+    });
+    MARQ.set(t.name, m);
+  }
+  map.getContainer().addEventListener("click", e => { const b = e.target.closest("[data-pop]"); if (b) { map.closePopup(); ouvrir(b.dataset.pop); } });
+  map.on("moveend", () => { if (mouvementCode) { mouvementCode = false; return; } $("ex-zone").hidden = false; });
+  majCarte(true);
+}
+let cleCarte = "";
+function majCarte(force) {
+  if (!carteFaite) return;
+  const r = filtrer(false);
+  const cle = r.map(t => t.name).join("|");
+  if (!force && cle === cleCarte) return;
+  cleCarte = cle;
+  grappes.clearLayers();
+  grappes.addLayers(r.map(t => MARQ.get(t.name)).filter(Boolean));
+}
+function bougerCarte(f) { mouvementCode = true; f(); }
+let survol = null;
+function surligner(nom) {
+  if (survol) { survol.classList.remove("choisi"); survol = null; }
+  if (!carteFaite || !nom) return;
+  const m = MARQ.get(nom); if (!m || !grappes.hasLayer(m)) return;
+  const p = grappes.getVisibleParent(m);
+  const el = p && (p._icon || (p.getElement && p.getElement()));
+  if (el) { el.classList.add("choisi"); survol = el; }
+}
+function montrerSurCarte(nom) {
+  const m = MARQ.get(nom); if (!m) return;
+  if (MOBILE.matches) vue("carte");
+  initCarte();
+  setTimeout(() => {
+    map.invalidateSize();
+    if (!grappes.hasLayer(m)) grappes.addLayer(m);
+    bougerCarte(() => grappes.zoomToShowLayer(m, () => m.fire("click")));
+  }, 60);
+}
+
+// ------------------------------------------------------------ fiche
+function axe(t, k, nom) {
+  const n = noteAxe(t, k);
+  return `<div class="fi-axe${n == null ? " nn" : ""}"><span>${nom}</span><div class="fi-jauge"><i style="width:${n == null ? 0 : Math.round(n / 5 * 100)}%"></i></div><b>${n == null ? "—" : virg(n)}</b></div>`;
+}
+function blocCout(t) {
+  const p = t.prix; if (!p || p.tot == null) return `<div class="fi-cout"><div class="l"><span>Coût pour un étranger</span><b>—</b></div><p>Prix non publié par la fac.</p></div>`;
+  const parts = [["Scolarité", p.scol], ["logement", p.log], ["assurance", p.ass]].filter(([, v]) => v);
+  const ecart = MON_BUDGET != null ? p.tot - MON_BUDGET : null;
+  return `<div class="fi-cout"><div class="l"><span>Coût pour un étranger</span><b>${fmt(p.tot)} $<small> / an</small></b></div>
+    ${parts.length ? `<div class="fi-barres">${parts.map(([, v]) => `<i style="flex:${v}"></i>`).join("")}</div>
+    <p>${parts.map(([k, v]) => `${k} ${fmt(v)}`).join(" · ")}${p.src === "estime" ? " · estimation" : ""} · avant bourse</p>` : ""}
+    ${ecart != null ? `<p class="ecart${ecart <= 0 ? " ok" : ""}">${ecart <= 0 ? `Dans ton budget (${fmt(-ecart)} $ de marge)` : `${fmt(ecart)} $ au-dessus de ton budget`}</p>` : ""}</div>`;
+}
+function texteFiche(v) { return typeof v === "string" && v.length > 4 ? v : ""; }   // « oui » = aperçu avant chargement
+function blocJoueurs(t) {
+  const js = (t.players || []).slice();
+  if (!js.length) return `<p class="fi-avert">${t.empty ? "Roster pas encore lu pour cette saison." : "Aucun joueur listé."}</p>`;
+  const partants = js.filter(p => p.dep).sort((a, b) => (a.score ?? 999) - (b.score ?? 999));
+  const montres = TOUT_EFFECTIF ? js.sort((a, b) => (b.dep || 0) - (a.dep || 0) || (a.score ?? 999) - (b.score ?? 999)) : partants.slice(0, 8);
+  const ligne = p => `<div class="fi-j${p.dep ? " sr" : ""}"><div>${p.year ? `<em>${esc(p.year)}</em>` : ""}<b>${esc(p.name)}</b>${p.hometown ? ` <span>· ${esc(p.hometown)}</span>` : ""}</div><b>${p.score != null ? virg(p.score) : ""}</b></div>`;
+  const reste = TOUT_EFFECTIF ? 0 : js.length - montres.length;
+  return `<p class="fi-titre">${TOUT_EFFECTIF ? `Effectif <small>(${js.length})</small>` : `Joueurs qui partent en 2027 <small>(${partants.length})</small>`}</p>
+    <div class="fi-joueurs">${montres.map(ligne).join("") || `<div class="fi-j"><div>Aucun départ prévu.</div><b></b></div>`}
+    ${reste > 0 || TOUT_EFFECTIF ? `<button type="button" id="fi-effectif">${TOUT_EFFECTIF ? "Revenir aux départs" : `Voir l'effectif complet (${js.length})`}</button>` : ""}</div>
+    <p class="fi-avert">Moyenne de score de la saison passée, quand l'université la publie.</p>`;
+}
+function dessinerFiche(t) {
+  const el = $("ex-fiche");
+  const g = noteGlobale(t), n = niveau(t), dans = SEL.has(t.name);
+  const effectif = (t.players || []).length;
+  const annees = ["fr", "so", "jr", "sr"].filter(k => t[k] != null).map(k => `${k.toUpperCase()} ${t[k]}`).join(" · ");
+  const resume = texteFiche(t.summary);
+  const tags = [
+    t.course ? `Parcours : ${esc(t.course)}${t.course_km != null ? ` (${virg(t.course_km, 0)} km)` : ""}` : "",
+    t.indoor_oui === true ? "Golf indoor" : "",
+    t.intl > 0 ? `${t.intl} international${t.intl > 1 ? "aux" : ""}` : "",
+    (t.french_names || []).length ? `Français : ${esc(t.french_names.join(", "))}` : "",
+  ].filter(Boolean);
+  el.innerHTML = `<div class="fi-barre">
+      <button type="button" class="ex-btn" id="fi-retour"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>${MOBILE.matches ? "Retour" : "Revenir à la carte"}</button>
+      ${t.lat != null ? `<button type="button" class="ex-btn" id="fi-carte">Voir sur la carte</button>` : ""}
+      <button type="button" class="ex-etoile" id="fi-etoile" aria-pressed="${dans}" aria-label="${dans ? "Retirer de" : "Ajouter à"} ma sélection">${ETOILE}</button>
+    </div>
+    <div class="fi-corps" id="fi-corps">
+      <div><div class="fi-sur">${esc(DIV_NOM[divKey(t)] || t.division)}${t.conf ? " · " + esc(t.conf) : ""}</div>
+        <h2 id="fi-nom" tabindex="-1">${esc(t.name)}</h2>
+        <div class="fi-lieu">${[[t.city, t.state].filter(Boolean).join(", "), t.size ? `environ ${fmt(t.size)} étudiants` : "", t.coach ? `coach ${t.coach}` : ""].filter(Boolean).map(esc).join(" · ")}</div></div>
+      <div class="fi-chiffres">
+        <div class="fi-ch fort"><span>Places 2027</span><b>${t.empty ? "—" : t.seniors || 0}</b><small>${t.dep2028 != null ? `${t.dep2028} de plus en 2028` : "départs probables"}</small></div>
+        <div class="fi-ch"><span>Effectif</span><b>${effectif || "—"}</b><small>${annees || "&nbsp;"}</small></div>
+        <div class="fi-ch"><span>Niveau de l'équipe</span><b>${t.team_avg != null ? virg(t.team_avg) : "—"}</b><small>${n ? `<b style="font:inherit;font-weight:700;color:var(--accent)">${NIV_TXT[n.k]}</b> · ${esc(n.txt)}` : MON_SCORE == null ? "moyenne · indique la tienne" : "moyenne de score"}</small></div>
+      </div>
+      <div class="fi-deux">
+        <div class="fi-col">
+          <div style="display:flex;flex-direction:column;gap:10px"><p class="fi-titre">Notes de la fac${g ? ` <small>· ${virg(g.n)} sur 5${g.partiel ? ", partielle" : ""}</small>` : ""}</p>${AXES.map(([k, nom]) => axe(t, k, nom)).join("")}</div>
+          ${blocCout(t)}
+          ${tags.length ? `<div class="ex-badges">${tags.map(x => `<span class="ex-b">${x}</span>`).join("")}</div>` : ""}
+        </div>
+        <div class="fi-col">
+          ${resume ? `<div><p class="fi-titre">En bref</p><p class="fi-texte">${esc(resume)}</p></div>` : ""}
+          <div id="fi-joueurs">${blocJoueurs(t)}</div>
+          <div class="fi-actions">
+            ${t.coach_mail ? `<a class="principal" href="mailto:${esc(t.coach_mail)}">Écrire au coach</a>` : ""}
+            ${t.roster_url ? `<a class="second" href="${esc(t.roster_url)}" target="_blank" rel="noopener">Roster officiel ↗</a>` : ""}
+            ${t.site ? `<a class="second" href="${esc(t.site)}" target="_blank" rel="noopener">Site de l'université ↗</a>` : ""}
+          </div>
+          <p class="fi-avert">Projection, pas certitude : un senior est un départ probable. À confirmer avec le coach.</p>
+        </div>
+      </div>
+    </div>`;
+}
+function ouvrir(nom, depuisLien) {
+  const t = PAR_NOM.get(nom); if (!t) return;
+  FAC = nom; TOUT_EFFECTIF = false;
+  const el = $("ex-fiche");
+  dessinerFiche(t);
+  el.hidden = false;
+  document.body.classList.add("ex-fiche-ouverte");
+  if (!depuisLien) history.replaceState(null, "", "#fac=" + encodeURIComponent(nom));
+  document.querySelectorAll(".ex-carte-fac.ouverte").forEach(c => c.classList.remove("ouverte"));
+  const c = document.querySelector(`.ex-carte-fac[data-nom="${CSS.escape(nom)}"]`); if (c) c.classList.add("ouverte");
+  $("fi-nom").focus({ preventScroll: true });
+  if (window.ccCharger) ccCharger(nom, x => { if (FAC === x.name) { dessinerFiche(x); } }, $("fi-corps"));
+}
+function fermer() {
+  if (FAC == null) return;
+  const nom = FAC; FAC = null;
+  $("ex-fiche").hidden = true;
+  document.body.classList.remove("ex-fiche-ouverte");
+  history.replaceState(null, "", location.pathname);
+  document.querySelectorAll(".ex-carte-fac.ouverte").forEach(c => c.classList.remove("ouverte"));
+  if (map) setTimeout(() => map.invalidateSize(), 30);
+  const b = document.querySelector(`.ex-carte-fac[data-nom="${CSS.escape(nom)}"] [data-ouvrir]`); if (b) b.focus({ preventScroll: true });
+}
+function basculerSel(nom) {
+  if (SEL.has(nom)) SEL.delete(nom); else SEL.add(nom);
+  garderMeta({ selection: [...SEL] });
+  document.querySelectorAll(`.ex-carte-fac[data-nom="${CSS.escape(nom)}"] [data-etoile]`).forEach(b => {
+    const d = SEL.has(nom); b.setAttribute("aria-pressed", d); b.setAttribute("aria-label", `${d ? "Retirer" : "Ajouter"} ${nom} ${d ? "de" : "à"} ma sélection`); });
+  const fe = $("fi-etoile"); if (fe && FAC === nom) { fe.setAttribute("aria-pressed", SEL.has(nom)); fe.setAttribute("aria-label", `${SEL.has(nom) ? "Retirer de" : "Ajouter à"} ma sélection`); }
+  $("ex-nsel").textContent = SEL.size;
+  if (S.sel) render();
+}
+
+// ------------------------------------------------------------ vue téléphone : liste ⇄ carte
+function vue(v) {
+  document.body.classList.toggle("ex-vue-carte", v === "carte");
+  $("ex-bascule").innerHTML = v === "carte"
+    ? '<svg width="18" height="18" viewBox="0 0 22 22" aria-hidden="true"><path d="M4 6h14M4 11h14M4 16h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Voir la liste'
+    : '<svg width="18" height="18" viewBox="0 0 22 22" aria-hidden="true"><path d="M11 19s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="11" cy="9" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Voir sur la carte';
+  if (v === "carte") {
+    const premiere = !carteFaite; initCarte();
+    setTimeout(() => { if (!map) return; map.invalidateSize(); if (premiere) bougerCarte(() => map.fitBounds(USA)); }, 30);
+  }
+}
+
+// ------------------------------------------------------------ panneau des filtres
+const dlg = $("ex-filtres");
+function remplirPanneau() {
+  $("fl-score").value = (META.profil || {}).score || "";
+  $("fl-budget").value = (META.profil || {}).budget || "";
+  majPanneau();
+}
+function majPanneau() {
+  document.querySelectorAll("#fl-niveaux button").forEach(b => { b.disabled = MON_SCORE == null; b.setAttribute("aria-pressed", S.niveaux.has(b.dataset.niv)); });
+  $("fl-niv-aide").textContent = MON_SCORE == null ? "Indique d'abord ta moyenne dans Mon profil."
+    : "À ta portée : tu serais dans les 5 premiers des joueurs qui restent (ou l'équipe joue 2 coups au-dessus de toi). Au niveau : 6e à 8e (ou ±2 coups).";
+  $("fl-dansbudget").disabled = MON_BUDGET == null; $("fl-budget-case").classList.toggle("off", MON_BUDGET == null);
+  $("fl-dansbudget").checked = S.dansBudget;
+  document.querySelectorAll("#fl-note button").forEach(b => b.setAttribute("aria-pressed", b.dataset.note === S.note));
+  $("fl-etat").value = S.st;
+  for (const [id, k] of [["fl-places", "places"], ["fl-fr", "fr"], ["fl-intl", "intl"], ["fl-indoor", "indoor"], ["fl-proche", "proche"]]) $(id).checked = S[k];
+}
+function ouvrirFiltres(profil) {
+  remplirPanneau();
+  dlg.showModal();
+  if (profil) $("fl-score").focus();
+}
+function majProfil() {
+  MON_SCORE = lireScore($("fl-score").value); MON_BUDGET = lireBudget($("fl-budget").value);
+  $("fl-score").style.borderColor = $("fl-score").value.trim() && MON_SCORE == null ? "var(--h5)" : "";
+  $("fl-budget").style.borderColor = $("fl-budget").value.trim() && MON_BUDGET == null ? "var(--h5)" : "";
+  META.profil = { score: $("fl-score").value.trim(), budget: $("fl-budget").value.trim() };
+  garderMeta({ profil: META.profil });
+  majPanneau(); renderBientot();
+}
+
+// ------------------------------------------------------------ événements
+$("ex-q").addEventListener("input", e => { S.q = e.target.value; renderBientot(); });
+$("ex-divs").addEventListener("click", e => {
+  const b = e.target.closest("[data-div]"); if (!b) return;
+  const d = b.dataset.div;
+  if (!d) S.divs = new Set(DIVK);
+  else if (S.divs.size === DIVK.length) S.divs = new Set([d]);
+  else { S.divs.has(d) ? S.divs.delete(d) : S.divs.add(d); if (!S.divs.size) S.divs = new Set(DIVK); }
+  const tout = S.divs.size === DIVK.length;
+  $("ex-divs").querySelectorAll("[data-div]").forEach(x => x.setAttribute("aria-pressed", x.dataset.div ? !tout && S.divs.has(x.dataset.div) : tout));
+  relancer();
+});
+$("ex-tri").addEventListener("change", e => { S.tri = e.target.value; relancer(); });
+$("ex-masel").addEventListener("click", () => { S.sel = !S.sel; relancer(); });
+$("ex-ouvrir-filtres").addEventListener("click", () => ouvrirFiltres(false));
+$("ex-liste").addEventListener("click", e => {
+  if (e.target.closest("#ex-plus")) { LIM += 40; render(); return; }
+  const c = e.target.closest(".ex-carte-fac"); if (!c) return;
+  if (e.target.closest("[data-etoile]")) { basculerSel(c.dataset.nom); return; }
+  ouvrir(c.dataset.nom);
+});
+$("ex-liste").addEventListener("mouseover", e => { const c = e.target.closest(".ex-carte-fac"); surligner(c ? c.dataset.nom : null); });
+$("ex-liste").addEventListener("mouseleave", () => surligner(null));
+$("ex-actifs").addEventListener("click", e => {
+  if (e.target.closest("#ex-profil")) return ouvrirFiltres(true);
+  if (e.target.closest("#ex-effacer")) { const tri = S.tri, q = S.q, divs = S.divs; S = DEF(); Object.assign(S, { tri, q, divs }); $("ex-zone").hidden = true; return relancer(); }
+  const b = e.target.closest("[data-retirer]"); if (!b) return;
+  const k = b.dataset.retirer;
+  if (k === "niveaux") S.niveaux = new Set(); else if (k === "zone") { S.zone = null; } else if (k === "note" || k === "st") S[k] = ""; else S[k] = false;
+  relancer();
+});
+$("ex-zone").addEventListener("click", () => { S.zone = map.getBounds(); $("ex-zone").hidden = true; if (MOBILE.matches) vue("liste"); relancer(); });
+$("ex-fiche").addEventListener("click", e => {
+  if (e.target.closest("#fi-retour")) return fermer();
+  if (e.target.closest("#fi-etoile")) return basculerSel(FAC);
+  if (e.target.closest("#fi-carte")) { const n = FAC; fermer(); return montrerSurCarte(n); }
+  if (e.target.closest("#fi-effectif")) { TOUT_EFFECTIF = !TOUT_EFFECTIF; $("fi-joueurs").innerHTML = blocJoueurs(PAR_NOM.get(FAC)); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && FAC != null && !dlg.open && document.getElementById("cc-menu").hidden) fermer(); });
+$("ex-bascule").addEventListener("click", () => vue(document.body.classList.contains("ex-vue-carte") ? "liste" : "carte"));
+document.querySelector(".ex-basnav").addEventListener("click", e => {
+  const b = e.target.closest("[data-nav]"); if (!b) return;
+  if (b.dataset.nav === "profil") return ouvrirFiltres(true);
+  fermer();
+  S.sel = b.dataset.nav === "selection"; vue("liste"); relancer();
+});
+// panneau
+$("fl-fermer").addEventListener("click", () => dlg.close());
+$("fl-voir").addEventListener("click", () => dlg.close());
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });   // clic sur le fond
+$("fl-score").addEventListener("input", majProfil);
+$("fl-budget").addEventListener("input", majProfil);
+$("fl-niveaux").addEventListener("click", e => { const b = e.target.closest("[data-niv]"); if (!b || b.disabled) return;
+  S.niveaux.has(b.dataset.niv) ? S.niveaux.delete(b.dataset.niv) : S.niveaux.add(b.dataset.niv); majPanneau(); renderBientot(); });
+$("fl-note").addEventListener("click", e => { const b = e.target.closest("[data-note]"); if (!b) return; S.note = b.dataset.note; majPanneau(); renderBientot(); });
+$("fl-etat").addEventListener("change", e => { S.st = e.target.value; renderBientot(); });
+$("fl-dansbudget").addEventListener("change", e => { S.dansBudget = e.target.checked; renderBientot(); });
+for (const [id, k] of [["fl-places", "places"], ["fl-fr", "fr"], ["fl-intl", "intl"], ["fl-indoor", "indoor"], ["fl-proche", "proche"]])
+  $(id).addEventListener("change", e => { S[k] = e.target.checked; renderBientot(); });
+$("fl-effacer").addEventListener("click", () => { const keep = { tri: S.tri, q: S.q, divs: S.divs, sel: S.sel, zone: S.zone }; S = Object.assign(DEF(), keep); majPanneau(); renderBientot(); });
+MOBILE.addEventListener("change", () => { if (!MOBILE.matches) { document.body.classList.remove("ex-vue-carte"); initCarte(); setTimeout(() => map && map.invalidateSize(), 30); } });
+
+// ------------------------------------------------------------ démarrage
+$("fl-etat").insertAdjacentHTML("beforeend", [...new Set(DATA.map(t => t.state).filter(Boolean))].sort().map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join(""));
+$("ex").hidden = false;
+vue("liste");
+if (!MOBILE.matches) initCarte();
+render();
+const lien = new URLSearchParams(location.hash.slice(1)).get("fac");
+if (lien && PAR_NOM.has(lien)) ouvrir(lien, true);
+})();
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js"></script>
+<script>window.CC_PAGE="explorer";
+/* Campus Caddie — connexion, chargement des données, fiche à la demande.
+   Inséré par page/construire.py dans chaque page (window.CC_PAGE = "liste" | "carte" | "admin").
+   La page d'origine (son script, type="text/plain" id="cc-app") ne démarre qu'une fois
+   la personne connectée et les données chargées : elle trouve alors window.CC_DATA. */
+(() => {
+  const SB_URL = "https://vdhwwvobnfmryertxlog.supabase.co";
+  const SB_CLE = "sb_publishable__8UNmME51sNlal1jCdv_Qw_20rP75Yx";   // clé publique : faite pour être ici
+  const PAGE = window.CC_PAGE || "liste";
+  const ICI = location.origin + location.pathname;
+  // arrivée par un lien d'invitation / de mot de passe oublié : lu AVANT que supabase-js ne nettoie l'adresse
+  const ARRIVEE = /(?:^#|&)type=(invite|recovery)\b/.exec(location.hash)?.[1] || null;
+  const sb = supabase.createClient(SB_URL, SB_CLE,
+    { auth: { storageKey: "cc-auth", detectSessionInUrl: true, persistSession: true } });
+  window.ccSb = sb;
+
+  const $ = id => document.getElementById(id);
+  const ecran = $("cc-ecran"), msg = $("cc-msg");
+  const montrer = vue => {
+    ecran.hidden = !vue;
+    document.querySelectorAll("#cc-ecran [data-vue]").forEach(el => { el.hidden = el.dataset.vue !== vue; });
+    msg.textContent = "";
+  };
+  const dire = (txt, ok) => { msg.textContent = txt; msg.className = ok ? "ok" : ""; };
+
+  // ------------------------------------------------------------ connexion
+  $("cc-form-mdp").addEventListener("submit", async e => {
+    e.preventDefault();
+    dire("Connexion…", true);
+    const { error } = await sb.auth.signInWithPassword({ email: $("cc-mel").value.trim(), password: $("cc-mdp").value });
+    if (error) return dire("E-mail ou mot de passe incorrect.");
+    demarrer();
+  });
+  $("cc-lien").addEventListener("click", async () => {
+    const email = $("cc-mel").value.trim();
+    if (!email) return dire("Indique ton e-mail, puis clique à nouveau.");
+    dire("Envoi…", true);
+    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: ICI } });
+    dire(error ? "Envoi impossible pour cette adresse (accès sur invitation)." : "C'est envoyé : ouvre le lien reçu par e-mail.", !error);
+  });
+  $("cc-oubli").addEventListener("click", async () => {
+    const email = $("cc-mel").value.trim();
+    if (!email) return dire("Indique ton e-mail, puis clique à nouveau.");
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: ICI });
+    dire(error ? "Envoi impossible." : "Si cette adresse a un accès, un lien vient de partir.", !error);
+  });
+  $("cc-form-nouveau").addEventListener("submit", async e => {
+    e.preventDefault();
+    const p = $("cc-nouveau").value;
+    if (p.length < 10) return dire("10 caractères au moins.");
+    const { error } = await sb.auth.updateUser({ password: p });
+    if (error) return dire("Impossible d'enregistrer ce mot de passe : " + error.message);
+    demarrer(true);
+  });
+  $("cc-sortir").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
+
+  // ------------------------------------------------------------ menu du compte, thème
+  const menu = $("cc-menu"), boutonCompte = $("cc-compte-btn");
+  const ouvrirMenu = ouvert => { menu.hidden = !ouvert; boutonCompte.setAttribute("aria-expanded", ouvert); };
+  boutonCompte.addEventListener("click", e => { e.stopPropagation(); ouvrirMenu(menu.hidden); });
+  document.addEventListener("click", e => { if (!menu.hidden && !e.target.closest(".cc-compte")) ouvrirMenu(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !menu.hidden) { ouvrirMenu(false); boutonCompte.focus(); } });
+  function appliquerTheme(theme) {
+    theme = theme === "neutre" ? "neutre" : "usa";               // USA par défaut
+    document.documentElement.dataset.ccTheme = theme;
+    try { localStorage.setItem("cc-theme", theme); } catch { /* navigation privée */ }
+    document.querySelectorAll("[data-theme-choix]").forEach(b => b.setAttribute("aria-checked", b.dataset.themeChoix === theme));
+  }
+  document.querySelectorAll("[data-theme-choix]").forEach(b => b.addEventListener("click", async () => {
+    appliquerTheme(b.dataset.themeChoix);
+    await sb.auth.updateUser({ data: { theme: b.dataset.themeChoix } });   // le choix suit la personne
+  }));
+  $("cc-mdp-btn").addEventListener("click", () => {
+    const f = $("cc-mdp-form"); f.hidden = !f.hidden; $("cc-mdp-btn").setAttribute("aria-expanded", !f.hidden);
+    if (!f.hidden) $("cc-mdp2").focus();
+  });
+  $("cc-mdp-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const p = $("cc-mdp2").value;
+    if (p.length < 10) { $("cc-mdp-msg").textContent = "10 caractères au moins."; return; }
+    const { error } = await sb.auth.updateUser({ password: p });
+    $("cc-mdp-msg").textContent = error ? "Impossible : " + error.message : "Mot de passe changé.";
+    if (!error) { $("cc-mdp2").value = ""; }
+  });
+
+  // ------------------------------------------------------------ données
+  async function toutesLesFacs() {
+    const out = [];
+    for (let debut = 0; ; debut += 1000) {
+      const { data, error } = await sb.from("facs").select("liste").order("id").range(debut, debut + 999);
+      if (error) throw error;
+      out.push(...data.map(r => r.liste));
+      if (data.length < 1000) return out.sort((a, b) => (a._ordre ?? 0) - (b._ordre ?? 0));   // ordre de l'export
+    }
+  }
+
+  // fiche + roster d'une fac, chargés une seule fois à sa première ouverture ; puis apres(t) la redessine.
+  // attente : élément où afficher « Chargement… » (facultatif).
+  const charges = new Map();
+  window.ccCharger = (nom, apres, attente) => {
+    const t = (window.CC_DATA || []).find(x => x.name === nom);
+    if (!t || t._complet) return;
+    if (!charges.has(nom)) {
+      if (attente) attente.insertAdjacentHTML("afterbegin", '<p class="cc-charge">Chargement de la fiche…</p>');
+      charges.set(nom, Promise.all([sb.rpc("fiche", { p_id: nom }), sb.rpc("roster", { p_id: nom })])
+        .then(([f, r]) => {
+          if (f.error || r.error) throw f.error || r.error;
+          Object.assign(t, f.data || {});
+          if (Array.isArray(r.data)) t.players = r.data;
+          t._complet = true;
+        }));
+    }
+    charges.get(nom).then(() => apres(t)).catch(() => {
+      charges.delete(nom);
+      const c = document.querySelector(".cc-charge");
+      if (c) c.textContent = "Fiche indisponible pour le moment (réessaie).";
+    });
+  };
+
+  // ------------------------------------------------------------ démarrage
+  let lance = false;
+  async function demarrer(apresMdp) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return montrer("connexion");
+    if (ARRIVEE && !apresMdp) return montrer("nouveau");   // invité / mot de passe oublié : il choisit son mot de passe
+    if (lance) return;
+    montrer("chargement");
+    const { data: ok, error } = await sb.rpc(PAGE === "admin" ? "est_admin" : "est_autorise");
+    if (error || !ok) { montrer("refuse"); $("cc-refuse-mel").textContent = session.user.email; return; }
+    const { data: admin } = PAGE === "admin" ? { data: true } : await sb.rpc("est_admin");
+    if (PAGE !== "admin") {
+      let facs, pub;
+      try {
+        [facs, { data: pub }] = await Promise.all([toutesLesFacs(), sb.from("publication").select("*").maybeSingle()]);
+      } catch (e) {
+        montrer("connexion"); return dire("Chargement impossible : " + (e.message || e));
+      }
+      // la carte ne montre que les facs lues et localisées (comme write_map_report)
+      window.CC_DATA = PAGE === "carte" ? facs.filter(t => !t.empty && t.lat != null) : facs;
+      document.querySelectorAll(".cc-nteams").forEach(el => { el.textContent = facs.length; });
+      document.querySelectorAll(".cc-nsen").forEach(el => { el.textContent = facs.reduce((a, t) => a + (t.seniors || 0), 0); });
+      document.querySelectorAll(".cc-ncarte").forEach(el => { el.textContent = window.CC_DATA.length; });
+      if (pub && pub.genere_le) $("cc-maj").textContent = "données du " + new Date(pub.genere_le).toLocaleDateString("fr-FR");
+    }
+    lance = true;
+    window.CC_USER = session.user;          // Explorer : profil et sélection gardés dans le compte
+    window.CC_ADMIN = !!admin;
+    document.body.classList.toggle("cc-admin", !!admin);
+    appliquerTheme((session.user.user_metadata || {}).theme);
+    $("cc-qui").textContent = session.user.email;
+    $("cc-menu-mel").textContent = session.user.email;
+    $("cc-av").textContent = (session.user.email || "?").charAt(0);
+    document.querySelectorAll(".cc-si-admin").forEach(el => { el.hidden = !admin; });
+    $("cc-barre").hidden = false;
+    montrer(null);
+    const s = document.createElement("script");
+    s.textContent = $("cc-app").textContent;   // la page d'origine démarre maintenant
+    document.body.appendChild(s);
+  }
+  sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_OUT") location.reload(); });
+  demarrer();
+})();
+</script>
+</body></html>
