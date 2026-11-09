@@ -108,6 +108,7 @@ h1{color:var(--accent)}
 .cc-logo-txt b{font-family:"Space Grotesk",sans-serif;font-size:21px;font-weight:700;letter-spacing:-.3px}
 .cc-logo-txt b span{color:var(--cc-marque2)}
 .cc-devise{font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.cc-usa{cursor:pointer;border-radius:3px;transition:color .15s}.cc-usa:hover,.cc-usa.joue{color:var(--cc-marque2)}
 :root[data-cc-theme="neutre"] .cc-devise{font-size:0}:root[data-cc-theme="neutre"] .cc-devise::after{content:"College golf";font-size:10px}
 .cc-nav{display:flex;gap:4px;background:var(--panel2);padding:4px;border-radius:12px;font-size:14px;font-weight:600}
 .cc-nav a{text-decoration:none;color:var(--muted);padding:9px 16px;border-radius:9px;min-height:20px}
@@ -162,7 +163,7 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
   <div class="cc-barre-in">
     <a class="cc-logo" href="index.html" aria-label="Campus Caddie, accueil">
       <span class="cc-logo-ic"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M7 19V4l9 3.8L7 11.6" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><path class="cc-etoile" d="M16.5 13.2l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z"/></svg></span>
-      <span class="cc-logo-txt"><b>Campus<span>Caddie</span></b><small class="cc-devise">College golf · USA</small></span>
+      <span class="cc-logo-txt"><b>Campus<span>Caddie</span></b><small class="cc-devise">College golf · <span class="cc-usa" title="Clique pour le son">USA</span></small></span>
     </a>
     <nav class="cc-nav" aria-label="Navigation"><a href="explorer.html">Explorer <span class="cc-neuf">nouveau</span></a><a href="index.html">Programmes</a><a href="carte.html">Carte</a><a class="cc-si-admin" href="admin.html" hidden>Accès</a></nav>
     <span id="cc-maj"></span>
@@ -333,6 +334,15 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
   window.ccSb = sb;
 
   const $ = id => document.getElementById(id);
+  // le « USA » du logo joue l'hymne du site (un 2e clic l'arrête)
+  let sonUSA = null;
+  document.addEventListener("click", e => {
+    const u = e.target.closest(".cc-usa"); if (!u) return;
+    e.preventDefault(); e.stopPropagation();
+    if (!sonUSA) { sonUSA = new Audio("usa.mp3"); sonUSA.addEventListener("ended", () => u.classList.remove("joue")); }
+    if (!sonUSA.paused) { sonUSA.pause(); sonUSA.currentTime = 0; u.classList.remove("joue"); return; }
+    sonUSA.play().then(() => u.classList.add("joue")).catch(() => {});
+  }, true);
   const ecran = $("cc-ecran"), msg = $("cc-msg");
   const montrer = vue => {
     ecran.hidden = !vue;
