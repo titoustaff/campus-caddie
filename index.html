@@ -1,16 +1,1565 @@
-<!doctype html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
+<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
 <title>Campus Caddie</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' fill='%23fff'/><g fill='%23b22234'><rect width='40' height='3.08' y='0'/><rect width='40' height='3.08' y='6.15'/><rect width='40' height='3.08' y='12.3'/><rect width='40' height='3.08' y='18.46'/><rect width='40' height='3.08' y='24.61'/><rect width='40' height='3.08' y='30.77'/><rect width='40' height='3.08' y='36.92'/></g><rect width='18' height='21.5' fill='%233c3b6e'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
-:root{--bg:#f6f4ee;--ink:#1f2a22;--muted:#5c6a60;--accent:#2e6b43}
-@media (prefers-color-scheme:dark){:root{--bg:#141a16;--ink:#e8ede9;--muted:#9fb0a4;--accent:#74c288}}
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font-family:system-ui,sans-serif;padding:16px;text-align:center}
-h1{margin:0 0 .4rem;color:var(--accent)}p{margin:0;color:var(--muted)}
+/*FICHE-COMMUNE-CSS:DEBUT — repris tel quel par la carte (scout.py, _fiche_commune) :
+  une seule fiche pour la liste et la carte. Ne rien mettre ici qui ne serve pas à la fiche. */
+:root{
+  --ground:#f4f7f1; --panel:#ffffff; --panel2:#eef2ea;
+  --ink:#182016; --muted:#5c6a58; --faint:#8a9785; 
+  --line:#dde3d6; --accent:#2e6b43; --accent-ink:#225032;
+  --h5:#a3372a; --h4:#bd6a26; --h3:#3f7d52; --h2:#5f7d5a; --h1:#8a9885;
+  --chip-d2:#2e6b43; --chip-naia:#7a5a2e; --chip-juco:#2f5d8a; --chip-d1:#8a2f4f; --chip-d3:#5a4a8a;
+  --shadow:0 1px 2px #1820160f,0 4px 16px #18201610;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#11150e; --panel:#191f14; --panel2:#212819;
+  --ink:#e9ede1; --muted:#9aa891; --faint:#6a7862;
+  --line:#2b3323; --accent:#74c288; --accent-ink:#a6e0b4;
+  --h5:#e8776a; --h4:#e0a05a; --h3:#74c288; --h2:#8fae86; --h1:#6a7862;
+  --chip-d2:#74c288; --chip-naia:#c9a76a; --chip-juco:#7fb2e0; --chip-d1:#e08aa8; --chip-d3:#aa9ae0;
+  --shadow:0 1px 2px #0006,0 6px 20px #0004;
+}}
+:root[data-theme="dark"]{
+  --ground:#11150e; --panel:#191f14; --panel2:#212819;
+  --ink:#e9ede1; --muted:#9aa891; --faint:#6a7862;
+  --line:#2b3323; --accent:#74c288; --accent-ink:#a6e0b4;
+  --h5:#e8776a; --h4:#e0a05a; --h3:#74c288; --h2:#8fae86; --h1:#6a7862;
+  --chip-d2:#74c288; --chip-naia:#c9a76a; --chip-juco:#7fb2e0; --chip-d1:#e08aa8; --chip-d3:#aa9ae0;
+  --shadow:0 1px 2px #0006,0 6px 20px #0004;
+}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:.68rem;font-weight:600;letter-spacing:.04em;
+  padding:.12rem .4rem;border-radius:5px;border:1px solid;display:inline-block;white-space:nowrap}
+.chip.d2{color:var(--chip-d2);border-color:var(--chip-d2)}
+.chip.naia{color:var(--chip-naia);border-color:var(--chip-naia)}
+.chip.d1{color:var(--chip-d1);border-color:var(--chip-d1)}
+.chip.d3{color:var(--chip-d3);border-color:var(--chip-d3)}
+.chip.juco{color:var(--chip-juco);border-color:var(--chip-juco);font-size:.52rem;letter-spacing:-.02em;padding-left:.12rem;padding-right:.12rem}
+.frline b,.frline{color:var(--ink)}
+.jtrouve{display:block;font-size:.78rem;font-weight:500;color:var(--h4)}
+.pscore{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--chip-juco);border:1px solid var(--line);border-radius:5px;padding:0 .3rem;margin-left:.25rem}
+ul.roster{list-style:none;margin:0;padding:0;columns:2;column-gap:2rem;font-size:.85rem}
+@media(max-width:700px){ul.roster{columns:1}}
+ul.roster li{padding:.15rem 0;break-inside:avoid;color:var(--ink)}
+ul.roster .yr{font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--accent-ink);padding:0 .3rem;border:1px solid var(--line);border-radius:4px;margin:0 .2rem}
+ul.roster .hs{color:var(--faint);font-size:.8rem}
+a.src{color:var(--accent);text-decoration:none;font-size:.82rem;white-space:nowrap;font-weight:500}
+a.src:hover{text-decoration:underline}
+.dmeta{display:flex;flex-wrap:wrap;gap:.4rem 1rem;align-items:center;font-size:.82rem;color:var(--muted);
+  margin-bottom:.7rem;padding-bottom:.6rem;border-bottom:1px solid var(--line)}
+.dmeta b{color:var(--ink)}
+.fiche-box{margin:.9rem 0 .2rem;padding:.8rem .9rem;background:var(--panel2,#eef2ea);border:1px solid var(--line);border-radius:10px}
+.fhead{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin-bottom:.5rem;font-size:.88rem}
+.fscore{font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 .3rem}
+.ftag{font-size:.7rem;padding:.1rem .4rem;border-radius:99px;border:1px solid var(--line);color:var(--muted);opacity:.55}
+.ftag.on{opacity:1;border-color:var(--accent);color:var(--accent)}
+.nchip{font-size:.68rem;padding:.05rem .3rem;border-radius:4px;border:1px solid var(--line);
+  color:var(--muted);min-width:2.1rem;text-align:center;font-variant-numeric:tabular-nums}
+.nchip b{font-weight:600}
+.nchip.n5{border-color:#15803d;color:#15803d}.nchip.n4{border-color:#65a30d;color:#65a30d}
+.nchip.n3{border-color:#ca8a04;color:#ca8a04}.nchip.n2{border-color:#ea580c;color:#ea580c}
+.nchip.n1{border-color:#dc2626;color:#dc2626}.nchip.nn{opacity:.45}
+.gscore{font-weight:700;font-variant-numeric:tabular-nums}
+.axes{display:flex;flex-wrap:wrap;gap:.6rem;margin:.4rem 0}
+.axe{flex:1 1 8rem;border:1px solid var(--line);border-radius:8px;padding:.4rem .55rem}
+.axe .t{font-size:.7rem;color:var(--muted)}
+.axe .v{font-size:1.05rem;font-weight:700;font-variant-numeric:tabular-nums}
+.axe .bar{height:4px;border-radius:2px;background:var(--line);margin-top:.25rem;overflow:hidden}
+.axe .bar i{display:block;height:100%;background:var(--accent)}
+.ftag.no{opacity:1;border-color:var(--line);color:var(--muted);text-decoration:line-through;
+         text-decoration-thickness:1px}
+.fmeta{font-size:.82rem;color:var(--muted);margin-bottom:.4rem}
+.fsources{margin-top:.5rem;border-top:1px solid var(--line);padding-top:.45rem;font-size:.84rem}
+.fsources>summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.fsources ul{margin:.4rem 0 0;padding-left:1.1rem;line-height:1.6}
+.fsources a{color:var(--accent)}
+.pv{font-size:.72rem;font-weight:600;white-space:nowrap;border-radius:4px;padding:0 .3rem}
+.pv a{color:inherit;text-decoration:none}
+.pv-ok{color:var(--accent-ink);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.pv-ko{color:var(--h4);background:color-mix(in srgb,var(--h4) 14%,transparent)}
+.pv-nf{color:var(--muted);background:var(--line)}
+.ftxt{margin:.25rem 0;font-size:.88rem;line-height:1.5}
+.fsmall{font-size:.82rem;color:var(--muted)}
+.fnone{margin:0;font-size:.85rem;color:var(--muted);font-style:italic}
+.flinks{margin:.6rem 0 0;display:flex;gap:1rem;flex-wrap:wrap}
+ul.roster mark{background:color-mix(in srgb,var(--h4) 30%,transparent);color:inherit;border-radius:3px;padding:0 .15rem}
+.niveau{margin:0 0 .6rem;font-size:.85rem;color:var(--muted)}
+.niveau b{color:var(--ink)}
+.prixsrc{margin-top:.3rem}.prixsrc summary{cursor:pointer;color:var(--accent)}.prixsrc p{margin:.3rem 0}
+/*FICHE-COMMUNE-CSS:FIN*/
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:1080px;margin:0 auto;padding:2.4rem 1.3rem 4rem}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:clamp(1.9rem,4.5vw,2.9rem);
+  line-height:1.05;letter-spacing:-.01em;margin:0 0 .6rem;text-wrap:balance}
+.lede{color:var(--muted);max-width:60ch;margin:0 0 1.6rem;font-size:1.02rem}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-bottom:1.6rem}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem 1.1rem;box-shadow:var(--shadow);
+  font:inherit;color:inherit;text-align:left;cursor:pointer;transition:border-color .15s}
+.tile:hover{border-color:var(--accent)}
+.tile[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.tile .k{font-weight:700;font-size:.95rem;letter-spacing:.04em;color:var(--ink);margin-bottom:.55rem}
+.tile .k span{font-weight:400;font-size:.75rem;letter-spacing:0;color:var(--faint);margin-left:.5rem}
+.tile .n{font-family:"Fraunces",serif;font-weight:600;font-size:2.2rem;line-height:1;
+  font-variant-numeric:tabular-nums;color:var(--accent)}
+.tile .l{font-size:.82rem;color:var(--muted);margin-top:.2rem}
+.tile .s{font-size:.8rem;color:var(--muted);margin-top:.6rem;padding-top:.5rem;border-top:1px solid var(--line)}
+.tiles-foot{grid-column:1/-1;margin:0;font-size:.78rem;color:var(--faint)}
+.note{background:var(--panel2);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+  padding:.85rem 1rem;font-size:.86rem;color:var(--muted);margin-bottom:1.5rem}
+.note b{color:var(--ink)}
+/*FILTRES-COMMUNS-CSS:DEBUT — repris tel quel par la carte (scout.py, _filtres_communs) */
+.more{margin:-.3rem 0 1rem}
+.more>summary{cursor:pointer;font-size:.85rem;font-weight:600;color:var(--accent);width:max-content;padding:.2rem 0;list-style:none}
+.more>summary::-webkit-details-marker{display:none}
+.more>summary::before{content:"▸";display:inline-block;margin-right:.35rem;transition:transform .15s}
+.more[open]>summary::before{transform:rotate(90deg)}
+.more>.controls{margin-top:.6rem;padding:.8rem 1rem;background:var(--panel2);border-radius:8px}
+#morecount{font-weight:400;color:var(--muted)}
+.controls{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-bottom:1rem}
+.seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
+.seg button{font:inherit;font-size:.85rem;border:0;background:transparent;color:var(--muted);
+  padding:.35rem .7rem;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:var(--shadow);font-weight:600}
+.seg label{display:inline-flex;align-items:center;gap:.3rem;font-size:.85rem;color:var(--muted);
+  padding:.35rem .7rem;border-radius:6px;cursor:pointer;user-select:none}
+.seg label:has(input:checked){background:var(--panel);color:var(--ink);box-shadow:var(--shadow);font-weight:600}
+.seg input[type=checkbox]{accent-color:var(--accent);margin:0}
+input[type=search]{font:inherit;font-size:.9rem;background:var(--panel);color:var(--ink);
+  border:1px solid var(--line);border-radius:8px;padding:.45rem .7rem;min-width:180px;flex:1}
+input[type=search]:focus-visible,.seg button:focus-visible,th[tabindex]:focus-visible,a:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px}
+label.minlab{font-size:.85rem;color:var(--muted);display:inline-flex;align-items:center;gap:.5rem}
+.sep{width:1px;align-self:stretch;background:var(--line);margin:0 .25rem}
+.sur-carte .liste-seule{display:none}   /* réglages qui n'ont de sens que sur la liste */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.7rem;margin-top:.6rem;align-items:start}
+.fgroup{margin:0;padding:.55rem .8rem .7rem;border:1px solid var(--line);border-radius:10px;background:var(--panel);
+  display:flex;flex-direction:column;gap:.4rem;min-width:0}
+.fgroup legend{padding:0 .3rem;font-size:.78rem;font-weight:700;letter-spacing:.03em;color:var(--accent)}
+.frow{display:flex;align-items:center;justify-content:space-between;gap:.6rem;font-size:.85rem;color:var(--muted)}
+.frow select,.frow input{font:inherit;font-size:.85rem;padding:.3rem .45rem;border-radius:7px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--ink);width:8.5rem;flex:none}
+.frow input::placeholder{color:var(--faint)}
+.fcase{display:flex;align-items:center;gap:.45rem;font-size:.85rem;color:var(--muted);cursor:pointer}
+.fcase input{accent-color:var(--accent);margin:0}
+.fcase:has(input:checked){color:var(--ink)}
+.freset-all{font:inherit;font-size:.82rem;font-weight:600;color:var(--accent);background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:.4rem .7rem;cursor:pointer;white-space:nowrap}
+.freset-all:hover{border-color:var(--accent)}
+.freset{align-self:flex-start;font:inherit;font-size:.78rem;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
+.fnote{margin:.1rem 0 0;font-size:.75rem;line-height:1.35;color:var(--faint)}
+.fnote b{color:var(--muted)}
+/*FILTRES-COMMUNS-CSS:FIN*/
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:var(--shadow);
+  /* la table peut être plus large que la colonne de texte : on la déborde et on la recentre sur l'écran */
+  /* 1250 : mesure au navigateur (2026-10-04), les 14 colonnes reclament 1238px depuis
+     l'ajout de « Dep. 2029 » ; a 1180 la colonne « Source » etait coupee de 60px. */
+  width:min(1250px,calc(100vw - 2rem));margin-left:50%;transform:translateX(-50%)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+/* gouttieres resserrees (.55rem au lieu de .8rem) : 14 colonnes x 8px = ~110px de marge.
+   Mesure au navigateur (2026-10-21) : avec .8rem la table reclamait 1282px pour 1248
+   disponibles et « Source » (roster ↗) etait coupee des 1440px d'ecran. */
+.tablewrap thead th,.tablewrap tbody tr:not(.detail)>td{padding-left:.55rem;padding-right:.55rem}
+/* Une seule source de verite : la classe est posee sur le conteneur, et c'est lui
+   qui commande a la fois sa propre largeur et l'affichage des colonnes. Jamais
+   d'attribut « hidden » cellule par cellule : en-tetes et lignes se
+   desynchroniseraient au re-rendu. */
+.tablewrap:not(.avecnotes) .axecol{display:none}
+/* Les 4 colonnes de notes demandent ~200px de plus. Mesure au navigateur : sans
+   elles la table reclame deja 1170px pour 1158 disponibles. On elargit donc le
+   conteneur la ou l'ecran le permet, au lieu de comprimer l'existant. */
+.tablewrap.avecnotes{width:min(1400px,calc(100vw - 2rem))}
+/* width:100% forcerait le navigateur a comprimer les cellules pour tenir dans le
+   conteneur — la colonne « fiche fac » etait la premiere sacrifiee. max-content
+   laisse chaque colonne prendre la largeur de son contenu ; le conteneur
+   (overflow-x:auto) defile si l'ecran est vraiment trop etroit. */
+.tablewrap.avecnotes table{width:max-content;min-width:100%}
+/* 18 colonnes au lieu de 14 : on reprend la place sur les gouttieres plutot que
+   sur le contenu. 11px x 18 colonnes = les ~170px qui manquaient, mesures au
+   navigateur — aucune colonne n'est sacrifiee. */
+.tablewrap.avecnotes thead th,.tablewrap.avecnotes tbody tr:not(.detail)>td{
+  padding-left:.45rem;padding-right:.45rem}
+/* le nom d'equipe, lui, continue a passer a la ligne : en nowrap il reclamait
+   290px a lui seul, soit la place de trois colonnes de notes. */
+.tablewrap.avecnotes td.nom{white-space:normal;max-width:13rem}
+/* uniquement les lignes du tableau : surtout PAS le bloc deplie de la fiche fac,
+   qui contient du texte long et doit continuer a se replier normalement */
+.tablewrap.avecnotes tbody tr:not(.detail)>td{white-space:nowrap}
+.tablewrap.avecnotes td.coach{max-width:9rem;overflow:hidden;text-overflow:ellipsis}
+thead th{text-align:left;font-weight:600;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);padding:.75rem .8rem;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+thead th.num{text-align:center}
+tbody td{padding:.7rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--panel2)}
+.rank{font-family:"IBM Plex Mono",monospace;color:var(--faint);font-size:.82rem;text-align:center}
+.team{font-weight:600;font-size:.96rem}
+.st{font-family:"IBM Plex Mono",monospace;color:var(--muted);font-size:.82rem}
+.num{text-align:center;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;justify-content:center;min-width:1.9rem;
+  font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:.9rem;color:#fff;
+  padding:.15rem .5rem;border-radius:20px}
+.team-btn{font:inherit;font-weight:600;font-size:.96rem;color:var(--ink);background:none;border:0;cursor:pointer;text-align:left;padding:0;text-decoration:none}
+.team-btn:hover{color:var(--accent)}
+tr.main.open .team-btn{color:var(--accent)}
+tr.main.open td{border-bottom:0}
+.frfr{font-size:.82rem;margin-left:.4rem;white-space:nowrap;font-family:"IBM Plex Mono",monospace;
+  font-weight:600;color:var(--accent);vertical-align:middle}
+.coach{font-size:.85rem;color:var(--muted);max-width:8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.intl{font-family:"IBM Plex Mono",monospace;font-size:.82rem;color:var(--muted)}
+tr.detail td{background:var(--panel2);padding:.4rem .9rem .7rem 3rem}
+/* La fiche depliee contient de la prose. Avec width:max-content sur la table (mode
+   « notes en colonnes »), le navigateur mesure chaque paragraphe mis sur UNE ligne :
+   la table passait de 1398 a 1998px des qu'on depliait une ligne, et « Fiche fac »
+   et « Source » sortaient de l'ecran. C'etait ca, le bug vu par Hans.
+   width:0 annule la contribution de ce bloc au calcul de largeur ; min-width:100%
+   le fait remplir la cellule une fois cette largeur connue. */
+.dbox{width:0;min-width:100%}
+.cls{font-family:"IBM Plex Mono",monospace;font-size:.78rem;letter-spacing:-.03em;color:var(--muted);white-space:nowrap;text-align:center}
+.cls b{color:var(--accent-ink);font-weight:600}
+.cls2028{color:var(--muted);font-variant-numeric:tabular-nums}
+.seniors{color:var(--muted);font-size:.85rem}
+.seniors b{color:var(--ink);font-weight:500}
+.foot{margin-top:1.6rem;font-size:.8rem;color:var(--muted)}
+.foot.droits{margin-top:.4rem;font-weight:600}
+.foot code{font-family:"IBM Plex Mono",monospace;background:var(--panel2);padding:.1rem .35rem;border-radius:4px}
+.empty{padding:2rem;text-align:center;color:var(--muted)}
+.legend{font-size:.82rem;color:var(--muted);margin:-.6rem 0 1.4rem;display:flex;flex-wrap:wrap;gap:.3rem .9rem}
+.legend b{color:var(--ink);font-weight:600}
+.legend .yk{font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--accent-ink);
+  padding:0 .3rem;border:1px solid var(--line);border-radius:4px;margin-right:.45rem}
+.legend span{white-space:nowrap}
+.erow{opacity:.7}
+.erow .team.dim{font-weight:600;color:var(--muted)}
+.estatus{font-family:"IBM Plex Mono",monospace;font-size:.66rem;color:var(--faint);
+  border:1px solid var(--line);border-radius:5px;padding:.05rem .35rem;margin-left:.35rem;white-space:nowrap}
+.oldseason{font-family:"IBM Plex Mono",monospace;font-size:.66rem;color:var(--h4);font-weight:600;
+  border:1px solid var(--h4);border-radius:5px;padding:.05rem .35rem;margin-left:.35rem;white-space:nowrap}
+.manualb{font-family:"IBM Plex Mono",monospace;font-size:.66rem;color:var(--accent-ink);font-weight:600;
+  border:1px solid var(--accent);border-radius:5px;padding:.05rem .35rem;margin-left:.35rem;white-space:nowrap}
+.results{font-size:.9rem;color:var(--muted);margin:.2rem 0 .9rem;line-height:1.6}
+.results b{color:var(--ink);font-size:1rem;font-variant-numeric:tabular-nums}
+.rphrase{display:block}
+.rsub{color:var(--faint);font-size:.85rem}
+.rdot{color:var(--faint)}
+.rpart{white-space:nowrap}
+.filtline{display:block;margin-top:.15rem;font-size:.8rem;color:var(--faint)}
+.dmeta{display:none}   /* bureau : ces chiffres sont déjà dans la ligne du tableau */
+/* ---------- Responsive : tablette / petit laptop ---------- */
+/* Le tableau par defaut a 14 colonnes et reclame 1170px, mesures au navigateur :
+   il lui faut donc 1202px d'ecran. En dessous, on masque le secondaire pour que
+   rien ne soit coupé (la vue détaillée au clic garde tout). Le seuil etait a
+   1080px : entre 1081 et 1202px, « Source » sortait de l'ecran. */
+@media (max-width:1280px){
+  .hide-md{display:none!important}
+}
+/* Les notes en colonnes deplacent ce seuil : a 1280px il manquait 52px, a 1100px
+   230px, et la table se mettait a defiler horizontalement — c'est-a-dire que
+   « Fiche fac » et « Source » sortaient de l'ecran. Mesure au navigateur : une
+   fois le secondaire masque, la table demande 966px et rentre partout au-dessus
+   de 1080. Seuil a 1340px : les 18 colonnes demandent 1298px, il faut donc un ecran
+   d'au moins 1330px pour les loger sans defilement. Les colonnes masquees restent
+   lisibles dans la fiche depliee. */
+@media (max-width:1380px){   /* 1380 : a 1341px il manquait encore 10px (mesure 2026-10-21) */
+  .tablewrap.avecnotes .hide-md{display:none}
+}
+/* ---------- Responsive : smartphone ---------- */
+/* 800 et non 760 : mesure au navigateur (2026-10-21), entre 761 et 799px la table
+   des 9 colonnes « tablette » debordait encore de 9 a 28px. */
+@media (max-width:800px){
+  .rpart{white-space:normal}   /* la ligne de resultats faisait defiler toute la page sur telephone */
+  .methodo table{display:block;overflow-x:auto}
+  /* colonne Equipe : l'etiquette « bloque (robots.txt / reseau…) » en nowrap et les noms
+     sans espace (« Washington&Jefferson ») l'empechaient de retrecir (table 470px pour 356) */
+  .estatus{white-space:normal}
+  td.nom{overflow-wrap:anywhere}
+  .wrap{padding:1.4rem .8rem 3rem}
+  .hide-sm{display:none!important}
+  table{min-width:0;font-size:.9rem;width:100%}
+  /* sur telephone aussi : la table deborde, le conteneur defile */
+  thead th{padding:.6rem .5rem;font-size:.66rem;white-space:normal}   /* « Dép. 2027 » sur deux lignes : 30px gagnés à 360px */
+  tbody td{padding:.6rem .5rem}
+  .team-btn{font-size:.92rem;white-space:normal}
+  tr.detail td{padding:.6rem .8rem .8rem 1rem}
+  ul.roster{columns:1}
+  .dmeta{display:flex}           /* le bandeau récap apparaît au clic sur mobile */
+  .niveau{display:none}          /* déjà dans le bandeau */
+  .lede{font-size:.96rem}
+  .controls{gap:.5rem}
+  input[type=search]{min-width:120px}
+}
+@media (max-width:600px){ .tiles{grid-template-columns:1fr} .tile{display:grid;grid-template-columns:1fr auto;align-items:baseline} .tile .k{grid-column:1/-1} .tile .n{grid-row:2;grid-column:2;font-size:1.8rem} .tile .l{grid-row:2;grid-column:1} .tile .s{grid-column:1/-1} }
+/* fiche fac (colonne + bloc déplié) */
+td.fiche{white-space:nowrap}
+td.fiche i{font-style:normal;opacity:.2;font-size:.95rem;letter-spacing:.08em}
+td.fiche i.on{opacity:1}
+.methodo{margin:1.6rem 0 .8rem;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.methodo summary{cursor:pointer;padding:.7rem .9rem;font-weight:600;font-size:.9rem;list-style:none}
+.methodo summary::-webkit-details-marker{display:none}
+.methodo summary::before{content:'▸ ';color:var(--muted)}
+.methodo[open] summary::before{content:'▾ '}
+.methodo .mcont{padding:0 .9rem .9rem;font-size:.84rem;line-height:1.5;color:var(--ink)}
+.methodo h4{margin:1rem 0 .3rem;font-size:.88rem}
+.methodo .mh5{margin:.9rem 0 .2rem;font-size:.82rem;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.03em}
+.methodo ul{margin:.2rem 0 .2rem 1.1rem;padding:0}
+.methodo li{margin:.18rem 0}
+.methodo .mwarn{border-left:3px solid var(--accent);padding:.4rem .7rem;background:var(--panel);
+  border-radius:0 6px 6px 0;margin:.6rem 0}
+.methodo .msmall{font-size:.78rem;color:var(--muted);margin:.4rem 0}
+.mtab{border-collapse:collapse;width:100%;margin:.3rem 0;font-size:.8rem}
+.mtab th,.mtab td{border:1px solid var(--line);padding:.22rem .45rem;text-align:left}
+.mtab th{background:var(--panel);font-weight:600}
+.mform{font-family:"IBM Plex Mono",monospace;font-size:.8rem;background:var(--panel);
+  border:1px solid var(--line);border-radius:6px;padding:.45rem .7rem;margin:.4rem 0;text-align:center}
+.mtab td:nth-child(2),.mtab td:nth-child(3){text-align:right;font-variant-numeric:tabular-nums}
+.excards{display:flex;flex-wrap:wrap;gap:.7rem;margin:.7rem 0}
+.excard{flex:1 1 15rem;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--panel)}
+.excard .exhead{padding:.45rem .6rem;background:var(--card);border-bottom:1px solid var(--line);
+  font-weight:600;font-size:.83rem}
+.excard .exhead span{display:block;font-weight:400;font-size:.72rem;color:var(--muted)}
+.excard table{width:100%;border-collapse:collapse;font-size:.78rem}
+.excard td{padding:.22rem .6rem;border-bottom:1px solid var(--line)}
+.excard td.v{text-align:right;color:var(--ink);white-space:nowrap;font-weight:600}
+.excard td.f{font-size:.72rem;color:var(--muted);font-family:"IBM Plex Mono",monospace;
+  white-space:nowrap;text-align:right}
+.excard td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;width:3.4rem}
+.excard tr.calc td{background:var(--card);font-style:italic;color:var(--muted)}
+.excard tr.sec td{background:var(--card);font-size:.7rem;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--muted);font-weight:600;padding-top:.4rem}
+.excard tr.sous td{font-weight:600;background:transparent}
+.excard tr.sous td.n{color:var(--ink)}
+.excard tr.tot td{background:var(--card);font-weight:700;border-bottom:none}
+.excard tr.tot td.n{color:var(--accent);font-size:1rem}
+.excard p{margin:.5rem .6rem .6rem;font-size:.76rem;color:var(--muted);line-height:1.45}
+.notes{display:flex;gap:.25rem;align-items:center}
+.poids{display:flex;flex-wrap:wrap;gap:.9rem;align-items:center;margin:.5rem 0 .2rem;
+  padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.poids label{font-size:.74rem;color:var(--muted);display:flex;align-items:center;gap:.35rem}
+.poids input[type=range]{width:92px}
+.poids .pv{font-variant-numeric:tabular-nums;min-width:1.6rem;text-align:right}
+</style>
+<style>
+#cc-ecran{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:16px;background:var(--ground)}
+#cc-ecran[hidden]{display:none}
+.cc-boite{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 24px;box-shadow:var(--shadow);color:var(--ink)}
+.cc-titre{font-family:Fraunces,serif;margin:0;font-size:2rem;color:var(--ink)}.cc-titre span{color:var(--accent)}
+.cc-sous{margin:.2rem 0 1.4rem;color:var(--muted)}
+.cc-boite label{display:block;margin:0 0 .9rem;font-size:.9rem;color:var(--muted)}
+.cc-boite input{display:block;width:100%;box-sizing:border-box;margin-top:.3rem;padding:.6rem .7rem;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink)}
+.cc-boite button[type=submit]{width:100%;padding:.7rem;font:inherit;font-weight:600;border:0;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer}
+.cc-liens{margin:.9rem 0 0;font-size:.85rem;color:var(--muted);text-align:center}
+.cc-liens button,#cc-sortir{font:inherit;background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline}
+#cc-msg{min-height:1.2em;margin:.8rem 0 0;font-size:.9rem;color:var(--h5)}#cc-msg.ok{color:var(--muted)}
+#cc-barre{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;padding:.5rem 16px;font-size:.85rem;color:var(--muted);border-bottom:1px solid var(--line);background:var(--panel)}
+#cc-barre b{color:var(--accent)}#cc-barre .cc-sep{flex:1}
+.cc-charge{color:var(--muted);font-style:italic}
 </style>
 </head>
-<body><main><h1>Campus Caddie</h1><p>Bientôt en ligne.</p></main></body>
+<body>
+<div id="cc-barre" hidden><b>Campus Caddie</b><span id="cc-maj"></span><span class="cc-sep"></span><span id="cc-qui"></span><button type="button" id="cc-sortir">Se déconnecter</button></div>
+<div id="cc-ecran">
+  <div class="cc-boite">
+    <h1 class="cc-titre">Campus <span>Caddie</span></h1>
+    <p class="cc-sous">Les facs US de golf, sur invitation.</p>
+    <div data-vue="chargement"><p>Chargement…</p></div>
+    <form data-vue="connexion" id="cc-form-mdp" hidden>
+      <label>E-mail<input id="cc-mel" type="email" autocomplete="username" required></label>
+      <label>Mot de passe<input id="cc-mdp" type="password" autocomplete="current-password"></label>
+      <button type="submit">Se connecter</button>
+      <p class="cc-liens"><button type="button" id="cc-lien">Recevoir un lien de connexion</button> · <button type="button" id="cc-oubli">Mot de passe oublié</button></p>
+    </form>
+    <form data-vue="nouveau" id="cc-form-nouveau" hidden>
+      <p>Bienvenue ! Choisis ton mot de passe (10 caractères au moins).</p>
+      <label>Nouveau mot de passe<input id="cc-nouveau" type="password" autocomplete="new-password" required minlength="10"></label>
+      <button type="submit">Enregistrer et entrer</button>
+    </form>
+    <div data-vue="refuse" hidden><p>Le compte <b id="cc-refuse-mel"></b> n'a pas (ou plus) accès à Campus Caddie.</p></div>
+    <p id="cc-msg" role="status"></p>
+  </div>
+</div>
+
+
+<div class="wrap">
+<p class="eyebrow">Scouting golf universitaire · D1, D2, D3, NAIA &amp; JUCO masculin</p>
+<h1>Où des places se libèrent en 2027</h1>
+<p class="lede">Programmes classés par nombre de <b>seniors</b> — donc de départs probables après la
+saison 2026-27, et de places potentiellement ouvertes pour une entrée à la rentrée 2027.</p>
+
+<div class="tiles" id="tiles"></div>
+
+<div class="note"><b>Projection, pas certitude.</b> Un « senior » est un départ <i>probable</i> —
+transferts, année de grâce et abandons peuvent changer la donne. Source : rosters officiels publiés
+par les universités (accès public, respect des robots.txt). À confirmer directement avec les coachs.</div>
+
+<p class="legend"><b>Années&nbsp;:</b>
+  <span><span class="yk">FR</span>1re (Freshman)</span>
+  <span><span class="yk">SO</span>2e (Sophomore)</span>
+  <span><span class="yk">JR</span>3e (Junior)</span>
+  <span><span class="yk">SR</span>4e/senior — <b>départ probable</b></span>
+  <span><span class="yk">GR</span>diplômé (Graduate)</span>
+  <span>🎓 = partant probable</span>
+</p>
+
+<!--FILTRES-COMMUNS-HTML:DEBUT — repris tel quel par la carte-->
+<div class="controls">
+  <div class="seg" id="divseg" role="group" aria-label="Divisions affichées" title="Décoche une division pour la retirer de la liste (choix mémorisé dans ce navigateur)">
+    <label><input type="checkbox" value="D1" checked>D1</label>
+    <label><input type="checkbox" value="D2" checked>D2</label>
+    <label><input type="checkbox" value="D3" checked>D3</label>
+    <label><input type="checkbox" value="NAIA" checked>NAIA</label>
+    <label><input type="checkbox" value="JUCO" checked>JUCO</label>
+  </div>
+  <label class="minlab">Départs 2027
+    <select id="minsel" style="font:inherit;padding:.35rem .5rem;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink)">
+      <option value="0" selected>toutes</option><option value="1">1+</option><option value="2">2+</option>
+      <option value="3">3+</option><option value="4">4+</option><option value="5">5+</option>
+    </select>
+  </label>
+  <label class="minlab">État
+    <select id="statesel" style="font:inherit;padding:.35rem .5rem;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink)">
+      <option value="" selected>tous</option>
+    </select>
+  </label>
+  <label class="minlab frtoggle"><input type="checkbox" id="intlonly"> 🌍 avec internationaux</label>
+  <label class="minlab frtoggle"><input type="checkbox" id="fronly"> 🇫🇷 avec Français</label>
+  <input type="search" id="q" placeholder="Fac, état (ex. FL) ou nom de joueur…" aria-label="Recherche">
+  <button type="button" class="freset-all" id="resetall" title="Toutes les divisions, aucun filtre, recherche vidée ; la moyenne du joueur et le budget sont effacés de ce navigateur">↺ tout remettre à zéro</button>
+</div>
+
+<details class="more" id="more"><summary>Plus de filtres <span id="morecount"></span></summary>
+<div class="fgrid">
+  <fieldset class="fgroup"><legend>🏌 Niveau du joueur</legend>
+    <label class="frow" title="Moyenne de score du joueur sur 18 trous (ex. 75,4), ou nombre de coups au-dessus du par (ex. +15, compté sur un par 72)."><span>Sa moyenne</span><input type="text" id="monscore" inputmode="decimal" placeholder="75,4 ou +15"></label>
+    <label class="frow" title="Rang du joueur parmi ceux qui restent dans l’équipe l’an prochain (seniors exclus), d’après les moyennes 2025-26. Pas calculé en JUCO : les joueurs qui restent n’y ont presque jamais de moyenne."><span>Place dans l'équipe</span><select id="rangmax"><option value="" selected>peu importe</option><option value="1">n°1</option><option value="3">3 premiers</option><option value="5">5 premiers</option></select></label>
+    <label class="frow" title="Écarte les équipes nettement plus faibles que le joueur : moyenne d’équipe au plus N coups au-dessus de la sienne. Une équipe plus forte passe toujours."><span>Équipe pas plus faible que</span><select id="ecartmax"><option value="" selected>peu importe</option><option value="2">+2 coups</option><option value="4">+4 coups</option><option value="6">+6 coups</option><option value="10">+10 coups</option></select></label>
+    <button type="button" class="freset" data-reset="monscore,rangmax,ecartmax">↺ remettre à zéro</button>
+  </fieldset>
+  <fieldset class="fgroup"><legend>💵 Budget</legend>
+    <label class="frow" title="Ce que la famille peut payer par an, en dollars (scolarité, logement et repas, assurance santé)."><span>Payé par la famille / an ($)</span><input type="text" id="budget" inputmode="numeric" placeholder="ex. 20000"></label>
+    <label class="frow" title="Part du prix couverte par les bourses (sportive + mérite) qu’on espère obtenir. Les privées affichent cher mais remisent beaucoup ; les publiques remisent peu."><span>Bourse espérée</span><select id="bourseesp"><option value="0" selected>aucune</option><option value="25">25 %</option><option value="50">50 %</option><option value="75">75 %</option></select></label>
+    <p class="fnote" id="budgetnote">Le prix des fiches est <b>avant bourse</b>. Une fac est gardée si ce prix, moins la bourse espérée, tient dans ce que paie la famille.</p>
+    <button type="button" class="freset" data-reset="budget,bourseesp">↺ remettre à zéro</button>
+  </fieldset>
+  <fieldset class="fgroup"><legend>⭐ Notes minimales</legend>
+    <label class="frow" title="Note globale pondérée, selon tes curseurs"><span>⭐ Globale</span><select id="minnote"><option value="" selected>toutes</option></select></label>
+    <label class="frow" title="Installation couverte et parcours d’attache"><span>⛳ Golf</span><select id="mingolf"><option value="" selected>toutes</option></select></label>
+    <label class="frow" title="Coût, diplomation, rétention, revenus, largeur de l’offre"><span>🎓 Études</span><select id="minetudes"><option value="" selected>toutes</option></select></label>
+    <label class="frow" title="Clery pour 1 000 étudiants et dispositif de sécurité"><span>🛡 Sécurité</span><select id="minsecurite"><option value="" selected>toutes</option></select></label>
+    <label class="frow" title="Milieu, hiver, part d’étrangers, taille"><span>🏡 Cadre</span><select id="mincadre"><option value="" selected>toutes</option></select></label>
+    <label class="fcase" title="Une fac dont l’axe filtré n’est pas noté est écartée par défaut, pour ne pas te faire croire qu’elle a été évaluée"><input type="checkbox" id="garderNonNotes"> garder les non notées</label>
+    <button type="button" class="freset" data-reset="minnote,mingolf,minetudes,minsecurite,mincadre,garderNonNotes">↺ remettre à zéro</button>
+  </fieldset>
+  <fieldset class="fgroup"><legend>⛳ Golf &amp; études</legend>
+    <label class="fcase" title="Installation de golf couverte vérifiée (simulateur, postes de frappe, green)"><input type="checkbox" id="indooronly"> 🏌 golf indoor</label>
+    <label class="fcase" title="Parcours d’attache à 10 km du campus au plus"><input type="checkbox" id="nearonly"> ⛳ parcours ≤ 10 km</label>
+    <label class="fcase" title="Bachelor de physique, de maths ou de génie mécanique : ouvre le concours GEI-UNIV des écoles d’ingénieurs françaises (Arts et Métiers, IMT Atlantique, Polytechnique, Mines…)"><input type="checkbox" id="voieonly"> 🇫🇷 voie école d’ingénieur</label>
+    <button type="button" class="freset" data-reset="indooronly,nearonly,voieonly">↺ remettre à zéro</button>
+  </fieldset>
+  <fieldset class="fgroup"><legend>🗂 Données</legend>
+    <label class="fcase" title="Les équipes dont le roster n’a pas pu être lu (site protégé, page introuvable)"><input type="checkbox" id="hideempty"> masquer non récupérées</label>
+    <label class="fcase" title="N’affiche que les facs dont le roster publié est bien celui de 2026-27. Les JUCO restent affichées : la NJCAA n’arrête son classement qu’en fin de saison, 2025-26 est donc le roster le plus récent qui existe, et ses premières années sont précisément celles qui libèrent une place en 2027."><input type="checkbox" id="saisoncourante"> 🗓 données les plus récentes</label>
+    <label class="fcase" title="Fiche fac à moins de 4 informations renseignées sur 4 — la liste de ce qu’il reste à chercher"><input type="checkbox" id="todofiche"> 📋 fiche fac incomplète</label>
+    <label class="fcase liste-seule" title="Ajoute les 4 notes en colonnes ; clique un en-tête pour trier, reclique pour inverser le sens"><input type="checkbox" id="voirnotes"> 📊 notes en colonnes</label>
+    <button type="button" class="freset" data-reset="hideempty,saisoncourante,todofiche,voirnotes">↺ remettre à zéro</button>
+  </fieldset>
+</div>
+</details>
+<!--FILTRES-COMMUNS-HTML:FIN-->
+
+<p class="results" id="results"></p>
+
+<div class="tablewrap">
+<table>
+<thead><tr>
+  <th class="num hide-sm hide-md" style="width:2.5rem">#</th>
+  <th class="nom" data-sort="name">Équipe</th>
+  <th data-sort="division">Div</th>
+  <th data-sort="state" class="hide-sm">État</th>
+  <th class="num hide-sm hide-md" data-sort="roster">Roster</th>
+  <th class="hide-sm hide-md" title="Répartition Freshman · Sophomore · Junior · Senior">Classes</th>
+  <th class="num" data-sort="seniors">Dép. 2027</th>
+  <th class="num" data-sort="dep2028" title="Juniors actuels = départs probables en 2028">Dép. 2028</th>
+  <th class="num hide-sm hide-md" data-sort="so" title="Sophomores actuels = départs probables en 2029">Dép. 2029</th>
+  <th class="num hide-sm hide-md" data-sort="intl" title="Joueurs internationaux (hors USA)">🌍 Intl</th>
+  <th data-sort="coach" class="hide-sm">Coach</th>
+  <th class="num axecol" data-sort="n_golf" title="Note Golf sur 5 — clique pour trier, reclique pour inverser">⛳</th>
+  <th class="num axecol" data-sort="n_etudes" title="Note Études sur 5 — clique pour trier, reclique pour inverser">🎓</th>
+  <th class="num axecol" data-sort="n_securite" title="Note Sécurité sur 5 — clique pour trier, reclique pour inverser">🛡</th>
+  <th class="num axecol" data-sort="n_cadre" title="Note Cadre de vie sur 5 — clique pour trier, reclique pour inverser">🏡</th>
+  <th class="num" data-sort="note" title="Note globale sur 5 : moyenne pondérée des quatre axes renseignés. Règle les poids avec les curseurs au-dessus du tableau.">Note</th>
+  <th data-sort="fiche" class="hide-sm" title="Fiche fac : nombre d'informations renseignées sur 4 (parcours d'attache · golf indoor · police de campus · fiche rédigée). Une réponse négative vérifiée — « aucune installation couverte listée » — compte comme renseignée.">Fiche fac</th>
+  <th class="hide-sm hide-md">Source</th>
+</tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+<div class="poids" id="poids">
+  <b style="font-size:.78rem">Pondération de la note</b>
+  <label>⛳ Golf <input type="range" min="0" max="5" step="1" data-axe="golf"><span class="pv" data-pv="golf"></span></label>
+  <label>🎓 Études <input type="range" min="0" max="5" step="1" data-axe="etudes"><span class="pv" data-pv="etudes"></span></label>
+  <label>🛡 Sécurité <input type="range" min="0" max="5" step="1" data-axe="securite"><span class="pv" data-pv="securite"></span></label>
+  <label>🏡 Cadre <input type="range" min="0" max="5" step="1" data-axe="cadre"><span class="pv" data-pv="cadre"></span></label>
+  <button class="minlab" id="poidsreset" style="cursor:pointer">réinitialiser</button>
+</div>
+<p class="empty" id="empty" hidden>Aucune équipe ne correspond à ce filtre.</p>
+
+<details class="methodo">
+<summary>📐 Comment les quatre notes sont calculées</summary>
+<div class="mcont">
+
+<p>Chaque axe est fait de 2 à 5 <b>indicateurs</b>, chacun ramené à une note entre 0 et 1.
+La note de l'axe est la <b>moyenne des indicateurs disponibles</b>, multipliée par 5. La note
+globale est la moyenne pondérée des axes, selon les curseurs en haut de page.</p>
+
+<p class="mwarn"><b>Aucune valeur n'est inventée.</b> Un indicateur manquant sort du calcul —
+il ne vaut pas zéro. Si moins de la moitié des indicateurs d'un axe manquent, l'axe est
+<b>non noté</b>. Et si moins de la moitié du poids total est couverte, la note globale est
+dite <b>partielle</b> : elle s'affiche en gris et passe derrière au tri.</p>
+
+<h4>Deux façons de noter un indicateur</h4>
+<p><b>Par paliers</b> — la valeur tombe dans une catégorie, qui a sa note. C'est le cas du golf :
+« sur le campus » vaut 1,0, « à moins de 8 km » vaut 0,85. Il n'y a rien entre les deux.</p>
+<p><b>Par échelle</b> — la note monte <b>en continu</b> entre une borne basse et une borne haute.
+Ce ne sont pas des tranches : deux facs à 30 % et 60 % de diplomation n'ont pas du tout la même
+note, et chaque point de pourcentage compte. La formule est toujours la même :</p>
+<p class="mform">note = (valeur − borne basse) ÷ (borne haute − borne basse)</p>
+<p>Exemple avec la diplomation en 4 ans, bornes 25 % et 75 % :</p>
+<table class="mtab"><tr><th>Diplomation constatée</th><th>Note</th><th>Pourquoi</th></tr>
+<tr><td>20 %</td><td>0</td><td>sous la borne basse, plancher</td></tr>
+<tr><td>25 %</td><td>0</td><td>(25−25) ÷ 50</td></tr>
+<tr><td><b>30 %</b></td><td><b>0,10</b></td><td>(30−25) ÷ 50</td></tr>
+<tr><td>40 %</td><td>0,30</td><td>(40−25) ÷ 50</td></tr>
+<tr><td>50 %</td><td>0,50</td><td>(50−25) ÷ 50</td></tr>
+<tr><td><b>60 %</b></td><td><b>0,70</b></td><td>(60−25) ÷ 50</td></tr>
+<tr><td>70 %</td><td>0,90</td><td>(70−25) ÷ 50</td></tr>
+<tr><td>75 %</td><td>1</td><td>la borne haute</td></tr>
+<tr><td>90 %</td><td>1</td><td>au-dessus, plafond — pas de bonus</td></tr></table>
+<p class="msmall">Une fac à 30 % et une à 60 % sont donc à <b>0,10</b> et <b>0,70</b> : rien à voir.
+Les bornes ne sont pas une tranche, ce sont le plancher et le plafond de la règle graduée.</p>
+
+<p class="mwarn"><b>Pourquoi ces bornes-là ?</b> Elles épousent la plage réelle des données, pour que
+la note serve à distinguer les facs entre elles. Sur nos 266 établissements, la diplomation en
+4 ans va de 16 % à 90 %, médiane à 49 % — et <b>250 d'entre eux, soit 94 %, tombent entre 25 et
+75 %</b>. Prendre ces deux valeurs comme plancher et plafond étale donc presque tout le monde sur
+la totalité de la note. Des bornes plus larges (0 à 100) tasseraient tout le monde au milieu et ne
+distingueraient plus rien. La contrepartie est assumée : <b>9 facs sous 25 % sont toutes à 0</b>,
+et <b>7 au-dessus de 75 % toutes à 1</b> — à ces extrêmes, la question n'est plus de départager.</p>
+<p class="msmall">Autrement dit, les bornes ne sont pas des seuils à franchir : ce sont le
+plancher et le plafond d'une règle graduée.</p>
+
+<h4>⛳ Golf — <i>de quoi s'entraîner</i></h4>
+
+<p><b>1. Le parcours d'attache</b>, par paliers : sur le campus 1,0 · à 8 km ou moins 0,85 ·
+jusqu'à 20 km 0,65 · jusqu'à 40 km 0,45 · au-delà 0,25 · parcours connu mais distance non
+mesurée 0,5.</p>
+
+<p><b>2. L'installation couverte</b>, en deux temps — et c'est le point qui surprend le plus,
+alors lisez-le avant de contester une note.</p>
+
+<p><i>D'abord ce que la fac offre.</i> On additionne les composants réellement cités, qui ne
+se valent pas :</p>
+<table class="mtab"><tr><th>Composant</th><th>Poids</th><th>Pourquoi</th></tr>
+<tr><td><b>Green de putting</b></td><td><b>0,30</b></td><td>le putting est ce qui se travaille le mieux à l'intérieur — et sans lui, l'hiver, il manque l'essentiel</td></tr>
+<tr><td>Postes de frappe</td><td>0,28</td><td>le cœur de l'entraînement hivernal</td></tr>
+<tr><td>Simulateur</td><td>0,20</td><td>jouer, et travailler les trajectoires</td></tr>
+<tr><td>Radar de mesure (Trackman, Foresight…)</td><td>0,17</td><td>les données de swing, exploitables toute l'année</td></tr>
+<tr><td>Zone de petit jeu</td><td>0,12</td><td>chipping, wedging</td></tr></table>
+
+<p class="mwarn"><b>Long jeu et petit jeu vont de paire.</b> Un simulateur sans green, l'hiver,
+c'est un demi-équipement : on frappe mais on ne putte pas. Les deux familles réunies valent donc
+<b>+0,10</b> ; le long jeu seul est <b>plafonné à 0,60</b>, le petit jeu seul à <b>0,55</b>.</p>
+
+<p class="mwarn"><b>Une réponse négative n'est jamais définitive.</b> « Aucune installation
+couverte » signifie que nous ne l'avons pas trouvée, pas qu'elle n'existe pas. Saginaw Valley
+était notée 0 jusqu'à ce qu'on découvre son George E. Eastlan Golf Center — page absente de
+l'index des installations du site, et injoignable pour notre lecteur automatique. Si vous
+connaissez une fac mieux que nous, votre information prime.</p>
+
+<p class="msmall">Plancher de <b>0,45</b> dès qu'une installation existe, même si la page n'en décrit
+pas le contenu — l'absence de détail sur le site n'est pas une absence d'équipement.
+<b>Nombre de postes</b> : +0,05 par unité au-delà du premier, plafonné à +0,15 (quatre postes valent
+mieux qu'un). <b>Accès</b> : −0,08 si l'équipement est ouvert à toute la communauté universitaire
+(file d'attente), +0,05 s'il est dédié à l'équipe. Un practice extérieur en propre vaut 0,25 quand
+il n'y a rien de couvert, et +0,05 en complément. Un projet <b>annoncé mais pas construit</b> : 0,10.</p>
+
+<p class="msmall"><b>Deux temps, toujours les mêmes.</b> On fait d'abord la <b>moyenne</b> des
+indicateurs de l'axe — chacun vaut entre 0 et 1, donc la moyenne aussi. Puis on la met
+<b>sur 5</b> en la multipliant par 5. Un axe à 2 indicateurs se divise par 2, un axe à 5 se
+divise par 5 : c'est le nombre d'indicateurs qui compte, pas un chiffre magique.</p>
+
+<p><i>Ensuite, à quel point elle en a besoin.</i> Le besoin vient du climat, par la latitude :</p>
+<table class="mtab"><tr><th>Latitude</th><th>Besoin</th><th>Exemples</th></tr>
+<tr><td>sous le 30<sup>e</sup></td><td>0</td><td>Floride, Hawaï, sud du Texas</td></tr>
+<tr><td>30 à 33</td><td>0,15</td><td>Louisiane, Géorgie du Sud</td></tr>
+<tr><td>33 à 36</td><td>0,35</td><td>Arkansas, Caroline du Nord</td></tr>
+<tr><td>36 à 39</td><td>0,55</td><td>Kentucky, Kansas</td></tr>
+<tr><td>39 à 42</td><td>0,80</td><td>Ohio, Pennsylvanie</td></tr>
+<tr><td>au-delà du 42<sup>e</sup></td><td>1,0</td><td>Michigan, Dakotas, Nouvelle-Angleterre</td></tr></table>
+
+<p class="mwarn"><b>La note de l'installation = 1 − besoin × (1 − offre).</b><br>
+Autrement dit : <b>ce qui manque ne compte qu'à hauteur du climat.</b> Une fac de Floride sans
+installation couverte n'est <b>pas</b> pénalisée — elle joue dehors douze mois par an, elle n'en a
+aucun besoin. La même absence dans le Michigan coûte tout, parce que là-bas c'est quatre mois sans
+toucher une balle dehors.</p>
+
+<div class="excards">
+
+<div class="excard">
+  <div class="exhead">☀️ Nova Southeastern <span>Davie, Floride · latitude 26,1°</span></div>
+  <table>
+    <tr class="sec"><td colspan="3">Ce qu'elle a — l'offre</td></tr>
+    <tr><td>Installation couverte</td><td class="f">aucune trouvée</td><td class="n">0,00</td></tr>
+    <tr class="sec"><td colspan="3">Ce qu'il lui faut — le besoin</td></tr>
+    <tr><td>Latitude 26,1°</td><td class="f">sous le 30<sup>e</sup> : on joue toute l'année</td><td class="n">0,00</td></tr>
+    <tr class="sec"><td colspan="3">Les deux indicateurs de l'axe</td></tr>
+    <tr><td>Installation couverte</td><td class="f">1 − 0,00 × (1 − 0,00)</td><td class="n">1,00</td></tr>
+    <tr><td>Parcours d'attache</td><td class="f">Grande Oaks Golf Club, 1,3 km</td><td class="n">0,85</td></tr>
+    <tr class="tot"><td colspan="2">(1,00 + 0,85) ÷ 2 = 0,93 &nbsp;×&nbsp; 5</td><td class="n">4,6</td></tr>
+  </table>
+  <p>Aucune installation couverte, et pourtant la meilleure note du trio : en Floride on joue
+  douze mois par an, cet équipement ne manque à personne. Le besoin étant nul, son absence ne
+  retire rien.</p>
+</div>
+
+<div class="excard">
+  <div class="exhead">❄️ Saginaw Valley <span>University Center, Michigan · latitude 43,5°</span></div>
+  <table>
+    <tr class="sec"><td colspan="3">Ce qu'elle a — l'offre</td></tr>
+    <tr><td>Green de putting</td><td class="f">composant le plus lourd</td><td class="n">0,30</td></tr>
+    <tr><td>Postes de frappe <i>(deux)</i></td><td class="f">0,28 + 0,05 pour le second</td><td class="n">0,33</td></tr>
+    <tr><td>Simulateur</td><td class="f">dans l'un des deux postes</td><td class="n">0,20</td></tr>
+    <tr><td>Long jeu <i>et</i> petit jeu</td><td class="f">bonus de complémentarité</td><td class="n">+0,10</td></tr>
+    <tr class="sous"><td colspan="2">offre totale</td><td class="n">0,93</td></tr>
+    <tr class="sec"><td colspan="3">Ce qu'il lui faut — le besoin</td></tr>
+    <tr><td>Latitude 43,5°</td><td class="f">au-delà du 42<sup>e</sup> : hiver long</td><td class="n">1,00</td></tr>
+    <tr class="sec"><td colspan="3">Les deux indicateurs de l'axe</td></tr>
+    <tr><td>Installation couverte</td><td class="f">1 − 1,00 × (1 − 0,93)</td><td class="n">0,93</td></tr>
+    <tr><td>Parcours d'attache</td><td class="f">inconnu : sort du calcul</td><td class="n">—</td></tr>
+    <tr class="tot"><td colspan="2">un seul indicateur noté : 0,93 &nbsp;×&nbsp; 5</td><td class="n">4,7</td></tr>
+  </table>
+  <p>Le besoin est maximal et le George E. Eastlan Golf Center y répond presque entièrement.
+  Son parcours d'attache n'étant pas connu, la note repose sur ce seul indicateur — la moitié
+  des indicateurs de l'axe, soit le minimum requis pour noter.</p>
+</div>
+
+<div class="excard">
+  <div class="exhead">❄️ Tiffin <span>Tiffin, Ohio · latitude 41,1°</span></div>
+  <table>
+    <tr class="sec"><td colspan="3">Ce qu'elle a — l'offre</td></tr>
+    <tr><td>Bâtiment de golf dédié</td><td class="f">contenu non publié</td><td class="n">0,45</td></tr>
+    <tr class="sous"><td colspan="2">plancher, faute de détail vérifiable</td><td class="n">0,45</td></tr>
+    <tr class="sec"><td colspan="3">Ce qu'il lui faut — le besoin</td></tr>
+    <tr><td>Latitude 41,1°</td><td class="f">entre 39 et 42<sup>e</sup></td><td class="n">0,80</td></tr>
+    <tr class="sec"><td colspan="3">Les deux indicateurs de l'axe</td></tr>
+    <tr><td>Installation couverte</td><td class="f">1 − 0,80 × (1 − 0,45)</td><td class="n">0,56</td></tr>
+    <tr><td>Parcours d'attache</td><td class="f">Mohawk Golf &amp; Country Club, 6,6 km</td><td class="n">0,85</td></tr>
+    <tr class="tot"><td colspan="2">(0,56 + 0,85) ÷ 2 = 0,71 &nbsp;×&nbsp; 5</td><td class="n">3,5</td></tr>
+  </table>
+  <p>Le bâtiment existe — Tiffin est l'un des rares programmes de D2 à posséder le sien — mais
+  la fac n'en publie pas le contenu. Elle touche donc le plancher et non le maximum : ce qu'on
+  ne peut pas vérifier ne se note pas comme acquis.</p>
+</div>
+
+</div>
+
+<h4>🎓 Études — <i>par échelle</i></h4>
+<table class="mtab"><tr><th>Indicateur</th><th>note 0 en dessous de</th><th>note 1 au-dessus de</th></tr>
+<tr><td>Diplomation en 4 ans</td><td>25 %</td><td>75 %</td></tr>
+<tr><td>Rétention en 2<sup>e</sup> année</td><td>55 %</td><td>88 %</td></tr>
+<tr><td>Revenu des diplômés <i>(5 ans après le diplôme)</i></td><td>43 000 $</td><td>70 000 $</td></tr>
+<tr><td>Coût annuel tout compris <i>(sens inversé : cher = mauvais)</i></td><td>58 000 $</td><td>20 000 $</td></tr>
+<tr><td>Largeur de l'offre (domaines ≥ 5 % des diplômes)</td><td>3</td><td>9</td></tr></table>
+<div class="excards"><div class="excard" style="flex:1 1 100%">
+  <div class="exhead">🎓 Tiffin <span>exemple de calcul, axe Études</span></div>
+  <table>
+    <tr class="sec"><td colspan="3">Les cinq indicateurs</td></tr>
+    <tr><td>Diplomation en 4 ans</td><td class="f">39,9 % · (39,9 − 25) ÷ 50</td><td class="n">0,30</td></tr>
+    <tr><td>Rétention en 2<sup>e</sup> année</td><td class="f">71,6 % · (71,6 − 55) ÷ 33</td><td class="n">0,50</td></tr>
+    <tr><td>Revenu des diplômés</td><td class="f">55 664 $ · (55 664 − 43 000) ÷ 27 000</td><td class="n">0,47</td></tr>
+    <tr><td>Coût annuel <i>(cher = mauvais)</i></td><td class="f">48 004 $ · (58 000 − 48 004) ÷ 38 000</td><td class="n">0,26</td></tr>
+    <tr><td>Largeur de l'offre</td><td class="f">5 domaines · (5 − 3) ÷ 6</td><td class="n">0,33</td></tr>
+    <tr class="tot"><td colspan="2">(0,30 + 0,50 + 0,47 + 0,26 + 0,33) ÷ 5 = 0,37 &nbsp;×&nbsp; 5</td><td class="n">1,9</td></tr>
+  </table>
+  <p>Aucun indicateur ne la sauve vraiment : six étudiants sur dix n'ont pas leur diplôme au bout
+  de quatre ans, pour 48 000 $ l'année. Seul le revenu de ses diplômés tient la route — c'est y
+  arriver qui est le problème, pas ce que le diplôme rapporte ensuite.</p>
+</div></div>
+
+<h5 class="mh5">Ce que mesure chaque indicateur</h5>
+<p class="msmall"><b>Diplomation en 4 ans</b> — la part d'une promotion qui décroche son diplôme
+dans les délais (au sens américain : 150 % du temps normal, donc 6 ans pour un cursus de 4). C'est
+le résultat final : la fac amène-t-elle ses étudiants au bout ?</p>
+
+<p class="msmall"><b>Rétention en 2<sup>e</sup> année</b> — la part des étudiants de première année
+qui <b>reviennent l'année suivante</b>. C'est le signal le plus précoce et le plus brutal qui
+existe : il se mesure au bout de douze mois, là où la diplomation demande six ans. Une rétention
+basse veut dire qu'on arrive, qu'on ne s'y retrouve pas, et qu'on repart — pour raisons
+financières, académiques ou d'intégration. Pour un étranger de 17 ans qui débarque seul, c'est
+sans doute l'indicateur le plus parlant de toute la fiche.<br>
+Sur nos 266 facs : de <b>33 %</b> (Post) à <b>97 %</b> (Hillsdale), médiane à 71 %. Bornes 55 et 88,
+qui étalent 240 facs sur 266. En dessous de 55 %, plus d'un étudiant sur deux ne revient pas :
+il n'y a plus lieu de départager.</p>
+
+<p class="msmall"><b>Revenu des diplômés</b> — le salaire médian cinq ans après l'obtention du
+diplôme. C'est lui qui entre dans la note : il répond à « <b>que vaut le diplôme une fois
+obtenu ?</b> », sans mélanger avec la question de savoir si on y arrive.</p>
+
+<p class="msmall"><b>Revenu à 10 ans</b> <i>(affiché, hors calcul)</i> — le salaire médian dix ans
+après l'<b>entrée</b>, donc <b>non-diplômés inclus</b>. Il est fortement tiré vers le bas par
+l'échec scolaire : sur nos données, la diplomation explique 33 % de sa variance (r = 0,57). Le noter
+en plus de la diplomation revenait à sanctionner deux fois la même faiblesse — il reste donc affiché
+pour information. <b>L'écart entre les deux revenus est en soi une information</b> : à Tiffin,
+55 664 $ pour les diplômés contre 35 942 $ tous entrants confondus. Le diplôme vaut son prix ;
+c'est y arriver qui est risqué.</p>
+
+<p class="msmall"><b>Coût annuel</b> — le prix <b>affiché</b>, avant aide, tout compris : scolarité,
+frais, logement, restauration, livres. C'est lui qui entre dans la note. Pour une université
+publique il est calculé sur le tarif <b>résident de l'État</b> : un étudiant étranger paie
+davantage, parfois beaucoup (+24 000 $ à Colorado Mines, +4 400 $ seulement à South Dakota Mines).</p>
+
+
+
+<p class="msmall"><b>Largeur de l'offre</b> — le nombre de grands domaines pesant au moins 5 % des
+diplômes délivrés. Mesure la diversité des études possibles, utile tant qu'une filière précise
+n'est pas arrêtée.</p>
+
+<h4>🛡 Sécurité — <i>échelle pour les faits, cumul pour le dispositif</i></h4>
+<p>Quatre indicateurs. Les trois premiers sont des <b>taux pour 1 000 étudiants</b>, en moyenne sur
+les trois dernières années publiées — un incident isolé dans une fac de 600 étudiants fait 1,7 pour
+1 000 et n'est que du bruit.</p>
+<table class="mtab"><tr><th>Indicateur</th><th>note 1 à</th><th>note 0 à partir de</th><th>médiane de la base</th></tr>
+<tr><td>Faits à caractère sexuel</td><td>0</td><td>2,5 ‰</td><td>0,66 ‰</td></tr>
+<tr><td>Violences physiques <i>(coups, vols avec violence, homicides)</i></td><td>0</td><td>1,5 ‰</td><td>0,14 ‰</td></tr>
+<tr><td>Atteintes aux biens <i>(cambriolages, vols de véhicule, incendies)</i></td><td>0</td><td>4,5 ‰</td><td>0,87 ‰</td></tr></table>
+<p class="msmall"><b>Pourquoi deux barèmes séparés pour les personnes.</b> Les deux risques n'ont pas
+la même distribution : 45 facs déclarent zéro fait sexuel, mais <b>110 déclarent zéro violence
+physique</b>. Avec une échelle commune, une violence physique médiane obtenait 0,96 — autant dire
+aucune sanction. Séparées, les deux se lisent, et les profils apparaissent : Eckerd, Lees-McRae et
+Hastings sont élevées en faits sexuels avec <b>zéro violence</b> ; American International et Bowie
+State sont l'inverse.</p>
+<ul>
+<li><b>Dispositif de sécurité</b> — celui-ci se <b>cumule</b> au lieu de s'échelonner.
+Base : vraie police universitaire assermentée <b>+0,40</b> · service de sûreté présent mais non
+assermenté, ou statut non précisé, <b>+0,15</b> · aucun service propre (on dépend de la police
+municipale) <b>+0</b>. Puis : présence 24 h/24 <b>+0,30</b> · raccompagnement le soir <b>+0,20</b> ·
+bornes d'appel d'urgence <b>+0,10</b>. Plafonné à 1,0.</li>
+</ul>
+
+<div class="excards"><div class="excard" style="flex:1 1 100%">
+  <div class="exhead">🛡 Tiffin <span>exemple de calcul, axe Sécurité · 2 051 étudiants</span></div>
+  <table>
+    <tr class="sec"><td colspan="3">Faits déclarés, année par année</td></tr>
+    <tr><td>2022</td><td class="f">2 faits à caractère sexuel · 0 violence · 0 bien</td><td class="n">2</td></tr>
+    <tr><td>2023</td><td class="f">9 faits à caractère sexuel · 2 violences · 0 bien</td><td class="n">11</td></tr>
+    <tr><td>2024</td><td class="f">4 faits à caractère sexuel · 1 violence · 0 bien</td><td class="n">5</td></tr>
+    <tr class="sec"><td colspan="3">Les quatre indicateurs</td></tr>
+    <tr><td>Faits à caractère sexuel</td><td class="f">5,0/an = 2,44 ‰ · 1 − (2,44 ÷ 2,5)</td><td class="n">0,02</td></tr>
+    <tr><td>Violences physiques</td><td class="f">1,0/an = 0,49 ‰ · 1 − (0,49 ÷ 1,5)</td><td class="n">0,67</td></tr>
+    <tr><td>Atteintes aux biens</td><td class="f">aucune en 3 ans</td><td class="n">1,00</td></tr>
+    <tr><td>Dispositif de sécurité</td><td class="f">0,15 <i>statut tu</i> + 0,30 <i>24 h/24</i></td><td class="n">0,45</td></tr>
+    <tr class="tot"><td colspan="2">(0,02 + 0,67 + 1,00 + 0,45) ÷ 4 = 0,54 &nbsp;×&nbsp; 5</td><td class="n">2,7</td></tr>
+  </table>
+  <p>Ses violences physiques sont faibles (0,49 ‰ pour une médiane de 0,14) et elle ne déclare
+  aucune atteinte aux biens. Ce sont les faits à caractère sexuel qui pèsent — 2,44 ‰ contre 0,66
+  de médiane — portés par le pic de 2023, et un dispositif dont la page ne précise pas le statut.</p>
+</div></div>
+
+<p class="msmall">Le Clery Act ne compte que les faits <b>déclarés à l'établissement</b> et survenus
+<b>sur le campus</b>. Un chiffre élevé signale souvent une fac qui enregistre honnêtement ;
+un zéro, que personne ne signale. La médiane de la base est de 0,96 atteinte aux personnes
+pour 1 000 étudiants.</p>
+
+<h4>🏡 Cadre de vie — <i>paliers, sauf la part d'étrangers</i></h4>
+<ul>
+<li><b>Milieu</b>, d'après le code de localisation du ministère — banlieue 0,95 · grande ville 0,85 ·
+bourg 0,60 · rural isolé 0,35. <i>Hypothèse assumée : sans voiture, à 17 ans et loin de chez soi,
+l'isolement pèse.</i></li>
+<li><b>Hiver</b>, par la latitude, c'est-à-dire le nombre de mois jouables dehors — au sud du
+33<sup>e</sup> parallèle : 1,0 · jusqu'au 37<sup>e</sup> : 0,85 · jusqu'au 40<sup>e</sup> : 0,60 ·
+jusqu'au 43<sup>e</sup> : 0,40 · au-delà : 0,25.</li>
+<li><b>Part d'étudiants étrangers</b> — seul indicateur à échelle ici : note 0 à 0,5 %, note 1 à 6 %.</li>
+<li><b>Taille</b> — jusqu'à 600 étudiants : 0,55 · jusqu'à 1 200 : 0,80 · de 1 200 à 8 000 : 1,0 ·
+jusqu'à 20 000 : 0,80 · au-delà : 0,65.</li>
+</ul>
+<div class="excards"><div class="excard" style="flex:1 1 100%">
+  <div class="exhead">🏡 Tiffin <span>exemple de calcul, axe Cadre de vie</span></div>
+  <table>
+    <tr class="sec"><td colspan="3">Les quatre indicateurs</td></tr>
+    <tr><td>Milieu</td><td class="f">bourg <i>(code 32)</i> · palier</td><td class="n">0,60</td></tr>
+    <tr><td>Hiver</td><td class="f">latitude 41,1° · palier « 40 à 43 »</td><td class="n">0,40</td></tr>
+    <tr><td>Part d'étudiants étrangers</td><td class="f">5,6 % · (5,6 − 0,5) ÷ 5,5</td><td class="n">0,92</td></tr>
+    <tr><td>Taille</td><td class="f">2 051 étudiants · fourchette idéale</td><td class="n">1,00</td></tr>
+    <tr class="tot"><td colspan="2">(0,60 + 0,40 + 0,92 + 1,00) ÷ 4 = 0,73 &nbsp;×&nbsp; 5</td><td class="n">3,6</td></tr>
+  </table>
+  <p>Un campus de bonne taille et très international pour une fac de cette taille, mais un bourg
+  de l'Ohio et un hiver qui raccourcit la saison de golf.</p>
+</div></div>
+
+<p class="msmall">Sources : rosters officiels des universités · College Scorecard (ministère
+américain de l'Éducation) pour le volet études · Campus Safety and Security (Clery Act) pour
+la sécurité · pages officielles des services des sports pour le golf. Tous les seuils sont
+dans <code>scoring.py</code>, commentés.</p>
+</div>
+</details>
+
+<p class="foot">Généré par <code>scout.py</code> à partir de rosters publics officiels ·
+<span class="cc-nteams"></span> programmes analysés, <span class="cc-nsen"></span> seniors repérés · Les projections ne sont pas des données officielles de départ.</p>
+<p class="foot droits">© Hans Leon 2026 — base de données protégée (CPI L341-1), reproduction interdite</p>
+</div>
+
+<script type="text/plain" id="cc-app">
+const DATA = window.CC_DATA;
+const heat=n=>n>=5?'var(--h5)':n>=4?'var(--h4)':n>=3?'var(--h3)':n>=2?'var(--h2)':'var(--h1)';
+const rowsEl=document.getElementById('rows'), emptyEl=document.getElementById('empty');
+/*FILTRES-COMMUNS-ETAT:DEBUT — repris tel quel par la carte */
+const DIVK=['D1','D2','D3','NAIA','JUCO'];
+// toutes cochees par defaut : Hans a cru que Western Texas manquait quand JUCO etait decoche
+const DIVDEF=['D1','D2','D3','NAIA','JUCO'];
+const divKey=t=>t.juco?'JUCO':(['D1','D2','D3'].includes(t.division)?t.division:'NAIA');
+const state={divs:new Set(DIVDEF),min:0,q:'',sort:'seniors',dir:-1,fronly:false,intlonly:false,st:'',hideEmpty:false,saisonCourante:false,todofiche:false,minnote:'',mingolf:'',minetudes:'',minsecurite:'',mincadre:'',gardeNN:false,voirnotes:false,indooronly:false,nearonly:false,voieonly:false,rangmax:'',ecartmax:'',bourseesp:'0'};
+/*FILTRES-COMMUNS-ETAT:FIN*/
+/*FICHE-COMMUNE-JS:DEBUT — repris tel quel par la carte (scout.py, _fiche_commune) */
+// --- niveau d'un joueur : sa moyenne saisie (n'importe quel joueur, pas seulement Quentin) ---
+// « 75,4 » = moyenne sur 18 trous ; « +15 » ou « 15 » = coups au-dessus d'un par 72
+function lireScore(txt){
+  const v=String(txt||'').trim().replace(',','.'); if(!v) return null;
+  const n=parseFloat(v); if(!isFinite(n)) return null;
+  return (v.startsWith('+')||n<40) ? 72+n : (n>=55&&n<=130 ? n : null);
+}
+let MON_SCORE=null;
+// aucun critère à l'ouverture : ni moyenne, ni divisions mémorisées (on efface celles des anciennes versions)
+try{localStorage.removeItem('monscore');localStorage.removeItem('divs.v3');}catch(e){}
+// budget annuel en dollars (« 20000 », « 20 000 », « 20k »)
+function lireBudget(txt){
+  const v=String(txt||'').trim().toLowerCase().replace(/[\s$]/g,'').replace(',','.'); if(!v) return null;
+  const n=parseFloat(v)*(v.endsWith('k')?1000:1); return isFinite(n)&&n>0?n:null;
+}
+let MON_BUDGET=null;
+// budget : jamais pré-rempli (ni mémorisé) ; on efface celui que gardaient les anciennes versions
+try{localStorage.removeItem('budget');}catch(e){}
+// rang parmi les joueurs qui RESTENT l'an prochain et ont une moyenne 2025-26 ;
+// pas en JUCO (les joueurs qui restent n'y ont presque jamais de moyenne), ni sous 3 moyennes
+function rangJoueur(t,s){
+  if(s==null||t.juco||t.empty) return null;
+  const reste=(t.players||[]).filter(p=>!p.dep&&p.score!=null).map(p=>p.score);
+  if(reste.length<3) return null;
+  const rang=1+reste.filter(x=>x<s).length;
+  // moins bon que tous les joueurs connus : sa vraie place dépend de ceux qui n'ont pas
+  // de moyenne (« n°4 » derrière 3 joueurs connus ne veut pas dire « dans les 5 »)
+  return {rang, n:reste.length, dernier:rang>reste.length};
+}
+function niveauJoueur(t){
+  if(MON_SCORE==null) return '';
+  const r=rangJoueur(t,MON_SCORE), ms=MON_SCORE.toFixed(1).replace('.',',');
+  const ec=t.team_avg!=null?t.team_avg-MON_SCORE:null;
+  return ` · 🏌 à ${ms}, ${r?`${r.dernier?`serait <b>derrière les ${r.n}</b> joueurs qui restent ayant une moyenne`:`serait <b>n°${r.rang}</b> sur ${r.n+1} (joueurs qui restent ayant une moyenne)`}`:(t.juco?'rang non calculé en JUCO':'rang non calculable (moins de 3 moyennes)')}${ec!=null?` · équipe ${ec>=0?'à +'+ec.toFixed(1).replace('.',','):'meilleure de '+(-ec).toFixed(1).replace('.',',')} coups`:''}`;
+}
+// --- fiche fac : 4 briques suivies (parcours, indoor, police, fiche rédigée) ---
+// --- notation : 4 axes calcules dans scoring.py, ponderation reglee ici ----
+const AXES=[['golf','⛳','Golf'],['etudes','🎓','Études'],
+            ['securite','🛡','Sécurité'],['cadre','🏡','Cadre de vie']];
+const POIDS_DEF={golf:3,etudes:3,securite:2,cadre:2};
+let POIDS=(()=>{try{return Object.assign({},POIDS_DEF,JSON.parse(localStorage.getItem('poids')||'{}'));}
+                catch(e){return Object.assign({},POIDS_DEF);}})();
+const noteAxe=(t,k)=>((t.notes||{})[k]||{}).note;
+// note globale : moyenne ponderee des SEULS axes notes (pas d'imputation).
+// Si moins de la moitie du poids total est couverte, la note est dite PARTIELLE :
+// elle s'affiche en gris, avec un point, et passe derriere les notes completes au tri.
+// Sans cette regle, une fac dont un seul axe est renseigne peut trôner en tete.
+function noteGlobale(t){
+  let s=0,p=0,tot=0;
+  for(const [k] of AXES){tot+=POIDS[k]; const n=noteAxe(t,k);
+    if(n==null)continue; s+=n*POIDS[k]; p+=POIDS[k];}
+  if(!p)return null;
+  return {n:Math.round(10*s/p)/10, part:tot?p/tot:0};
+}
+const gNote=t=>{const g=noteGlobale(t);return g?g.n:null;};
+const gPartiel=t=>{const g=noteGlobale(t);return !!g&&g.part<0.5;};
+// filtre par note : un axe non noté est ecarte, sauf si on demande a le garder —
+// sinon on laisserait croire qu'une fac a ete evaluee alors qu'on ne sait rien d'elle.
+function passeNotes(t){
+  const seuils=[['minnote',null],['mingolf','golf'],['minetudes','etudes'],
+                ['minsecurite','securite'],['mincadre','cadre']];
+  for(const [cle,axe] of seuils){
+    const s=state[cle]; if(s==='')continue;
+    const n = axe===null ? gNote(t) : noteAxe(t,axe);
+    if(n==null) { if(!state.gardeNN) return false; continue; }
+    if(n < +s) return false;
+  }
+  return true;
+}
+// les noms JUCO passaient sur 4 lignes (« Central Community College-Columbus, Nebraska ») :
+// on abrège dans le tableau, le nom complet reste au survol et dans la fiche.
+const shortName=n=>n.replace(/\bCommunity College\b/g,'CC').replace(/\bJunior College\b/g,'JC')
+  .replace(/\s*-\s*/g,' – ').replace(/\s+/g,' ').trim();
+const clsNote=n=>n==null?'nn':('n'+Math.max(1,Math.min(5,Math.ceil(n))));
+const FICHE=[['course','⛳',"parcours d'attache"],['indoor','🏌','golf indoor'],
+             ['police','🛡','police de campus'],['summary','🏫','fiche rédigée']];
+const hasF=(t,k)=>{const v=(t[k]||'').trim();
+  return !!v && !/à vérifier|non documenté/i.test(v);};
+// renseigné mais la réponse est « non » : l'info existe, l'équipement n'existe pas
+const negF=(t,k)=>hasF(t,k) && /^(aucune?\b|pas d)/i.test((t[k]||'').trim());
+const scoreF=t=>FICHE.reduce((a,f)=>a+(hasF(t,f[0])?1:0),0);
+
+function tiles(){
+  // une carte par division : le chiffre qui compte (places 2027) en gros, le reste en petit.
+  // Clic = filtre sur la division (re-clic = toutes).
+  const F=DATA.filter(t=>!t.empty);           // seulement les équipes réellement lues
+  const nempty=DATA.length-F.length;
+  const DIVS=[['D1','NCAA Division I',t=>t.division==='D1'],
+              ['D2','NCAA Division II',t=>t.division==='D2'],
+              ['D3','NCAA Division III · pas de bourse sportive',t=>t.division==='D3'],
+              ['NAIA','',t=>!t.juco&&!['D1','D2','D3'].includes(t.division)],
+              ['JUCO','NJCAA · cursus 2 ans',t=>t.juco]];
+  document.getElementById('tiles').innerHTML=DIVS.map(([k,lab,f])=>{
+    const T=F.filter(f), dep=T.reduce((a,t)=>a+t.seniors,0), fr=T.filter(t=>t.french>0).length;
+    return `<button type="button" class="tile" data-div="${k}" aria-pressed="${state.divs.size===1&&state.divs.has(k)}">
+      <div class="k">${k}<span>${lab}</span></div>
+      <div class="n">${dep}</div><div class="l">départs 2027</div>
+      <div class="s">${T.length} équipes${fr?` · 🇫🇷 ${fr} avec Français`:''}</div></button>`;}).join('')
+    +(nempty?`<p class="tiles-foot">${F.length} équipes lues · ${nempty} rosters non lus</p>`:'');
+}
+// --- fiche fac affichée sous le roster dans le bloc déplié ---------------
+// --- sources et preuves ---------------------------------------------------
+// Chaque chiffre de la fiche doit pouvoir être re-vérifié : roster, Scorecard
+// (études), Clery (sécurité) et les pages lues pour rédiger la fiche. Une
+// affirmation passée au vérificateur (tools/verif_fiches.py) porte en plus sa
+// preuve : ✓ confirmée, ⚠ contredite, ? introuvable dans la source.
+const PV={confirme:['✓','pv-ok','confirmé'],contredit:['⚠','pv-ko','contredit'],introuvable:['?','pv-nf','introuvable dans la source']};
+function pvHTML(t,k){
+  const p=(t.preuves||{})[k]; if(!p||!PV[p.verdict]) return '';
+  // texte réécrit depuis la vérification : la preuve ne vaut plus pour lui
+  const cur={summary:t.summary,ambiance:t.ambiance,course_name:t.course,course_note:t.course_note,
+             indoor_golf:t.indoor,gym:t.gym,police:t.police}[k]||'';
+  const perime=p.texte&&p.texte!==cur.slice(0,600);
+  const [ic,cls,lab]=perime?['↻','pv-nf','à revérifier (texte modifié depuis)']:PV[p.verdict];
+  const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const ti=`${lab} le ${p.verifie_le||'?'}${p.par?' ('+p.par+')':''}${p.extrait?' — « '+p.extrait+' »':''}${p.note?' — '+p.note:''}`;
+  const inner=`${ic} ${lab}`;
+  return ` <span class="pv ${cls}" title="${esc(ti)}">${p.url?`<a href="${esc(p.url)}" target="_blank" rel="noopener">${inner}</a>`:inner}</span>`;
+}
+function sourcesHTML(t){
+  const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const court=u=>esc(u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'').slice(0,55));
+  const a=(u,l)=>`<a href="${esc(u)}" target="_blank" rel="noopener">${l}</a>`;
+  const off=[];
+  if(t.roster_url) off.push(`📋 ${a(t.roster_url,'roster')} <span class="fsmall">(joueurs, années)</span>`);
+  if(t.unitid){
+    off.push(`🎓 ${a('https://collegescorecard.ed.gov/school/?'+t.unitid,'College Scorecard')} <span class="fsmall">(coût, diplomation, admission, revenus)</span>`);
+    if(t.cv!=null) off.push(`🚔 ${a('https://ope.ed.gov/campussafety/#/institution/details?id='+t.unitid,'Clery')} <span class="fsmall">(faits déclarés${t.cy?' '+t.cy:''})</span>`);
+  }
+  const clery=/ope\.ed\.gov\/campussafety/;
+  const lues=(t.sources||[]).filter(u=>!clery.test(u)||!t.unitid);
+  const np=Object.values(t.preuves||{}).filter(p=>PV[p.verdict]).length;
+  const nko=Object.values(t.preuves||{}).filter(p=>p.verdict&&p.verdict!=='confirme').length;
+  const etat=np?` · <span class="${nko?'pv pv-ko':'pv pv-ok'}">${np} affirmation${np>1?'s':''} vérifiée${np>1?'s':''}${nko?`, ${nko} à revoir`:''}</span>`:' · <span class="fsmall">pas encore passée au vérificateur</span>';
+  return `<details class="fsources"><summary>🔎 Sources${etat}</summary>
+    <ul>${off.map(x=>`<li>${x}</li>`).join('')}
+    ${lues.length?`<li>📝 Pages lues pour la fiche : ${lues.map(u=>a(u,court(u))).join(' · ')}</li>`:(t.summary?'<li class="fsmall">⚠️ Fiche rédigée sans source enregistrée.</li>':'')}</ul></details>`;
+}
+function ficheHTML(t){
+  const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const n=scoreF(t);
+  const tags=FICHE.map(([k,ic,lab])=>{
+    const ok=hasF(t,k), no=negF(t,k);
+    const cls=no?'no':(ok?'on':'');
+    const suf=ok?(no?' — non':''):' — à faire';
+    const ti=no?' title="renseigné : la fac n\'a pas cet équipement"':'';
+    return `<span class="ftag ${cls}"${ti}>${ic} ${lab}${suf}</span>`;}).join('');
+  const gg=gNote(t), gpart=gPartiel(t);
+  const axes=`<div class="axes">`+AXES.map(([k,ic,lab])=>{
+      const n=noteAxe(t,k), c=((t.notes||{})[k]||{}).couv;
+      return `<div class="axe" title="${lab} — ${n==null
+        ? 'non noté : trop de données manquantes (jamais 0 par défaut)'
+        : 'couverture des indicateurs : '+Math.round((c||0)*100)+' %'}">
+        <div class="t">${ic} ${lab}</div>
+        <div class="v ${clsNote(n)}">${n==null?'non noté':n.toFixed(1)+' <span style="font-size:.7rem;font-weight:400">/5</span>'}</div>
+        <div class="bar"><i style="width:${n==null?0:n/5*100}%"></i></div></div>`;}).join('')
+    +`</div>`;
+  const head=`<div class="fhead"><b>🏫 Fiche fac</b> <span class="fscore" title="informations renseignées sur 4 — une réponse négative vérifiée compte comme renseignée">${n}/4 renseignés</span>${tags}</div>`;
+  const gline=`<div class="fhead" style="margin-top:.35rem"><b>Note globale</b> <span class="gscore ${gpart?'nn':clsNote(gg)}">${gg==null?'—':gg.toFixed(1)+' / 5'}</span> <span class="ftag" title="moyenne pondérée des axes renseignés, selon tes curseurs">pondérée</span>${gpart?' <span class="ftag no" title="moins de la moitié des axes sont renseignés : la note ne vaut pas grand-chose">partielle</span>':''}</div>`;
+  // voie vers une école d'ingénieur française (concours GEI-UNIV, notices 2026) :
+  // la même ligne sur toutes les fiches, y compris quand la réponse est « non »
+  const VOIE_LIB={physique:'physique',maths:'maths',meca:'génie mécanique',meca_abet:'génie mécanique (ABET)'};
+  const voie=`<p class="ftxt"><b>🇫🇷 Vers une école d'ingénieur :</b> ${
+    t.voie==null ? 'non renseigné (fac non rattachée au College Scorecard).'
+    : t.voie.length ? `bachelor de <b>${t.voie.map(f=>VOIE_LIB[f]||f).join(', ')}</b> — ouvre le concours GEI-UNIV (Arts et Métiers, IMT Atlantique, Polytechnique, Mines, ESPCI, SupOptique…), candidature en 3e année du bachelor, mention AB au minimum.`
+    : t.juco ? 'pas de bachelor ici (2 ans) : la voie passe par le transfert vers une fac de 4 ans en physique, maths ou génie mécanique.'
+    : 'aucun bachelor de physique, de maths ni de génie mécanique : pas d\'accès au concours GEI-UNIV avec un diplôme de cette fac.'}</p>`;
+  const usd=n=>Math.round(n).toLocaleString('fr-FR')+' $';
+  const P=t.prix;
+  const prix=`<div class="ftxt"><b>💵 Prix pour un étranger :</b> ${!P ? 'non renseigné (ni tarif relevé, ni donnée College Scorecard).'
+    : P.exclu ? `⛔ sans objet. ${esc(P.exclu)}`
+    : `<b>≈ ${usd(P.tot)} / an</b> avant bourse — scolarité et frais ${usd(P.scol)} + ${P.log_budget?'budget de vie':P.log_horscampus?'logement hors campus (estimation Scorecard, pas de logement sur le campus)':'logement et repas'} ${usd(P.log)} + assurance santé ${usd(P.ass)}${P.ass_forfait?' (forfait)':''}.
+      ${MON_BUDGET!=null?`<br><span class="fsmall">Avec ${usd(MON_BUDGET)} de budget, il faut <b>${P.tot>MON_BUDGET?usd(P.tot-MON_BUDGET)+' de bourse, soit '+Math.round((1-MON_BUDGET/P.tot)*100)+' % du prix':'aucune bourse'}</b>.</span>`:''}
+      ${P.auto?`<br><span class="fsmall">✅ Réduction automatique : scolarité ramenée à ${usd(P.auto)}${P.auto_cond?` (${esc(P.auto_cond)})`:''}.</span>`:''}
+      ${P.plein?`<br><span class="fsmall">✅ Prix déjà réduit pour tout étudiant étranger admis : scolarité ${usd(P.plein)} au tarif plein, ramenée à ${usd(P.scol)}${P.auto_cond?` (${esc(P.auto_cond)})`:''}.</span>`:''}
+      ${P.bourse?`<br><span class="fsmall">🎓 Bourses au mérite pour étrangers : ${esc(P.bourse)}</span>`:''}
+      <br><span class="fsmall">${P.src==='estime'
+        ? `Estimation College Scorecard (tarif hors-État${P.log_budget?', budget de vie car pas de logement sur le campus publié':' + logement sur le campus'}) — à vérifier sur le site de l'école.`
+        : `Relevé sur le site de l'école${P.annee?' ('+esc(P.annee)+')':''}${P.src==='deduit'?', recalculé à partir de ses tarifs':''}.`} Hors livres, billets d'avion et frais personnels.</span>
+      ${(P.note||(P.sources||[]).length)?`<details class="fsmall prixsrc"><summary>détail du calcul et sources</summary>${P.note?`<p>${esc(P.note)}</p>`:''}${(P.sources||[]).length?`<p>${P.sources.map(u=>`<a class="src" href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/,'').slice(0,60))} ↗</a>`).join('<br>')}</p>`:''}</details>`:''}`}</div>`;
+  if(!t.summary&&!t.course&&!t.police&&!t.ambiance)
+    return `<div class="fiche-box">${head}${axes}${gline}<p class="fnone">Fiche campus pas encore rédigée pour cette fac.</p>${prix}${voie}${sourcesHTML(t)}</div>`;
+  const km=t.course_km!=null?` · ${t.course_km} km du campus`:'';
+  const onsite=t.onsite?' · <b>sur le campus</b>':'';
+  // Clery : le total seul trompe. 30 atteintes a Bowie State, ce sont 27 coups et
+  // blessures ; 13 a Oklahoma City, ce sont 12 faits sexuels. On montre la nature
+  // des faits, et la moyenne sur trois ans plutot qu'une annee isolee.
+  let clery='';
+  if(t.cv!=null){
+    let det=null; try{det=t.cdet?JSON.parse(t.cdet):null;}catch(e){}
+    const an=det?Object.keys(det).sort():[];
+    let nature='', moy='';
+    if(det&&an.length){
+      const d=det[an[an.length-1]];
+      const bouts=[];
+      if(d.sexuels) bouts.push(`${d.sexuels} fait${d.sexuels>1?'s':''} à caractère sexuel`);
+      if(d.violents) bouts.push(`${d.violents} violence${d.violents>1?'s':''} physique${d.violents>1?'s':''}`);
+      nature = bouts.length?` — dont ${bouts.join(' et ')}`:'';
+      const tot=an.reduce((a,y)=>a+det[y].sexuels+det[y].violents,0)/an.length;
+      const tb=an.reduce((a,y)=>a+det[y].biens,0)/an.length;
+      const serie=an.map(y=>`${y} : <b>${det[y].sexuels+det[y].violents}</b>`).join(' · ');
+      const tx=t.size?1000*tot/t.size:null;
+      moy = an.length>1
+        ? `<br><span class="fsmall">Année par année — ${serie}. Moyenne ${tot.toFixed(1)} atteintes aux personnes et ${tb.toFixed(1)} aux biens par an${tx!=null?` — soit <b>${tx.toFixed(1)} pour 1 000 étudiants</b>, quand la médiane de la base est à 0,96`:''}.${
+            (Math.max(...an.map(y=>det[y].sexuels+det[y].violents)) >= 3*Math.max(1,Math.min(...an.map(y=>det[y].sexuels+det[y].violents))))
+            ? ' ⚠️ Forte variation d\'une année sur l\'autre : un pic peut signaler un fait réel comme une campagne de signalement qui a libéré la parole — le Clery ne permet pas de trancher.' : ''}</span>`
+        : '';
+    }
+    clery=`<p class="ftxt"><b>🚔 Sécurité déclarée (Clery ${t.cy||''}) :</b> ${t.cv} atteinte${t.cv>1?'s':''} aux personnes${nature}, ${t.cp} aux biens, sur le campus${t.size?` — pour ${t.size.toLocaleString('fr-FR')} étudiants de 1er cycle`:''}.${moy}
+      <br><span class="fsmall">Ne compte que les faits <b>déclarés à l'établissement</b> et survenus <b>sur le campus</b>. Un chiffre élevé signale souvent une fac qui enregistre honnêtement ; un zéro signale souvent que personne ne signale.</span></p>`;
+  }
+  const euros=n=>n==null?'':n.toLocaleString('fr-FR')+' $';
+  const pct=n=>n==null?'':Math.round(n*100)+' %';
+  const dom=Object.entries(t.domaines||{}).filter(([k,v])=>v>=0.05)
+      .sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k} ${Math.round(v*100)} %`).join(' · ');
+  const etudes=(t.cout!=null||t.diplome!=null)?`<p class="ftxt"><b>🎓 Études :</b>
+    ${t.cout!=null?`coût annuel <b>${euros(t.cout)}</b>`:''}${t.diplome!=null?` · diplomation en 4 ans ${pct(t.diplome)}`:''}${t.revenu_dip!=null?` · <b>revenu des diplômés ${euros(t.revenu_dip)}</b>`:''}${t.revenu!=null?` · tous entrants ${euros(t.revenu)}`:''}${t.retention!=null?` · rétention ${pct(t.retention)}`:''}${t.etrangers!=null?` · ${pct(t.etrangers)} d'étrangers`:''}${t.admission!=null?` · admission ${pct(t.admission)}`:''}.
+    ${(t.revenu_dip!=null&&t.revenu!=null&&t.revenu_dip-t.revenu>6000)?`<br><span class="fsmall">⚠️ Écart de <b>${euros(t.revenu_dip-t.revenu)}</b> entre les deux : le diplôme vaut son prix, mais une partie des étudiants n'y arrive pas. C'est la diplomation qu'il faut regarder, pas le salaire.</span>`:''}
+    ${dom?`<br><span class="fsmall">Domaines dominants : ${esc(dom)}.</span>`:''}</p>`:'';
+  return `<div class="fiche-box">${head}${axes}${gline}
+    <div class="fmeta">${t.city?`📍 ${esc(t.city)}, ${esc(t.state)}`:''}${t.conf?` · ${esc(t.conf)}`:''}${t.size?` · 🏫 ${t.size.toLocaleString('fr-FR')} étudiants en 1er cycle`:''}</div>
+    ${t.summary?`<p class="ftxt">${esc(t.summary)}${pvHTML(t,'summary')}</p>`:''}
+    ${t.ambiance?`<p class="ftxt"><b>Ambiance :</b> ${esc(t.ambiance)}${pvHTML(t,'ambiance')}</p>`:''}
+    ${t.course?`<p class="ftxt"><b>⛳ Parcours :</b> ${esc(t.course)}${km}${onsite}${pvHTML(t,'course_name')}</p>`:''}
+    ${t.course_note?`<p class="ftxt fsmall">${esc(t.course_note)}${pvHTML(t,'course_note')}</p>`:''}
+    ${t.indoor?`<p class="ftxt"><b>🏌 Indoor :</b> ${esc(t.indoor)}${pvHTML(t,'indoor_golf')}
+      ${t.besoin_indoor!=null?`<br><span class="fsmall">${
+        t.besoin_indoor<=0.15
+          ? "☀️ Sous cette latitude, le golf se joue quasiment toute l'année : l'absence d'installation couverte <b>ne pèse pas</b> dans la note Golf."
+          : t.besoin_indoor<=0.55
+            ? "🌤 Climat intermédiaire : une installation couverte est un confort, pas une nécessité — son absence pèse <b>modérément</b>."
+            : "❄️ Hiver long ici : une installation couverte est <b>décisive</b>, et son absence pèse de tout son poids dans la note Golf."
+      }</span>`:''}</p>`:''}
+    ${t.gym?`<p class="ftxt"><b>💪 Muscu :</b> ${esc(t.gym)}${pvHTML(t,'gym')}</p>`:''}
+    ${t.police?`<p class="ftxt"><b>🛡 Sécurité :</b> ${esc(t.police)}${pvHTML(t,'police')}</p>`:''}
+    ${clery}
+    ${etudes}
+    ${prix}
+    ${voie}
+    <p class="flinks"><a class="src" href="${lienFac(t.name)}" target="_blank" rel="noopener" title="Lien direct vers cette fiche">ouvrir dans un onglet ↗</a> ${t.roster_url?`<a class="src" href="${t.roster_url}" target="_blank" rel="noopener">roster officiel ↗</a>`:''} ${t.site?`<a class="src" href="${t.site}" target="_blank" rel="noopener">site de la fac ↗</a>`:''}
+      ${false&&t.mapped&&!SUR_CARTE?`<a class="src" href="${lienVers('carte.html',t.name)}&seule=1">voir sur la carte ↗</a>`:''}</p>
+    ${sourcesHTML(t)}</div>`;
+}
+// --- bloc complet d'une fac (bandeau, roster, fiche) : le même dans la liste et sur la carte ---
+// lienFac : sur la carte, BASE_FICHE vaut « index.html » ; SUR_CARTE masque « voir sur la carte »
+var BASE_FICHE='', SUR_CARTE=false;
+// recherche d'un joueur par son nom (3 lettres mini, sans tenir compte des accents) ;
+// JOUEUR_CHERCHE est posé par la recherche de la page, la fiche surligne le joueur trouvé
+var JOUEUR_CHERCHE='';
+const sansAcc=s=>(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const joueursTrouves=t=>JOUEUR_CHERCHE?(t.players||[]).filter(p=>sansAcc(p.name).includes(JOUEUR_CHERCHE)):[];
+function lienFac(nom){return BASE_FICHE+'#fac='+encodeURIComponent(nom);}
+const FOREIGN=new Set(('thailand canada ireland england scotland wales germany spain france argentina sweden belgium mexico norway japan australia bahamas iceland malaysia colombia portugal bolivia pakistan china dubai netherlands denmark finland italy switzerland austria brazil chile peru ecuador venezuela uae philippines singapore india korea taiwan poland ukraine russia greece turkey uruguay paraguay guatemala panama nigeria kenya morocco egypt israel lebanon').split(/\s+/).concat(['south africa','new zealand','northern ireland','united kingdom','great britain','dominican republic','costa rica','hong kong','czech republic','el salvador','saudi arabia','united arab emirates','puerto rico']));
+function isIntl(hw){if(!hw)return false;const s=hw.trim().toLowerCase().replace(/\./g,'');
+  if(!s.includes(',')) return FOREIGN.has(s);
+  const t=s.split(',').pop().trim();
+  return t&&!US.has(t)&&t!=='usa'&&t!=='us';}
+function isFrench(hw){if(!hw||!hw.includes(','))return false;const t=hw.split(',').pop().trim().toLowerCase().replace(/\./g,'');
+  return t==='france'||t==='fra';}
+const US=new Set(('al ak az ar ca co ct de fl ga hi id il in ia ks ky la me md ma mi mn ms mo mt ne nv nj nm ny nc nd oh ok or pa ri sc sd tn tx ut vt va wa wv wi wy dc '+
+ 'alabama alaska arizona arkansas california colorado connecticut delaware florida georgia hawaii idaho illinois indiana iowa kansas kentucky louisiana maine maryland massachusetts michigan minnesota mississippi missouri montana nebraska nevada ohio oklahoma oregon pennsylvania tennessee texas utah vermont virginia washington wisconsin wyoming '+
+ 'ala ariz ark calif colo conn del fla ill ind kan kans mass mich minn miss mont neb nebr nev okla ore oreg tenn tex wash wis wisc wyo wva').split(/\s+/));
+function blocFac(t){
+  const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const divCls=d=>({D1:'d1',D2:'d2',D3:'d3',NAIA:'naia'})[d]||'juco';
+  const divLab=d=>d.startsWith('NJCAA')?'JUCO '+d.slice(6):d;
+  const flag=hw=>isFrench(hw)?' 🇫🇷':(isIntl(hw)?' 🌍':'');
+  const det=(t.players||[]).map(p=>`<li>${p.dep?'🎓 ':(p.year==='JR'?'· ':'&nbsp;&nbsp;')}<b>${JOUEUR_CHERCHE&&sansAcc(p.name).includes(JOUEUR_CHERCHE)?`<mark>${esc(p.name)}</mark>`:esc(p.name)}</b>
+    <span class="yr">${p.year}</span> ${esc(p.hometown)||''}${flag(p.hometown)}
+    ${p.score?`<span class="pscore" title="Moyenne de score 2025-26">${p.score.toFixed(2)}</span>`:''}
+    ${p.hs?`<span class="hs">— ${esc(p.hs)}</span>`:''}</li>`).join('');
+  return `<div class="dmeta"><span class="chip ${divCls(t.division)}" title="${t.division}">${divLab(t.division)}</span>
+        ${t.state?`<span>📍 ${t.state}</span>`:''}
+        <span>👥 ${t.roster} joueurs · Fr${t.fr} So${t.so} Jr${t.jr} <b>Sr${t.sr}</b></span>
+        <span${t.juco?' title="Cursus de deux ans : ce sont les 1re année du roster 2025-26 qui finissent en 2027. Les 2e année de ce roster sont déjà partis en 2026."':''}>🎓 départs : ${t.seniors} en 2027${t.juco?' · cursus 2 ans':` · ${t.dep2028||0} en 2028 · ${t.so||0} en 2029`}</span>
+        ${t.intl?`<span>🌍 ${t.intl} internationaux</span>`:''}
+        ${t.french?`<span class="frline">🇫🇷 ${(t.french_names||[]).map(esc).join(', ')}</span>`:''}
+        ${t.coach?`<span>🧑‍🏫 ${esc(t.coach)}${t.coach_mail?` · <a class="src" href="mailto:${esc(t.coach_mail)}">${esc(t.coach_mail)}</a>`:''}${t.coach_tel?` · ${esc(t.coach_tel)}`:''}</span>`:''}
+        ${t.roster_url?`<a class="src" href="${t.roster_url}" target="_blank" rel="noopener">roster ↗</a>`:''}${t.njcaa_rank?`<span title="Classement national NJCAA 2025-26">🏆 n°${t.njcaa_rank} NJCAA</span>`:''}${t.team_avg?`<span title="Moyenne de score 2025-26 des joueurs classés de l'équipe (à comparer à la moyenne du joueur, saisie dans « Plus de filtres »)">📊 ${t.team_avg.toFixed(1)} de moyenne</span>`:''}</div>
+      ${!SUR_CARTE&&(t.team_avg||t.njcaa_rank)?`<p class="niveau">${t.team_avg?`📊 <b>${t.team_avg.toFixed(1)}</b> de moyenne d'équipe en 2025-26 <span class="fsmall">(joueurs classés)</span>`:''}${t.njcaa_rank?` · 🏆 n°${t.njcaa_rank} NJCAA`:''}</p>`:''}
+      ${MON_SCORE!=null?`<p class="niveau" style="display:block">${niveauJoueur(t).slice(3)}</p>`:''}
+      <ul class="roster">${det||'<li>—</li>'}</ul>
+      ${ficheHTML(t)}`;
+}
+/*FICHE-COMMUNE-JS:FIN*/
+function render(){
+  let r=filtrer();
+  r.sort((a,b)=>{if(a.empty!==b.empty)return a.empty?1:-1;   // les non récupérées toujours en bas
+    const val=(t)=>state.sort==='fiche'?scoreF(t)
+                  :state.sort==='note'?(gNote(t)==null?-1:(gPartiel(t)?gNote(t)-10:gNote(t)))
+                  :state.sort.startsWith('n_')?(noteAxe(t,state.sort.slice(2))??-1)
+                  :t[state.sort];
+    let x=val(a),y=val(b);
+    if(typeof x==='string'){x=x.toLowerCase();y=y.toLowerCase();}
+    return (x<y?-1:x>y?1:0)*state.dir;});
+  const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const divCls=d=>({D1:'d1',D2:'d2',D3:'d3',NAIA:'naia'})[d]||'juco';
+  const divLab=d=>d.startsWith('NJCAA')?'JUCO '+d.slice(6):d;   // « NJCAA II » tient mal dans la colonne Div
+  majColonnes();
+  rowsEl.innerHTML=r.map((t,i)=>{
+    if(t.empty){return `<tr class="main erow" data-i="${i}">
+      <td class="rank hide-sm hide-md">—</td>
+      <td class="nom"><span class="team dim">${esc(t.name)}</span> <span class="estatus" title="roster non récupéré">${esc(t.status)}</span></td>
+      <td><span class="chip ${divCls(t.division)}" title="${t.division}">${divLab(t.division)}</span></td>
+      <td class="st hide-sm">${t.state||''}</td>
+      <td class="num hide-sm hide-md">—</td><td class="cls hide-sm hide-md">—</td>
+      <td class="num">—</td><td class="num cls2028">—</td>
+      <td class="num cls2028 hide-sm hide-md">—</td><td class="num intl hide-sm hide-md">—</td>
+      <td class="coach hide-sm">—</td>
+      <td class="num axecol">—</td><td class="num axecol">—</td>
+      <td class="num axecol">—</td><td class="num axecol">—</td>
+      <td class="num">—</td>
+      <td class="fiche hide-sm">—</td>
+      <td class="hide-sm hide-md">${t.roster_url?`<a class="src" href="${t.roster_url}" target="_blank" rel="noopener">vérifier ↗</a>`:'—'}</td></tr>`;}
+    return `<tr class="main" data-i="${i}">
+      <td class="rank hide-sm hide-md">${i+1}</td>
+      <td class="nom"><a class="team-btn" href="${lienFac(t.name)}" aria-expanded="false" data-nom="${esc(t.name)}" title="${esc(t.name)} — clic : déplier la fiche ; clic droit : l'ouvrir dans un nouvel onglet">${esc(shortName(t.name))}</a>${joueursTrouves(t).length?`<span class="jtrouve" title="joueur trouvé par la recherche">👤 ${joueursTrouves(t).map(p=>esc(p.name)).join(', ')}</span>`:''}${t.french?`<span class="frfr" title="${t.french} joueur(s) français">🇫🇷${t.french>1?' '+t.french:''}</span>`:''}${t.old_season&&!t.juco?`<span class="oldseason" title="La page sert le roster ${t.old_season}, pas celui de 2026-27. Ses derniers années sont déjà partis : ${t.dep_fiable?`les départs 2027 comptés ici sont ses juniors`:`aucun départ 2027 ne peut en être déduit, la fac est comptée 0`}.">⏳ ${t.old_season}</span>`:''}${t.manual&&!t.juco?`<span class="manualb" title="Roster saisi manuellement (site protégé, données fournies à la main)">✍ manuel</span>`:''}</td>
+      <td><span class="chip ${divCls(t.division)}" title="${t.division}">${divLab(t.division)}</span></td>
+      <td class="st hide-sm">${t.state||''}</td>
+      <td class="num hide-sm hide-md">${t.roster}</td>
+      <td class="cls hide-sm hide-md">${t.fr}·${t.so}·${t.jr}·<b>${t.sr}</b></td>
+      <td class="num"><span class="pill" style="background:${heat(t.seniors)}">${t.seniors}</span></td>
+      <td class="num cls2028">${t.dep2028||0}</td>
+      <td class="num cls2028 hide-sm hide-md">${t.juco?'—':(t.so||0)}</td>
+      <td class="num intl hide-sm hide-md">${t.intl?('🌍 '+t.intl):'—'}</td>
+      <td class="coach hide-sm" title="${esc(t.coach)}">${esc(t.coach)||'—'}</td>
+      ${AXES.map(([k])=>{const n=noteAxe(t,k);
+        return `<td class="num axecol"><span class="nchip ${clsNote(n)}">${n==null?'—':n.toFixed(1)}</span></td>`;}).join('')}
+      <td class="num"><span class="gscore ${gPartiel(t)?'nn':clsNote(gNote(t))}" title="${gPartiel(t)?'note partielle : moins de la moitié des axes sont renseignés':'note globale pondérée'}">${gNote(t)!=null?gNote(t).toFixed(1)+(gPartiel(t)?' ·':''):'—'}</span></td>
+      <td class="fiche hide-sm" title="${FICHE.map(([k,ic,lab])=>(hasF(t,k)?'✓ ':'✗ ')+lab).join(' · ')}">${FICHE.map(([k,ic])=>`<i class="${hasF(t,k)?'on':''}">${ic}</i>`).join('')}</td>
+      <td class="hide-sm hide-md">${t.roster_url?`<a class="src" href="${t.roster_url}" target="_blank" rel="noopener">roster ↗</a>`:'<span title="Programme entré par le référentiel NJCAA : l\'URL de son roster reste à trouver — docs/missing-njcaa.md">—</span>'}</td>
+    </tr>
+    <tr class="detail" hidden><td colspan="18"><div class="dbox">
+      ${blocFac(t)}</div></td></tr>`;
+  }).join('');
+  emptyEl.hidden=r.length>0; document.querySelector('.tablewrap').style.display=r.length?'':'none';
+  // ligne récap dynamique du filtre courant
+  const rd2=r.filter(t=>t.division==='D2').length, rd1=r.filter(t=>t.division==='D1').length,
+    rd3=r.filter(t=>t.division==='D3').length,
+    rjuco=r.filter(t=>t.juco).length, rnaia=r.length-rd1-rd2-rd3-rjuco,
+    rfr=r.filter(t=>t.french>0).length, rintl=r.filter(t=>t.intl>0).length,
+    rempty=r.filter(t=>t.empty).length,
+    rsen=r.reduce((a,t)=>a+t.seniors,0), rdep28=r.reduce((a,t)=>a+(t.dep2028||0),0);
+  const depTxt=state.min===0?'tous départs':`≥ ${state.min} départ${state.min>1?'s':''} 2027`;
+  const flags=(state.st?' · '+state.st:'')+(state.intlonly?' · 🌍 seulement':'')+(state.fronly?' · 🇫🇷 seulement':'');
+  const rf=r.filter(t=>!t.empty);
+  // une phrase plutôt qu'une rangée de cases : on la lit d'un trait
+  const pl=(n,sg,pr)=>`<b>${n}</b> ${n>1?pr:sg}`;
+  const repart=[[rd1,'D1'],[rd2,'D2'],[rd3,'D3'],[rnaia,'NAIA'],[rjuco,'JUCO']].filter(([n])=>n);
+  const parts=[
+    pl(r.length,'équipe','équipes')+(repart.length>1?` <span class="rsub">(${repart.map(([n,k])=>`${n} ${k}`).join(' · ')})</span>`:'')
+      +(rempty?` <span class="rsub">dont ${rempty} non lue${rempty>1?'s':''}</span>`:''),
+    pl(rsen,'départ 2027','départs 2027'),
+    `${rdep28} en 2028`,
+  ];
+  if(rintl) parts.push(`🌍 ${rintl} avec internationaux`);
+  if(rfr)   parts.push(`🇫🇷 ${rfr} avec Français`);
+  // notes : la mediane dit tout de suite si le lot filtre vaut quelque chose
+  const gs=rf.map(t=>gNote(t)).filter(v=>v!=null).sort((a,b)=>a-b);
+  if(gs.length){
+    const med=gs.length%2?gs[(gs.length-1)/2]:(gs[gs.length/2-1]+gs[gs.length/2])/2;
+    parts.push(`⭐ note médiane ${med.toFixed(1)}`);
+  }
+  // couverture de la fiche : le détail par rubrique au survol
+  if(rf.length){
+    const pc=k=>Math.round(rf.filter(t=>hasF(t,k)).length/rf.length*100);
+    const det=FICHE.map(([k,ic,lab])=>`${lab} ${pc(k)} %`).join(' · ');
+    parts.push(`<span class="rsub" title="${det}">📋 ${rf.filter(t=>scoreF(t)===4).length}/${rf.length} fiches complètes</span>`);
+  }
+  const filtreLine=`filtre : ${state.divs.size===3?'toutes divisions':([...state.divs].join(' + ')||'aucune division')} · ${depTxt}${flags}`
+    + (['minnote','mingolf','minetudes','minsecurite','mincadre'].some(k=>state[k]!=='')
+       ? ' · notes min ' + [['minnote','⭐'],['mingolf','⛳'],['minetudes','🎓'],['minsecurite','🛡'],['mincadre','🏡']]
+           .filter(([k])=>state[k]!=='').map(([k,ic])=>`${ic}${state[k]}`).join(' ')
+         + (state.gardeNN?' (non notées gardées)':'')
+       : '');
+  document.getElementById('results').innerHTML=`<span class="rphrase">${parts.map(x=>`<span class="rpart">${x}</span>`).join('<span class="rdot"> · </span>')}</span><span class="filtline">${filtreLine}</span>`;
+}
+// délégation : clic sur une équipe -> déplie/replie le roster détaillé
+// le nom est un vrai lien (#fac=…) : clic droit / Ctrl+clic / clic molette = nouvel onglet
+rowsEl.addEventListener('click',e=>{const b=e.target.closest('.team-btn');
+  if(!b||e.button!==0||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
+  e.preventDefault();
+  const tr=b.closest('tr.main'),det=tr.nextElementSibling;const open=det.hidden;
+  det.hidden=!open;if(open&&window.ccCharger)ccCharger(b.dataset.nom,det);b.setAttribute('aria-expanded',open);tr.classList.toggle('open',open);});
+// divisions affichées : cases à cocher, mémorisées (partagées avec la carte)
+/*FILTRES-COMMUNS-JS:DEBUT — repris tel quel par la carte, qui définit render() pour se redessiner */
+// les facs retenues par les filtres (liste ET carte : mêmes critères, même code)
+// FAC_FORCEE : fac demandée par un lien (#fac=…), montrée même si un filtre l'écarte
+let FAC_FORCEE=null;
+// SEULE : « voir sur la carte » depuis la liste (#seule=1) — la carte ne montre que cette fac
+let SEULE=false;
+function filtrer(){
+  let r=DATA.filter(t=>state.divs.has(divKey(t))&&t.seniors>=state.min
+    &&(!state.fronly||t.french>0)&&(!state.intlonly||t.intl>0)&&(!state.st||t.state===state.st)
+    &&(!state.hideEmpty||!t.empty)&&(!state.saisonCourante||t.empty||t.a_jour||t.juco)&&(!state.todofiche||(!t.empty&&scoreF(t)<4))
+    &&(!state.indooronly||t.indoor_oui===true)
+    &&(!state.nearonly||(t.course_km!=null&&t.course_km<=10))
+    &&(!state.voieonly||(t.voie||[]).length>0)
+    &&(MON_SCORE==null||!state.rangmax||((r=>r&&!r.dernier&&r.rang<=+state.rangmax)(rangJoueur(t,MON_SCORE))))
+    &&(MON_BUDGET==null||(t.prix&&t.prix.tot!=null&&t.prix.tot*(1-(+state.bourseesp||0)/100)<=MON_BUDGET))
+    &&(MON_SCORE==null||!state.ecartmax||(t.team_avg!=null&&t.team_avg-MON_SCORE<=+state.ecartmax))
+    &&passeNotes(t));
+  JOUEUR_CHERCHE='';
+  if(state.q){const q=state.q.toLowerCase();
+    r=r.filter(t=>t.name.toLowerCase().includes(q)||(t.state||'').toLowerCase().includes(q));
+    // un joueur cherché par son nom est trouvé même si les filtres masquent sa fac
+    const qj=sansAcc(state.q.trim());
+    if(qj.length>=3){JOUEUR_CHERCHE=qj;const vus=new Set(r.map(t=>t.name));
+      r=r.concat(DATA.filter(t=>!vus.has(t.name)&&joueursTrouves(t).length));}}
+  if(FAC_FORCEE&&!r.some(t=>t.name===FAC_FORCEE)){const t=DATA.find(x=>x.name===FAC_FORCEE); if(t) r.push(t);}
+  return r;
+}
+function setDivs(ds){state.divs=new Set(ds);
+  document.querySelectorAll('#divseg input').forEach(x=>{x.checked=state.divs.has(x.value);});
+  document.querySelectorAll('#tiles .tile').forEach(x=>x.setAttribute('aria-pressed',state.divs.size===1&&state.divs.has(x.dataset.div)));
+  render();}
+document.getElementById('divseg').addEventListener('change',()=>
+  setDivs([...document.querySelectorAll('#divseg input:checked')].map(x=>x.value)));
+document.getElementById('minsel').addEventListener('change',e=>{state.min=+e.target.value;render();});
+document.getElementById('intlonly').addEventListener('change',e=>{state.intlonly=e.target.checked;render();});
+document.getElementById('fronly').addEventListener('change',e=>{state.fronly=e.target.checked;render();});
+document.getElementById('hideempty').addEventListener('change',e=>{state.hideEmpty=e.target.checked;render();});
+document.getElementById('saisoncourante').addEventListener('change',e=>{state.saisonCourante=e.target.checked;render();});
+// --- filtres par note ---------------------------------------------------
+['minnote','mingolf','minetudes','minsecurite','mincadre'].forEach(id=>{
+  const el=document.getElementById(id);
+  for(let v=1;v<=4.5;v+=0.5) el.insertAdjacentHTML('beforeend',
+    `<option value="${v}">${v.toFixed(1)} et plus</option>`);
+  el.addEventListener('change',e=>{state[id]=e.target.value;render();});
+});
+document.getElementById('garderNonNotes').addEventListener('change',
+  e=>{state.gardeNN=e.target.checked;render();});
+
+document.getElementById('todofiche').addEventListener('change',e=>{state.todofiche=e.target.checked;render();});
+document.getElementById('indooronly').addEventListener('change',e=>{state.indooronly=e.target.checked;render();});
+document.getElementById('nearonly').addEventListener('change',e=>{state.nearonly=e.target.checked;render();});
+document.getElementById('voieonly').addEventListener('change',e=>{state.voieonly=e.target.checked;render();});
+// moyenne du joueur : gardée dans ce navigateur (la carte la lit aussi)
+(function(){const el=document.getElementById('monscore');
+  el.addEventListener('input',()=>{MON_SCORE=lireScore(el.value);
+    el.style.borderColor=(el.value.trim()&&MON_SCORE==null)?'var(--h1)':'';
+    render();});
+  const bu=document.getElementById('budget');
+  bu.addEventListener('input',()=>{MON_BUDGET=lireBudget(bu.value);
+    bu.style.borderColor=(bu.value.trim()&&MON_BUDGET==null)?'var(--h1)':'';
+    render();});
+  ['rangmax','ecartmax','bourseesp'].forEach(id=>document.getElementById(id).addEventListener('change',e=>{state[id]=e.target.value;render();}));})();
+// sous le budget : traduire le réglage en « prix avant bourse maximum »
+function majBudgetNote(){const el=document.getElementById('budgetnote'); if(!el) return;
+  const b=+state.bourseesp||0, f=n=>Math.round(n).toLocaleString('fr-FR')+' $';
+  el.innerHTML=MON_BUDGET==null
+    ? 'Le prix des fiches est <b>avant bourse</b>. Une fac est gardée si ce prix, moins la bourse espérée, tient dans ce que paie la famille.'
+    : b ? `<b>Calcul :</b> ${f(MON_BUDGET)} payés ÷ ${(1-b/100).toLocaleString('fr-FR')} (${b} % de bourse) = <b>${f(MON_BUDGET/(1-b/100))}</b> de prix avant bourse au plus, dont ${f(MON_BUDGET/(1-b/100)-MON_BUDGET)} de bourse.<br>Les facs plus chères sont écartées.`
+        : `<b>Calcul :</b> aucune bourse comptée, donc prix avant bourse au plus <b>${f(MON_BUDGET)}</b>.<br>Les facs plus chères sont écartées.`;}
+document.getElementById('more').addEventListener('input',majBudgetNote);
+document.getElementById('more').addEventListener('change',majBudgetNote);
+document.getElementById('q').addEventListener('input',e=>{state.q=e.target.value;FAC_FORCEE=null;render();});
+// remplit le menu État avec les états présents dans les données (triés)
+(function(){const sel=document.getElementById('statesel');
+  const states=[...new Set(DATA.map(t=>t.state).filter(Boolean))].sort();
+  sel.insertAdjacentHTML('beforeend',states.map(s=>`<option value="${s}">${s}</option>`).join(''));
+  sel.addEventListener('change',e=>{state.st=e.target.value;render();});})();
+// « Plus de filtres » : dire combien de réglages s'écartent du défaut, même replié
+const MORE_DEF={minnote:'',mingolf:'',minetudes:'',minsecurite:'',mincadre:'',
+  hideempty:false,saisoncourante:false,todofiche:false,voirnotes:false,garderNonNotes:false,
+  indooronly:false,nearonly:false,voieonly:false,monscore:'',rangmax:'',ecartmax:'',budget:'',bourseesp:'0'};
+// --- remise à zéro : une carte de filtres (data-reset) ou tout (#resetall) ---
+// chaque réglage repasse à sa valeur par défaut et prévient son propre écouteur
+// (même effet qu'un clic) ; on ne redessine qu'une fois à la fin
+const FILTRE_DEF={...MORE_DEF,minsel:'0',statesel:'',intlonly:false,fronly:false,q:''};
+function remettre(ids){
+  const vrai=render; render=()=>{};
+  try{ids.forEach(id=>{const e=document.getElementById(id), d=FILTRE_DEF[id]; if(!e||d===undefined) return;
+    if(typeof d==='boolean') e.checked=d; else e.value=d;
+    e.dispatchEvent(new Event(e.tagName==='INPUT'&&e.type!=='checkbox'?'input':'change',{bubbles:true}));});}
+  finally{render=vrai;}
+  render(); majMore(); if(typeof majBudgetNote==='function') majBudgetNote();
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-reset]'); if(b) remettre(b.dataset.reset.split(','));});
+document.getElementById('resetall').addEventListener('click',()=>{
+  FAC_FORCEE=null;
+  const vrai=render; render=()=>{}; try{setDivs(DIVDEF);}finally{render=vrai;}
+  remettre(Object.keys(FILTRE_DEF));});
+function majMore(){const n=Object.entries(MORE_DEF).filter(([id,d])=>{const e=document.getElementById(id);
+    return e&&(typeof d==='boolean'?e.checked!==d:e.value!==d);}).length;
+  document.getElementById('morecount').textContent=n?`· ${n} actif${n>1?'s':''}`:'';}
+const moreEl=document.getElementById('more');
+moreEl.addEventListener('change',majMore);moreEl.addEventListener('click',()=>setTimeout(majMore));
+// panneau des filtres toujours fermé à l'ouverture (on efface l'état gardé par les anciennes versions)
+try{localStorage.removeItem('more');}catch(err){}
+// --- liens directs : l'adresse de la page porte les filtres et la fac à ouvrir ----------
+// ex. index.html#div=NAIA,D2&st=MI&golf=3&fac=Aquinas  (copier l'adresse = partager la vue)
+const LIEN_SEL={bourse:'bourseesp',rang:'rangmax',ecart:'ecartmax',min:'minsel',note:'minnote',golf:'mingolf',etudes:'minetudes',securite:'minsecurite',cadre:'mincadre',st:'statesel'};
+const LIEN_STATE={bourse:'bourseesp',rang:'rangmax',ecart:'ecartmax',min:'min',note:'minnote',golf:'mingolf',etudes:'minetudes',securite:'minsecurite',cadre:'mincadre',st:'st'};
+const LIEN_CASE={fr:['fronly','fronly'],intl:['intlonly','intlonly'],afaire:['todofiche','todofiche'],
+  notes:['voirnotes','voirnotes'],masquervides:['hideempty','hideEmpty'],recentes:['saisoncourante','saisonCourante'],
+  indoor:['indooronly','indooronly'],parcours:['nearonly','nearonly'],voie:['voieonly','voieonly']};
+let facDemandee=null, lienLu=false;
+function lireLien(){
+  // « ?fac=… » (lien de PDF : certains lecteurs suppriment la partie « #… ») puis « #… »
+  const p=new URLSearchParams(location.search);
+  for(const [k,v] of new URLSearchParams(location.hash.slice(1))) p.set(k,v);
+  if(p.has('div')){const ds=p.get('div').split(',').filter(d=>DIVK.includes(d));
+    state.divs=new Set(ds);document.querySelectorAll('#divseg input').forEach(x=>{x.checked=state.divs.has(x.value);});}
+  for(const [k,id] of Object.entries(LIEN_SEL)) if(p.has(k)){const v=p.get(k);
+    state[LIEN_STATE[k]]=k==='min'?+v:v; const el=document.getElementById(id); if(el) el.value=v;}
+  for(const [k,[id,cle,inverse]] of Object.entries(LIEN_CASE)) if(p.has(k)){
+    const on=p.get(k)==='1', val=inverse?!on:on;
+    state[cle]=val; const el=document.getElementById(id); if(el) el.checked=val;}
+  if(p.has('q')){state.q=p.get('q');document.getElementById('q').value=state.q;}
+  if(p.has('budget')){const el=document.getElementById('budget');el.value=p.get('budget');MON_BUDGET=lireBudget(el.value);}
+  if(p.has('moy')){const el=document.getElementById('monscore');el.value=p.get('moy');MON_SCORE=lireScore(el.value);}
+  if(p.has('tri')){const [k,d]=p.get('tri').split(':');state.sort=k;state.dir=d==='asc'?1:-1;}
+  facDemandee=p.get('fac'); SEULE=p.get('seule')==='1';
+}
+// les filtres en cours, sans la fac ouverte (sert aussi aux liens liste <-> carte)
+function paramsFiltres(){
+  const p=new URLSearchParams();
+  const defs=[...DIVDEF].sort().join(','), cur=[...state.divs].sort().join(',');
+  if(cur!==defs) p.set('div',[...state.divs].join(','));
+  for(const k of Object.keys(LIEN_SEL)){const v=state[LIEN_STATE[k]]; if(v!==''&&v!==0&&v!=='0'&&v!=null) p.set(k,v);}
+  for(const [k,[,cle,inverse]] of Object.entries(LIEN_CASE)){const on=inverse?!state[cle]:state[cle]; if(on) p.set(k,'1');}
+  if(state.q) p.set('q',state.q);
+  const bv=document.getElementById('budget').value.trim(); if(bv&&MON_BUDGET!=null) p.set('budget',bv);
+  const ms=document.getElementById('monscore').value.trim(); if(ms&&MON_SCORE!=null) p.set('moy',ms);
+  if(state.sort!=='seniors'||state.dir!==-1) p.set('tri',state.sort+':'+(state.dir===1?'asc':'desc'));
+  return p;
+}
+const h_=p=>p.toString().replace(/\+/g,'%20');
+// adresse d'une autre page (liste / carte) avec les mêmes filtres, et la fac à ouvrir
+function lienVers(page,fac){const p=paramsFiltres(); if(fac){p.set('fac',fac); if(p.get('q')===fac) p.delete('q');} const h=h_(p); return page+(h?'#'+h:'');}
+// facOuverte() : définie par chaque page (liste : la ligne dépliée ; carte : la fiche affichée)
+function ecrireLien(){
+  const p=paramsFiltres(); const f=facOuverte(); if(f){p.set('fac',f); if(SEULE) p.set('seule','1');}
+  const h=h_(p);
+  if(lienLu) history.replaceState(null,'',location.pathname+(h?'#'+h:''));   // la recherche « ?… » est reprise dans le « #… »
+  document.querySelectorAll('a[data-lien-page]').forEach(a=>{a.href=lienVers(a.dataset.lienPage);});
+}
+/*FILTRES-COMMUNS-JS:FIN*/
+// --- propre à la liste : cartes de division, colonnes de notes, pondération, tri ---
+// clic sur une carte de division = elle seule ; re-clic = retour au défaut (D2 + NAIA)
+document.getElementById('tiles').addEventListener('click',e=>{const b=e.target.closest('.tile');
+  if(b)setDivs(state.divs.size===1&&state.divs.has(b.dataset.div)?DIVDEF:[b.dataset.div]);});
+// colonnes de notes : masquees tant qu'on ne les demande pas, pour ne pas charger
+// le tableau ; une fois affichees, chaque en-tete trie dans un sens puis dans l'autre.
+function majColonnes(){
+  const w=document.querySelector('.tablewrap');
+  if(w) w.classList.toggle('avecnotes', state.voirnotes);
+}
+document.getElementById('voirnotes').addEventListener('change',e=>{
+  state.voirnotes=e.target.checked;
+  try{localStorage.setItem('voirnotes',state.voirnotes?'1':'');}catch(err){}
+  render();});
+// --- curseurs de ponderation -------------------------------------------
+function majPoids(){
+  document.querySelectorAll('#poids input[type=range]').forEach(i=>{
+    i.value=POIDS[i.dataset.axe];
+    document.querySelector(`[data-pv="${i.dataset.axe}"]`).textContent=POIDS[i.dataset.axe];});
+}
+document.querySelectorAll('#poids input[type=range]').forEach(i=>{
+  i.addEventListener('input',e=>{
+    POIDS[e.target.dataset.axe]=+e.target.value;
+    try{localStorage.setItem('poids',JSON.stringify(POIDS));}catch(err){}
+    majPoids(); render();});
+});
+document.getElementById('poidsreset').addEventListener('click',()=>{
+  POIDS=Object.assign({},POIDS_DEF);
+  try{localStorage.setItem('poids',JSON.stringify(POIDS));}catch(err){}
+  majPoids(); render();});
+majPoids();
+try{ if(localStorage.getItem('voirnotes')){ state.voirnotes=true;
+     document.getElementById('voirnotes').checked=true; } }catch(e){}
+document.querySelectorAll('th[data-sort]').forEach(th=>{th.tabIndex=0;
+  const go=()=>{const k=th.dataset.sort;state.dir=state.sort===k?-state.dir:(k==='seniors'||k==='roster'?-1:1);state.sort=k;render();};
+  th.addEventListener('click',go);
+  th.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
+function facOuverte(){const b=document.querySelector('tr.main.open .team-btn'); return b?b.dataset.nom:null;}
+function trouverFac(nom){   // nom exact, sinon début du nom, sinon nom contenu (une seule fac)
+  const n=nom.toLowerCase(), noms=DATA.map(t=>t.name);
+  const ex=noms.find(x=>x.toLowerCase()===n); if(ex) return ex;
+  const deb=noms.filter(x=>x.toLowerCase().startsWith(n)); if(deb.length===1) return deb[0];
+  const dans=noms.filter(x=>x.toLowerCase().includes(n)); return dans.length===1?dans[0]:(deb[0]||dans[0]||null);
+}
+function ouvrirFac(demande){
+  const nom=trouverFac(demande); if(!nom) return;
+  const cherche=()=>[...document.querySelectorAll('tr.main .team-btn')].find(b=>b.dataset.nom===nom);
+  // la recherche en cours (ex. un joueur : q=carlie&fac=Kansas) montre déjà la fac : on la garde
+  render(); let b=state.q?cherche():null;
+  if(!b){state.q=nom; document.getElementById('q').value=nom; render(); b=cherche();}
+  if(!b){   // la fac est masquée par les filtres : on l'affiche quand même
+    const t=DATA.find(x=>x.name===nom); if(!t) return;
+    state.q=nom; document.getElementById('q').value=nom;
+    if(!state.divs.has(divKey(t))) setDivs([...state.divs,divKey(t)]);
+    if(t.empty){state.hideEmpty=false;document.getElementById('hideempty').checked=false;}
+    state.saisonCourante=false; document.getElementById('saisoncourante').checked=false;
+    render(); b=cherche();
+    if(!b){FAC_FORCEE=nom; render(); b=cherche(); if(!b) return;}}   // écartée par un autre filtre (notes, budget…)
+  if(b.getAttribute('aria-expanded')!=='true') b.click();
+  b.closest('tr').scrollIntoView({block:'start'});
+}
+const renderSansLien=render;
+render=function(){renderSansLien();ecrireLien();};
+rowsEl.addEventListener('click',e=>{if(e.target.closest('.team-btn'))setTimeout(ecrireLien);});
+window.addEventListener('hashchange',()=>{lireLien();render();if(facDemandee)ouvrirFac(facDemandee);});
+lireLien();
+tiles();render();majMore();majBudgetNote();
+lienLu=true; if(facDemandee) ouvrirFac(facDemandee); else ecrireLien();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js"></script>
+<script>
+/* Campus Caddie — connexion, chargement des données, fiche à la demande.
+   Inséré par page/construire.py dans la page tirée de template.html (college-golf-search).
+   La page d'origine (son script, type="text/plain" id="cc-app") ne démarre qu'une fois
+   les données chargées : elle trouve alors window.CC_DATA à la place de ses données embarquées. */
+(() => {
+  const SB_URL = "https://vdhwwvobnfmryertxlog.supabase.co";
+  const SB_CLE = "sb_publishable__8UNmME51sNlal1jCdv_Qw_20rP75Yx";   // clé publique : faite pour être ici
+  const ICI = location.origin + location.pathname;
+  // arrivée par un lien d'invitation / de mot de passe oublié : lu AVANT que supabase-js ne nettoie l'adresse
+  const ARRIVEE = /(?:^#|&)type=(invite|recovery)\b/.exec(location.hash)?.[1] || null;
+  const sb = supabase.createClient(SB_URL, SB_CLE,
+    { auth: { storageKey: "cc-auth", detectSessionInUrl: true, persistSession: true } });
+
+  const $ = id => document.getElementById(id);
+  const ecran = $("cc-ecran"), msg = $("cc-msg");
+  const montrer = vue => {
+    ecran.hidden = !vue;
+    document.querySelectorAll("#cc-ecran [data-vue]").forEach(el => { el.hidden = el.dataset.vue !== vue; });
+    msg.textContent = "";
+  };
+  const dire = (txt, ok) => { msg.textContent = txt; msg.className = ok ? "ok" : ""; };
+
+  // ------------------------------------------------------------ connexion
+  $("cc-form-mdp").addEventListener("submit", async e => {
+    e.preventDefault();
+    dire("Connexion…", true);
+    const { error } = await sb.auth.signInWithPassword({ email: $("cc-mel").value.trim(), password: $("cc-mdp").value });
+    if (error) return dire("E-mail ou mot de passe incorrect.");
+    demarrer();
+  });
+  $("cc-lien").addEventListener("click", async () => {
+    const email = $("cc-mel").value.trim();
+    if (!email) return dire("Indique ton e-mail, puis clique à nouveau.");
+    dire("Envoi…", true);
+    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: ICI } });
+    dire(error ? "Envoi impossible pour cette adresse (accès sur invitation)." : "C'est envoyé : ouvre le lien reçu par e-mail.", !error);
+  });
+  $("cc-oubli").addEventListener("click", async () => {
+    const email = $("cc-mel").value.trim();
+    if (!email) return dire("Indique ton e-mail, puis clique à nouveau.");
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: ICI });
+    dire(error ? "Envoi impossible." : "Si cette adresse a un accès, un lien vient de partir.", !error);
+  });
+  $("cc-form-nouveau").addEventListener("submit", async e => {
+    e.preventDefault();
+    const p = $("cc-nouveau").value;
+    if (p.length < 10) return dire("10 caractères au moins.");
+    const { error } = await sb.auth.updateUser({ password: p });
+    if (error) return dire("Impossible d'enregistrer ce mot de passe : " + error.message);
+    demarrer(true);
+  });
+  $("cc-sortir").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
+
+  // ------------------------------------------------------------ données
+  async function toutesLesFacs() {
+    const out = [];
+    for (let debut = 0; ; debut += 1000) {
+      const { data, error } = await sb.from("facs").select("liste").order("id").range(debut, debut + 999);
+      if (error) throw error;
+      out.push(...data.map(r => r.liste));
+      if (data.length < 1000) return out.sort((a, b) => (a._ordre ?? 0) - (b._ordre ?? 0));   // ordre de l'export
+    }
+  }
+
+  // fiche + roster d'une fac, chargés à l'ouverture (une fac à la fois), puis la fiche est redessinée
+  const charges = new Map();
+  window.ccCharger = (nom, det) => {
+    const t = (window.CC_DATA || []).find(x => x.name === nom);
+    if (!t || !det) return;
+    const boite = det.querySelector(".dbox");
+    if (!charges.has(nom)) {
+      if (boite) boite.insertAdjacentHTML("afterbegin", '<p class="cc-charge">Chargement de la fiche…</p>');
+      charges.set(nom, Promise.all([
+        sb.rpc("fiche", { p_id: nom }), sb.rpc("roster", { p_id: nom }),
+      ]).then(([f, r]) => {
+        if (f.error || r.error) throw f.error || r.error;
+        Object.assign(t, f.data || {});
+        if (Array.isArray(r.data)) t.players = r.data;
+      }));
+    }
+    charges.get(nom).then(() => {
+      const b = det.querySelector(".dbox");
+      if (b && typeof blocFac === "function") b.innerHTML = blocFac(t);
+    }).catch(() => {
+      charges.delete(nom);
+      const b = det.querySelector(".cc-charge");
+      if (b) b.textContent = "Fiche indisponible pour le moment (réessaie).";
+    });
+  };
+
+  // ------------------------------------------------------------ démarrage
+  let lance = false;
+  async function demarrer(apresMdp) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return montrer("connexion");
+    if (ARRIVEE && !apresMdp) return montrer("nouveau");   // invité / mot de passe oublié : il choisit son mot de passe
+    if (lance) return;
+    montrer("chargement");
+    const { data: ok, error } = await sb.rpc("est_autorise");
+    if (error || !ok) { montrer("refuse"); $("cc-refuse-mel").textContent = session.user.email; return; }
+    let facs, pub;
+    try {
+      [facs, { data: pub }] = await Promise.all([toutesLesFacs(), sb.from("publication").select("*").maybeSingle()]);
+    } catch (e) {
+      montrer("connexion"); return dire("Chargement impossible : " + (e.message || e));
+    }
+    lance = true;
+    window.CC_DATA = facs;
+    document.querySelectorAll(".cc-nteams").forEach(el => { el.textContent = facs.length; });
+    document.querySelectorAll(".cc-nsen").forEach(el => { el.textContent = facs.reduce((a, t) => a + (t.seniors || 0), 0); });
+    if (pub && pub.genere_le) $("cc-maj").textContent = "données du " + new Date(pub.genere_le).toLocaleDateString("fr-FR");
+    $("cc-qui").textContent = session.user.email;
+    $("cc-barre").hidden = false;
+    montrer(null);
+    const s = document.createElement("script");
+    s.textContent = $("cc-app").textContent;   // la page d'origine démarre maintenant
+    document.body.appendChild(s);
+  }
+  sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_OUT") location.reload(); });
+  demarrer();
+})();
+</script>
+</body>
 </html>
