@@ -349,7 +349,7 @@ td.fiche i.on{opacity:1}
 .poids .pv{font-variant-numeric:tabular-nums;min-width:1.6rem;text-align:right}
 </style>
 <style>
-#cc-ecran{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:16px;background:var(--ground)}
+#cc-ecran{position:fixed;inset:0;z-index:5000;display:grid;place-items:center;padding:16px;background:var(--ground)}
 #cc-ecran[hidden]{display:none}
 .cc-boite{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 24px;box-shadow:var(--shadow);color:var(--ink)}
 .cc-titre{font-family:Fraunces,serif;margin:0;font-size:2rem;color:var(--ink)}.cc-titre span{color:var(--accent)}
@@ -358,15 +358,17 @@ td.fiche i.on{opacity:1}
 .cc-boite input{display:block;width:100%;box-sizing:border-box;margin-top:.3rem;padding:.6rem .7rem;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink)}
 .cc-boite button[type=submit]{width:100%;padding:.7rem;font:inherit;font-weight:600;border:0;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer}
 .cc-liens{margin:.9rem 0 0;font-size:.85rem;color:var(--muted);text-align:center}
-.cc-liens button,#cc-sortir{font:inherit;background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline}
+.cc-liens button,.cc-liens a,#cc-sortir{font:inherit;background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline}
 #cc-msg{min-height:1.2em;margin:.8rem 0 0;font-size:.9rem;color:var(--h5)}#cc-msg.ok{color:var(--muted)}
-#cc-barre{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;padding:.5rem 16px;font-size:.85rem;color:var(--muted);border-bottom:1px solid var(--line);background:var(--panel)}
+#cc-barre{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;padding:.5rem 16px;font-size:.85rem;color:var(--muted);border-bottom:1px solid var(--line);background:var(--panel);position:relative;z-index:4000}
 #cc-barre b{color:var(--accent)}#cc-barre .cc-sep{flex:1}
+#cc-barre nav{display:flex;gap:.7rem}#cc-barre nav a{color:var(--ink);text-decoration:none;font-weight:600}#cc-barre nav a[hidden]{display:none}
+#cc-barre nav a.ici{color:var(--accent);text-decoration:underline}
 .cc-charge{color:var(--muted);font-style:italic}
 </style>
 </head>
 <body>
-<div id="cc-barre" hidden><b>Campus Caddie</b><span id="cc-maj"></span><span class="cc-sep"></span><span id="cc-qui"></span><button type="button" id="cc-sortir">Se déconnecter</button></div>
+<div id="cc-barre" hidden><b>Campus Caddie</b><nav><a class="ici" href="index.html">Liste</a><a href="carte.html">Carte</a><a class="cc-si-admin" href="admin.html" hidden>Accès</a></nav><span id="cc-maj"></span><span class="cc-sep"></span><span id="cc-qui"></span><button type="button" id="cc-sortir">Se déconnecter</button></div>
 <div id="cc-ecran">
   <div class="cc-boite">
     <h1 class="cc-titre">Campus <span>Caddie</span></h1>
@@ -383,7 +385,7 @@ td.fiche i.on{opacity:1}
       <label>Nouveau mot de passe<input id="cc-nouveau" type="password" autocomplete="new-password" required minlength="10"></label>
       <button type="submit">Enregistrer et entrer</button>
     </form>
-    <div data-vue="refuse" hidden><p>Le compte <b id="cc-refuse-mel"></b> n'a pas (ou plus) accès à Campus Caddie.</p></div>
+    <div data-vue="refuse" hidden><p>Le compte <b id="cc-refuse-mel"></b> n'a pas accès à cette page.</p><p class="cc-liens"><a href="index.html">Retour à la liste</a></p></div>
     <p id="cc-msg" role="status"></p>
   </div>
 </div>
@@ -394,6 +396,7 @@ td.fiche i.on{opacity:1}
 <h1>Où des places se libèrent en 2027</h1>
 <p class="lede">Programmes classés par nombre de <b>seniors</b> — donc de départs probables après la
 saison 2026-27, et de places potentiellement ouvertes pour une entrée à la rentrée 2027.</p>
+<p style="margin:-.8rem 0 1.4rem;font-size:.9rem"><a href="carte.html" data-lien-page="carte.html" style="color:var(--accent);text-decoration:none;font-weight:600">🗺️ Carte &amp; profils des facs</a></p>
 
 <div class="tiles" id="tiles"></div>
 
@@ -1069,7 +1072,7 @@ function ficheHTML(t){
     ${prix}
     ${voie}
     <p class="flinks"><a class="src" href="${lienFac(t.name)}" target="_blank" rel="noopener" title="Lien direct vers cette fiche">ouvrir dans un onglet ↗</a> ${t.roster_url?`<a class="src" href="${t.roster_url}" target="_blank" rel="noopener">roster officiel ↗</a>`:''} ${t.site?`<a class="src" href="${t.site}" target="_blank" rel="noopener">site de la fac ↗</a>`:''}
-      ${false&&t.mapped&&!SUR_CARTE?`<a class="src" href="${lienVers('carte.html',t.name)}&seule=1">voir sur la carte ↗</a>`:''}</p>
+      ${t.mapped&&!SUR_CARTE?`<a class="src" href="${lienVers('carte.html',t.name)}&seule=1">voir sur la carte ↗</a>`:''}</p>
     ${sourcesHTML(t)}</div>`;
 }
 // --- bloc complet d'une fac (bandeau, roster, fiche) : le même dans la liste et sur la carte ---
@@ -1212,7 +1215,7 @@ rowsEl.addEventListener('click',e=>{const b=e.target.closest('.team-btn');
   if(!b||e.button!==0||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;
   e.preventDefault();
   const tr=b.closest('tr.main'),det=tr.nextElementSibling;const open=det.hidden;
-  det.hidden=!open;if(open&&window.ccCharger)ccCharger(b.dataset.nom,det);b.setAttribute('aria-expanded',open);tr.classList.toggle('open',open);});
+  det.hidden=!open;if(open&&window.ccCharger)ccCharger(b.dataset.nom,t=>{const x=det.querySelector('.dbox');if(x)x.innerHTML=blocFac(t);},det.querySelector('.dbox'));b.setAttribute('aria-expanded',open);tr.classList.toggle('open',open);});
 // divisions affichées : cases à cocher, mémorisées (partagées avec la carte)
 /*FILTRES-COMMUNS-JS:DEBUT — repris tel quel par la carte, qui définit render() pour se redessiner */
 // les facs retenues par les filtres (liste ET carte : mêmes critères, même code)
@@ -1438,19 +1441,21 @@ tiles();render();majMore();majBudgetNote();
 lienLu=true; if(facDemandee) ouvrirFac(facDemandee); else ecrireLien();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js"></script>
-<script>
+<script>window.CC_PAGE="liste";
 /* Campus Caddie — connexion, chargement des données, fiche à la demande.
-   Inséré par page/construire.py dans la page tirée de template.html (college-golf-search).
+   Inséré par page/construire.py dans chaque page (window.CC_PAGE = "liste" | "carte" | "admin").
    La page d'origine (son script, type="text/plain" id="cc-app") ne démarre qu'une fois
-   les données chargées : elle trouve alors window.CC_DATA à la place de ses données embarquées. */
+   la personne connectée et les données chargées : elle trouve alors window.CC_DATA. */
 (() => {
   const SB_URL = "https://vdhwwvobnfmryertxlog.supabase.co";
   const SB_CLE = "sb_publishable__8UNmME51sNlal1jCdv_Qw_20rP75Yx";   // clé publique : faite pour être ici
+  const PAGE = window.CC_PAGE || "liste";
   const ICI = location.origin + location.pathname;
   // arrivée par un lien d'invitation / de mot de passe oublié : lu AVANT que supabase-js ne nettoie l'adresse
   const ARRIVEE = /(?:^#|&)type=(invite|recovery)\b/.exec(location.hash)?.[1] || null;
   const sb = supabase.createClient(SB_URL, SB_CLE,
     { auth: { storageKey: "cc-auth", detectSessionInUrl: true, persistSession: true } });
+  window.ccSb = sb;
 
   const $ = id => document.getElementById(id);
   const ecran = $("cc-ecran"), msg = $("cc-msg");
@@ -1503,29 +1508,26 @@ lienLu=true; if(facDemandee) ouvrirFac(facDemandee); else ecrireLien();
     }
   }
 
-  // fiche + roster d'une fac, chargés à l'ouverture (une fac à la fois), puis la fiche est redessinée
+  // fiche + roster d'une fac, chargés une seule fois à sa première ouverture ; puis apres(t) la redessine.
+  // attente : élément où afficher « Chargement… » (facultatif).
   const charges = new Map();
-  window.ccCharger = (nom, det) => {
+  window.ccCharger = (nom, apres, attente) => {
     const t = (window.CC_DATA || []).find(x => x.name === nom);
-    if (!t || !det) return;
-    const boite = det.querySelector(".dbox");
+    if (!t || t._complet) return;
     if (!charges.has(nom)) {
-      if (boite) boite.insertAdjacentHTML("afterbegin", '<p class="cc-charge">Chargement de la fiche…</p>');
-      charges.set(nom, Promise.all([
-        sb.rpc("fiche", { p_id: nom }), sb.rpc("roster", { p_id: nom }),
-      ]).then(([f, r]) => {
-        if (f.error || r.error) throw f.error || r.error;
-        Object.assign(t, f.data || {});
-        if (Array.isArray(r.data)) t.players = r.data;
-      }));
+      if (attente) attente.insertAdjacentHTML("afterbegin", '<p class="cc-charge">Chargement de la fiche…</p>');
+      charges.set(nom, Promise.all([sb.rpc("fiche", { p_id: nom }), sb.rpc("roster", { p_id: nom })])
+        .then(([f, r]) => {
+          if (f.error || r.error) throw f.error || r.error;
+          Object.assign(t, f.data || {});
+          if (Array.isArray(r.data)) t.players = r.data;
+          t._complet = true;
+        }));
     }
-    charges.get(nom).then(() => {
-      const b = det.querySelector(".dbox");
-      if (b && typeof blocFac === "function") b.innerHTML = blocFac(t);
-    }).catch(() => {
+    charges.get(nom).then(() => apres(t)).catch(() => {
       charges.delete(nom);
-      const b = det.querySelector(".cc-charge");
-      if (b) b.textContent = "Fiche indisponible pour le moment (réessaie).";
+      const c = document.querySelector(".cc-charge");
+      if (c) c.textContent = "Fiche indisponible pour le moment (réessaie).";
     });
   };
 
@@ -1537,20 +1539,26 @@ lienLu=true; if(facDemandee) ouvrirFac(facDemandee); else ecrireLien();
     if (ARRIVEE && !apresMdp) return montrer("nouveau");   // invité / mot de passe oublié : il choisit son mot de passe
     if (lance) return;
     montrer("chargement");
-    const { data: ok, error } = await sb.rpc("est_autorise");
+    const { data: ok, error } = await sb.rpc(PAGE === "admin" ? "est_admin" : "est_autorise");
     if (error || !ok) { montrer("refuse"); $("cc-refuse-mel").textContent = session.user.email; return; }
-    let facs, pub;
-    try {
-      [facs, { data: pub }] = await Promise.all([toutesLesFacs(), sb.from("publication").select("*").maybeSingle()]);
-    } catch (e) {
-      montrer("connexion"); return dire("Chargement impossible : " + (e.message || e));
+    const { data: admin } = PAGE === "admin" ? { data: true } : await sb.rpc("est_admin");
+    if (PAGE !== "admin") {
+      let facs, pub;
+      try {
+        [facs, { data: pub }] = await Promise.all([toutesLesFacs(), sb.from("publication").select("*").maybeSingle()]);
+      } catch (e) {
+        montrer("connexion"); return dire("Chargement impossible : " + (e.message || e));
+      }
+      // la carte ne montre que les facs lues et localisées (comme write_map_report)
+      window.CC_DATA = PAGE === "carte" ? facs.filter(t => !t.empty && t.lat != null) : facs;
+      document.querySelectorAll(".cc-nteams").forEach(el => { el.textContent = facs.length; });
+      document.querySelectorAll(".cc-nsen").forEach(el => { el.textContent = facs.reduce((a, t) => a + (t.seniors || 0), 0); });
+      document.querySelectorAll(".cc-ncarte").forEach(el => { el.textContent = window.CC_DATA.length; });
+      if (pub && pub.genere_le) $("cc-maj").textContent = "données du " + new Date(pub.genere_le).toLocaleDateString("fr-FR");
     }
     lance = true;
-    window.CC_DATA = facs;
-    document.querySelectorAll(".cc-nteams").forEach(el => { el.textContent = facs.length; });
-    document.querySelectorAll(".cc-nsen").forEach(el => { el.textContent = facs.reduce((a, t) => a + (t.seniors || 0), 0); });
-    if (pub && pub.genere_le) $("cc-maj").textContent = "données du " + new Date(pub.genere_le).toLocaleDateString("fr-FR");
     $("cc-qui").textContent = session.user.email;
+    document.querySelectorAll(".cc-si-admin").forEach(el => { el.hidden = !admin; });
     $("cc-barre").hidden = false;
     montrer(null);
     const s = document.createElement("script");

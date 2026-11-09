@@ -1,0 +1,327 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Campus Caddie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f4f7f1; --panel:#ffffff; --panel2:#eef2ea;
+  --ink:#182016; --muted:#5c6a58; --faint:#8a9785; 
+  --line:#dde3d6; --accent:#2e6b43; --accent-ink:#225032;
+  --h5:#a3372a; --h4:#bd6a26; --h3:#3f7d52; --h2:#5f7d5a; --h1:#8a9885;
+  --chip-d2:#2e6b43; --chip-naia:#7a5a2e; --chip-juco:#2f5d8a; --chip-d1:#8a2f4f; --chip-d3:#5a4a8a;
+  --shadow:0 1px 2px #1820160f,0 4px 16px #18201610;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#11150e; --panel:#191f14; --panel2:#212819;
+  --ink:#e9ede1; --muted:#9aa891; --faint:#6a7862;
+  --line:#2b3323; --accent:#74c288; --accent-ink:#a6e0b4;
+  --h5:#e8776a; --h4:#e0a05a; --h3:#74c288; --h2:#8fae86; --h1:#6a7862;
+  --chip-d2:#74c288; --chip-naia:#c9a76a; --chip-juco:#7fb2e0; --chip-d1:#e08aa8; --chip-d3:#aa9ae0;
+  --shadow:0 1px 2px #0006,0 6px 20px #0004;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:24px 16px 48px}
+h1{font-family:Fraunces,serif;font-size:1.9rem;margin:0 0 .3rem}
+.lede{color:var(--muted);margin:0 0 1.5rem}
+.carte{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow);margin-bottom:1.5rem}
+.carte h2{font-size:1.05rem;margin:0 0 .8rem}
+#inviter{display:flex;gap:.6rem;flex-wrap:wrap;align-items:end}
+#inviter label{display:flex;flex-direction:column;font-size:.85rem;color:var(--muted);gap:.25rem;flex:1 1 180px}
+input,select{font:inherit;padding:.5rem .6rem;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink)}
+button{font:inherit;cursor:pointer}
+.principal{padding:.55rem 1rem;border:0;border-radius:8px;background:var(--accent);color:#fff;font-weight:600}
+.principal:disabled{opacity:.6;cursor:wait}
+#retour{margin:.7rem 0 0;min-height:1.3em;font-size:.9rem}
+#retour.err{color:var(--h5)}#retour.ok{color:var(--accent)}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:.4rem .5rem;border-bottom:1px solid var(--line)}
+td{padding:.5rem;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.coupe td{color:var(--faint)}
+.pastille{display:inline-block;font-size:.75rem;padding:.1rem .45rem;border-radius:999px;background:var(--panel2);color:var(--muted)}
+.pastille.ok{background:#2e6b4322;color:var(--accent)}.pastille.non{background:#a3372a22;color:var(--h5)}
+.lien{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline}
+.mot{color:var(--muted);font-size:.8rem}
+</style>
+<style>
+#cc-ecran{position:fixed;inset:0;z-index:5000;display:grid;place-items:center;padding:16px;background:var(--ground)}
+#cc-ecran[hidden]{display:none}
+.cc-boite{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 24px;box-shadow:var(--shadow);color:var(--ink)}
+.cc-titre{font-family:Fraunces,serif;margin:0;font-size:2rem;color:var(--ink)}.cc-titre span{color:var(--accent)}
+.cc-sous{margin:.2rem 0 1.4rem;color:var(--muted)}
+.cc-boite label{display:block;margin:0 0 .9rem;font-size:.9rem;color:var(--muted)}
+.cc-boite input{display:block;width:100%;box-sizing:border-box;margin-top:.3rem;padding:.6rem .7rem;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink)}
+.cc-boite button[type=submit]{width:100%;padding:.7rem;font:inherit;font-weight:600;border:0;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer}
+.cc-liens{margin:.9rem 0 0;font-size:.85rem;color:var(--muted);text-align:center}
+.cc-liens button,.cc-liens a,#cc-sortir{font:inherit;background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline}
+#cc-msg{min-height:1.2em;margin:.8rem 0 0;font-size:.9rem;color:var(--h5)}#cc-msg.ok{color:var(--muted)}
+#cc-barre{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;padding:.5rem 16px;font-size:.85rem;color:var(--muted);border-bottom:1px solid var(--line);background:var(--panel);position:relative;z-index:4000}
+#cc-barre b{color:var(--accent)}#cc-barre .cc-sep{flex:1}
+#cc-barre nav{display:flex;gap:.7rem}#cc-barre nav a{color:var(--ink);text-decoration:none;font-weight:600}#cc-barre nav a[hidden]{display:none}
+#cc-barre nav a.ici{color:var(--accent);text-decoration:underline}
+.cc-charge{color:var(--muted);font-style:italic}
+</style>
+</head>
+<body>
+<div id="cc-barre" hidden><b>Campus Caddie</b><nav><a href="index.html">Liste</a><a href="carte.html">Carte</a><a class="cc-si-admin" href="admin.html" hidden>Accès</a></nav><span id="cc-maj"></span><span class="cc-sep"></span><span id="cc-qui"></span><button type="button" id="cc-sortir">Se déconnecter</button></div>
+<div id="cc-ecran">
+  <div class="cc-boite">
+    <h1 class="cc-titre">Campus <span>Caddie</span></h1>
+    <p class="cc-sous">Les facs US de golf, sur invitation.</p>
+    <div data-vue="chargement"><p>Chargement…</p></div>
+    <form data-vue="connexion" id="cc-form-mdp" hidden>
+      <label>E-mail<input id="cc-mel" type="email" autocomplete="username" required></label>
+      <label>Mot de passe<input id="cc-mdp" type="password" autocomplete="current-password"></label>
+      <button type="submit">Se connecter</button>
+      <p class="cc-liens"><button type="button" id="cc-lien">Recevoir un lien de connexion</button> · <button type="button" id="cc-oubli">Mot de passe oublié</button></p>
+    </form>
+    <form data-vue="nouveau" id="cc-form-nouveau" hidden>
+      <p>Bienvenue ! Choisis ton mot de passe (10 caractères au moins).</p>
+      <label>Nouveau mot de passe<input id="cc-nouveau" type="password" autocomplete="new-password" required minlength="10"></label>
+      <button type="submit">Enregistrer et entrer</button>
+    </form>
+    <div data-vue="refuse" hidden><p>Le compte <b id="cc-refuse-mel"></b> n'a pas accès à cette page.</p><p class="cc-liens"><a href="index.html">Retour à la liste</a></p></div>
+    <p id="cc-msg" role="status"></p>
+  </div>
+</div>
+
+<main>
+  <h1>Accès</h1>
+  <p class="lede">Qui peut consulter Campus Caddie. Une personne invitée reçoit un e-mail, choisit son mot de passe et entre. Couper un accès est immédiat.</p>
+  <section class="carte">
+    <h2>Inviter quelqu'un</h2>
+    <form id="inviter">
+      <label>E-mail<input id="i-mel" type="email" required placeholder="prenom.nom@exemple.fr"></label>
+      <label>Note (facultatif)<input id="i-note" type="text" placeholder="ex. famille Dupont, coach du club"></label>
+      <label style="flex:0 1 140px">Rôle<select id="i-role"><option value="lecteur">Lecteur</option><option value="admin">Administrateur</option></select></label>
+      <button class="principal" type="submit">Envoyer l'invitation</button>
+    </form>
+    <p id="retour" role="status"></p>
+  </section>
+  <section class="carte">
+    <h2>Personnes invitées <span class="mot" id="compte"></span></h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>E-mail</th><th>Note</th><th>Rôle</th><th>Invitation</th><th>Dernière connexion</th><th>Accès</th></tr></thead>
+      <tbody id="lignes"><tr><td colspan="6" class="mot">Chargement…</td></tr></tbody>
+    </table></div>
+  </section>
+</main>
+<script type="text/plain" id="cc-app">
+/* admin.js */
+// Page « Accès » : lancée par cc.js une fois l'administrateur connecté (window.ccSb).
+(() => {
+  const sb = window.ccSb;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const date = d => d ? new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "";
+  const retour = (txt, ok) => { $("retour").textContent = txt; $("retour").className = ok ? "ok" : "err"; };
+  let moi = null;
+
+  async function charger() {
+    const [{ data: { user } }, { data, error }] = await Promise.all([sb.auth.getUser(), sb.rpc("acces_liste")]);
+    moi = user && user.id;
+    if (error) { $("lignes").innerHTML = `<tr><td colspan="6">Lecture impossible : ${esc(error.message)}</td></tr>`; return; }
+    $("compte").textContent = `· ${data.filter(a => a.actif).length} actif(s) sur ${data.length}`;
+    $("lignes").innerHTML = data.map(a => {
+      const soi = a.user_id === moi;
+      return `<tr class="${a.actif ? "" : "coupe"}" data-id="${a.user_id}">
+        <td>${esc(a.email)}${soi ? ' <span class="mot">(toi)</span>' : ""}</td>
+        <td>${esc(a.note)}</td>
+        <td>${soi ? (a.role === "admin" ? "Administrateur" : "Lecteur")
+          : `<select data-role><option value="lecteur"${a.role === "lecteur" ? " selected" : ""}>Lecteur</option><option value="admin"${a.role === "admin" ? " selected" : ""}>Administrateur</option></select>`}</td>
+        <td>${date(a.invite_le)} ${a.confirme ? "" : '<span class="pastille">en attente</span>'}</td>
+        <td>${a.derniere_connexion ? date(a.derniere_connexion) : '<span class="mot">jamais</span>'}</td>
+        <td>${soi ? '<span class="pastille ok">actif</span>'
+          : `<span class="pastille ${a.actif ? "ok" : "non"}">${a.actif ? "actif" : "coupé"}</span>
+             <button class="lien" data-bascule="${a.actif ? 0 : 1}">${a.actif ? "couper" : "rétablir"}</button>
+             ${a.confirme ? "" : ` · <button class="lien" data-relance="${esc(a.email)}">renvoyer</button>`}`}</td>
+      </tr>`;
+    }).join("") || '<tr><td colspan="6" class="mot">Personne pour l\'instant.</td></tr>';
+  }
+
+  async function inviter(email, role, note) {
+    const { data, error } = await sb.functions.invoke("inviter", { body: { email, role, note } });
+    if (error) {
+      let detail = error.message;
+      try { detail = (await error.context.json()).erreur || detail; } catch { /* pas de corps lisible */ }
+      throw new Error(detail);
+    }
+    return data;
+  }
+
+  $("inviter").addEventListener("submit", async e => {
+    e.preventDefault();
+    const bouton = e.submitter; bouton.disabled = true;
+    const email = $("i-mel").value.trim();
+    retour("Envoi…", true);
+    try {
+      const r = await inviter(email, $("i-role").value, $("i-note").value.trim() || null);
+      retour(r.deja ? `${email} avait déjà un compte : accès rétabli et lien de connexion envoyé.` : `Invitation envoyée à ${email}.`, true);
+      $("inviter").reset();
+      charger();
+    } catch (err) {
+      retour("Invitation impossible : " + err.message);
+    } finally { bouton.disabled = false; }
+  });
+
+  $("lignes").addEventListener("change", async e => {
+    if (!e.target.matches("[data-role]")) return;
+    const id = e.target.closest("tr").dataset.id;
+    const { error } = await sb.from("acces").update({ role: e.target.value }).eq("user_id", id);
+    retour(error ? "Changement impossible : " + error.message : "Rôle modifié.", !error);
+    charger();
+  });
+
+  $("lignes").addEventListener("click", async e => {
+    const b = e.target.closest("[data-bascule],[data-relance]");
+    if (!b) return;
+    if (b.dataset.relance) {
+      try { await inviter(b.dataset.relance, null, null); /* garde rôle et note existants */ retour("Invitation renvoyée.", true); }
+      catch (err) { retour("Renvoi impossible : " + err.message); }
+      return charger();
+    }
+    const id = b.closest("tr").dataset.id, actif = b.dataset.bascule === "1";
+    if (!actif && !confirm("Couper l'accès de cette personne ? Elle ne verra plus rien dès son prochain chargement.")) return;
+    const { error } = await sb.from("acces").update({ actif }).eq("user_id", id);
+    retour(error ? "Changement impossible : " + error.message : (actif ? "Accès rétabli." : "Accès coupé."), !error);
+    charger();
+  });
+
+  charger();
+})();
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js"></script>
+<script>window.CC_PAGE="admin";
+/* Campus Caddie — connexion, chargement des données, fiche à la demande.
+   Inséré par page/construire.py dans chaque page (window.CC_PAGE = "liste" | "carte" | "admin").
+   La page d'origine (son script, type="text/plain" id="cc-app") ne démarre qu'une fois
+   la personne connectée et les données chargées : elle trouve alors window.CC_DATA. */
+(() => {
+  const SB_URL = "https://vdhwwvobnfmryertxlog.supabase.co";
+  const SB_CLE = "sb_publishable__8UNmME51sNlal1jCdv_Qw_20rP75Yx";   // clé publique : faite pour être ici
+  const PAGE = window.CC_PAGE || "liste";
+  const ICI = location.origin + location.pathname;
+  // arrivée par un lien d'invitation / de mot de passe oublié : lu AVANT que supabase-js ne nettoie l'adresse
+  const ARRIVEE = /(?:^#|&)type=(invite|recovery)\b/.exec(location.hash)?.[1] || null;
+  const sb = supabase.createClient(SB_URL, SB_CLE,
+    { auth: { storageKey: "cc-auth", detectSessionInUrl: true, persistSession: true } });
+  window.ccSb = sb;
+
+  const $ = id => document.getElementById(id);
+  const ecran = $("cc-ecran"), msg = $("cc-msg");
+  const montrer = vue => {
+    ecran.hidden = !vue;
+    document.querySelectorAll("#cc-ecran [data-vue]").forEach(el => { el.hidden = el.dataset.vue !== vue; });
+    msg.textContent = "";
+  };
+  const dire = (txt, ok) => { msg.textContent = txt; msg.className = ok ? "ok" : ""; };
+
+  // ------------------------------------------------------------ connexion
+  $("cc-form-mdp").addEventListener("submit", async e => {
+    e.preventDefault();
+    dire("Connexion…", true);
+    const { error } = await sb.auth.signInWithPassword({ email: $("cc-mel").value.trim(), password: $("cc-mdp").value });
+    if (error) return dire("E-mail ou mot de passe incorrect.");
+    demarrer();
+  });
+  $("cc-lien").addEventListener("click", async () => {
+    const email = $("cc-mel").value.trim();
+    if (!email) return dire("Indique ton e-mail, puis clique à nouveau.");
+    dire("Envoi…", true);
+    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: ICI } });
+    dire(error ? "Envoi impossible pour cette adresse (accès sur invitation)." : "C'est envoyé : ouvre le lien reçu par e-mail.", !error);
+  });
+  $("cc-oubli").addEventListener("click", async () => {
+    const email = $("cc-mel").value.trim();
+    if (!email) return dire("Indique ton e-mail, puis clique à nouveau.");
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: ICI });
+    dire(error ? "Envoi impossible." : "Si cette adresse a un accès, un lien vient de partir.", !error);
+  });
+  $("cc-form-nouveau").addEventListener("submit", async e => {
+    e.preventDefault();
+    const p = $("cc-nouveau").value;
+    if (p.length < 10) return dire("10 caractères au moins.");
+    const { error } = await sb.auth.updateUser({ password: p });
+    if (error) return dire("Impossible d'enregistrer ce mot de passe : " + error.message);
+    demarrer(true);
+  });
+  $("cc-sortir").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
+
+  // ------------------------------------------------------------ données
+  async function toutesLesFacs() {
+    const out = [];
+    for (let debut = 0; ; debut += 1000) {
+      const { data, error } = await sb.from("facs").select("liste").order("id").range(debut, debut + 999);
+      if (error) throw error;
+      out.push(...data.map(r => r.liste));
+      if (data.length < 1000) return out.sort((a, b) => (a._ordre ?? 0) - (b._ordre ?? 0));   // ordre de l'export
+    }
+  }
+
+  // fiche + roster d'une fac, chargés une seule fois à sa première ouverture ; puis apres(t) la redessine.
+  // attente : élément où afficher « Chargement… » (facultatif).
+  const charges = new Map();
+  window.ccCharger = (nom, apres, attente) => {
+    const t = (window.CC_DATA || []).find(x => x.name === nom);
+    if (!t || t._complet) return;
+    if (!charges.has(nom)) {
+      if (attente) attente.insertAdjacentHTML("afterbegin", '<p class="cc-charge">Chargement de la fiche…</p>');
+      charges.set(nom, Promise.all([sb.rpc("fiche", { p_id: nom }), sb.rpc("roster", { p_id: nom })])
+        .then(([f, r]) => {
+          if (f.error || r.error) throw f.error || r.error;
+          Object.assign(t, f.data || {});
+          if (Array.isArray(r.data)) t.players = r.data;
+          t._complet = true;
+        }));
+    }
+    charges.get(nom).then(() => apres(t)).catch(() => {
+      charges.delete(nom);
+      const c = document.querySelector(".cc-charge");
+      if (c) c.textContent = "Fiche indisponible pour le moment (réessaie).";
+    });
+  };
+
+  // ------------------------------------------------------------ démarrage
+  let lance = false;
+  async function demarrer(apresMdp) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return montrer("connexion");
+    if (ARRIVEE && !apresMdp) return montrer("nouveau");   // invité / mot de passe oublié : il choisit son mot de passe
+    if (lance) return;
+    montrer("chargement");
+    const { data: ok, error } = await sb.rpc(PAGE === "admin" ? "est_admin" : "est_autorise");
+    if (error || !ok) { montrer("refuse"); $("cc-refuse-mel").textContent = session.user.email; return; }
+    const { data: admin } = PAGE === "admin" ? { data: true } : await sb.rpc("est_admin");
+    if (PAGE !== "admin") {
+      let facs, pub;
+      try {
+        [facs, { data: pub }] = await Promise.all([toutesLesFacs(), sb.from("publication").select("*").maybeSingle()]);
+      } catch (e) {
+        montrer("connexion"); return dire("Chargement impossible : " + (e.message || e));
+      }
+      // la carte ne montre que les facs lues et localisées (comme write_map_report)
+      window.CC_DATA = PAGE === "carte" ? facs.filter(t => !t.empty && t.lat != null) : facs;
+      document.querySelectorAll(".cc-nteams").forEach(el => { el.textContent = facs.length; });
+      document.querySelectorAll(".cc-nsen").forEach(el => { el.textContent = facs.reduce((a, t) => a + (t.seniors || 0), 0); });
+      document.querySelectorAll(".cc-ncarte").forEach(el => { el.textContent = window.CC_DATA.length; });
+      if (pub && pub.genere_le) $("cc-maj").textContent = "données du " + new Date(pub.genere_le).toLocaleDateString("fr-FR");
+    }
+    lance = true;
+    $("cc-qui").textContent = session.user.email;
+    document.querySelectorAll(".cc-si-admin").forEach(el => { el.hidden = !admin; });
+    $("cc-barre").hidden = false;
+    montrer(null);
+    const s = document.createElement("script");
+    s.textContent = $("cc-app").textContent;   // la page d'origine démarre maintenant
+    document.body.appendChild(s);
+  }
+  sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_OUT") location.reload(); });
+  demarrer();
+})();
+</script>
+</body></html>
