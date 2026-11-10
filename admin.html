@@ -109,7 +109,7 @@ h1{color:var(--accent)}
 .cc-logo-txt b span{color:var(--cc-marque2)}
 .cc-devise{font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-top:4px}
 .cc-usa{cursor:pointer;border-radius:3px;transition:color .15s}.cc-usa:hover,.cc-usa.joue{color:var(--cc-marque2)}
-:root[data-cc-theme="neutre"] .cc-devise{font-size:0}:root[data-cc-theme="neutre"] .cc-devise::after{content:"College golf";font-size:10px}
+:root[data-cc-theme="neutre"] .cc-devise{font-size:0;letter-spacing:0}:root[data-cc-theme="neutre"] .cc-devise::after{content:"College golf";font-size:10px;letter-spacing:2.5px}
 .cc-nav{display:flex;gap:4px;background:var(--panel2);padding:4px;border-radius:12px;font-size:14px;font-weight:600}
 .cc-nav a{text-decoration:none;color:var(--muted);padding:9px 16px;border-radius:9px;min-height:20px}
 .cc-nav a[hidden]{display:none}
@@ -140,10 +140,34 @@ h1{color:var(--accent)}
 #cc-mdp-msg{margin:0;font-size:12px;color:var(--muted)}
 @media (max-width:640px){#cc-maj{display:none}#cc-qui{display:none}#cc-compte-btn{padding:4px}.cc-barre-in{gap:10px;padding:10px .8rem}.cc-nav{order:3;width:100%}.cc-nav a{flex:1;text-align:center}.cc-compte{margin-left:auto}}
 /* ---------- écran de connexion ---------- */
-#cc-ecran{position:fixed;inset:0;z-index:5000;display:grid;place-items:center;padding:16px;background:var(--ground)}
+#cc-ecran{position:fixed;inset:0;z-index:5000;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);background:var(--ground);overflow:auto}
+#cc-ecran[data-vue=chargement]{grid-template-columns:1fr}#cc-ecran[data-vue=chargement] .cc-accueil{display:none}
+.cc-accueil{--acc2:#FF9A9E;background:var(--cc-marque);color:#fff;display:flex;flex-direction:column;min-height:100%}
+:root[data-cc-theme="neutre"] .cc-accueil{--acc2:#CFE3D8}
+.cc-acc-in{flex:1;display:flex;flex-direction:column;justify-content:center;gap:30px;padding:48px clamp(24px,6vw,88px);max-width:640px;box-sizing:border-box}
+.cc-accueil .cc-logo{color:#fff}
+:root:not([data-cc-theme="neutre"]) .cc-accueil .cc-lisere{background:linear-gradient(90deg,#FFFFFF33 0 18%,transparent 18%),repeating-linear-gradient(180deg,#C1272D 0 2px,#FFFFFF 2px 4px)}
+.cc-accueil .cc-logo-ic{background:#FFFFFF1F;box-shadow:inset 0 0 0 1px #FFFFFF40}
+.cc-accueil .cc-logo-txt b{color:#fff}.cc-accueil .cc-logo-txt b span{color:var(--acc2)}
+.cc-accueil .cc-devise{color:#FFFFFFB3}.cc-accueil .cc-usa:hover,.cc-accueil .cc-usa.joue{color:var(--acc2)}
+.cc-acc-titre{margin:0;font-size:clamp(1.9rem,3.3vw,2.7rem);line-height:1.1;color:#fff;text-wrap:balance}
+.cc-points{list-style:none;margin:0;padding:0;display:grid;gap:18px}
+.cc-points li{padding-left:16px;border-left:3px solid var(--acc2);line-height:1.45;color:#FFFFFFCC}
+.cc-points b{display:block;color:#fff;font-size:1.02rem}
+.cc-acc-pied{margin:0;font-size:.85rem;letter-spacing:.04em;color:#FFFFFF99}
+.cc-acc-droite{display:grid;place-items:center;padding:32px 16px}
 #cc-ecran[hidden]{display:none}
-.cc-boite{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--cc-marque);border-radius:14px;padding:28px 24px;box-shadow:var(--shadow);color:var(--ink);box-sizing:border-box}
-.cc-titre{margin:0;font-size:2rem;color:var(--accent)}.cc-titre span{color:var(--cc-marque2)}
+.cc-boite{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:30px 26px;box-shadow:var(--shadow);color:var(--ink);box-sizing:border-box}
+.cc-titre{margin:0;font-size:1.7rem;color:var(--accent)}
+@media (max-width:860px){
+  #cc-ecran{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .cc-acc-in{padding:22px 16px 26px;gap:14px;justify-content:flex-start}
+  .cc-acc-titre{font-size:1.45rem}
+  .cc-points{gap:8px}.cc-points li span{display:none}.cc-points li{padding-left:10px}
+  .cc-points b{font-size:.92rem;font-weight:600}
+  .cc-acc-pied{display:none}
+  .cc-acc-droite{place-items:start center;padding:20px 16px 32px}
+}
 .cc-sous{margin:.2rem 0 1.4rem;color:var(--muted)}
 .cc-boite label{display:block;margin:0 0 .9rem;font-size:.9rem;color:var(--muted)}
 .cc-boite input{display:block;width:100%;box-sizing:border-box;margin-top:.3rem;padding:.65rem .75rem;font:inherit;border:1px solid var(--line);border-radius:10px;background:var(--ground);color:var(--ink);min-height:44px}
@@ -190,15 +214,32 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
   </div>
 </div>
 <div id="cc-ecran">
+  <section class="cc-accueil" aria-label="Campus Caddie">
+    <div class="cc-lisere" aria-hidden="true"></div>
+    <div class="cc-acc-in">
+      <div class="cc-logo">
+        <span class="cc-logo-ic"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M7 19V4l9 3.8L7 11.6" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><path class="cc-etoile" d="M16.5 13.2l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z"/></svg></span>
+        <span class="cc-logo-txt"><b>Campus<span>Caddie</span></b><small class="cc-devise">College golf · <span class="cc-usa" title="Clique pour le son">USA</span></small></span>
+      </div>
+      <h2 class="cc-acc-titre">Trouve la fac américaine où une place de golf se libère pour toi.</h2>
+      <ul class="cc-points">
+        <li><b>Les places 2027</b><span>Fac par fac, les joueurs qui partent, donc les places qui s'ouvrent.</span></li>
+        <li><b>Ton niveau</b><span>Ta moyenne comparée aux joueurs qui restent dans chaque équipe.</span></li>
+        <li><b>Le vrai coût</b><span>Scolarité, logement et assurance pour un étudiant étranger, face à ton budget.</span></li>
+      </ul>
+      <p class="cc-acc-pied">D1 · D2 · D3 · NAIA · JUCO — accès sur invitation</p>
+    </div>
+  </section>
+  <div class="cc-acc-droite">
   <div class="cc-boite">
-    <h1 class="cc-titre">Campus <span>Caddie</span></h1>
-    <p class="cc-sous">Les facs US de golf, sur invitation.</p>
+    <h1 class="cc-titre">Connexion</h1>
+    <p class="cc-sous">Avec l'e-mail de ton invitation.</p>
     <div data-vue="chargement"><p>Chargement…</p></div>
     <form data-vue="connexion" id="cc-form-mdp" hidden>
       <label>E-mail<input id="cc-mel" type="email" autocomplete="username" required></label>
       <label>Mot de passe<input id="cc-mdp" type="password" autocomplete="current-password"></label>
       <button type="submit">Se connecter</button>
-      <p class="cc-liens"><button type="button" id="cc-lien">Recevoir un lien de connexion</button> · <button type="button" id="cc-oubli">Mot de passe oublié</button></p>
+      <p class="cc-liens"><button type="button" id="cc-oubli">Mot de passe oublié ?</button></p>
     </form>
     <form data-vue="nouveau" id="cc-form-nouveau" hidden>
       <p>Bienvenue ! Choisis ton mot de passe (10 caractères au moins).</p>
@@ -207,6 +248,7 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
     </form>
     <div data-vue="refuse" hidden><p>Le compte <b id="cc-refuse-mel"></b> n'a pas accès à cette page.</p><p class="cc-liens"><a href="index.html">Retour à la liste</a></p></div>
     <p id="cc-msg" role="status"></p>
+  </div>
   </div>
 </div>
 
@@ -346,6 +388,7 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
   const ecran = $("cc-ecran"), msg = $("cc-msg");
   const montrer = vue => {
     ecran.hidden = !vue;
+    ecran.dataset.vue = vue || "";
     document.querySelectorAll("#cc-ecran [data-vue]").forEach(el => { el.hidden = el.dataset.vue !== vue; });
     msg.textContent = "";
   };
@@ -359,18 +402,12 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
     if (error) return dire("E-mail ou mot de passe incorrect.");
     demarrer();
   });
-  $("cc-lien").addEventListener("click", async () => {
-    const email = $("cc-mel").value.trim();
-    if (!email) return dire("Indique ton e-mail, puis clique à nouveau.");
-    dire("Envoi…", true);
-    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: ICI } });
-    dire(error ? "Envoi impossible pour cette adresse (accès sur invitation)." : "C'est envoyé : ouvre le lien reçu par e-mail.", !error);
-  });
   $("cc-oubli").addEventListener("click", async () => {
     const email = $("cc-mel").value.trim();
-    if (!email) return dire("Indique ton e-mail, puis clique à nouveau.");
+    if (!email) { $("cc-mel").focus(); return dire("Indique ton e-mail ci-dessus, puis clique à nouveau."); }
+    dire("Envoi…", true);
     const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: ICI });
-    dire(error ? "Envoi impossible." : "Si cette adresse a un accès, un lien vient de partir.", !error);
+    dire(error ? "Envoi impossible pour le moment, réessaie dans une minute." : "Si cette adresse a un accès, un e-mail vient de partir : son lien te connecte et te fait choisir un nouveau mot de passe.", !error);
   });
   $("cc-form-nouveau").addEventListener("submit", async e => {
     e.preventDefault();
