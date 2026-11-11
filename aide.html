@@ -1,0 +1,565 @@
+<!doctype html><html lang="fr"><head>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='10' fill='%230B2A55'/><path d='M13 33V8l15 6.4L13 21' fill='none' stroke='%23fff' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'/><path d='M29.5 22.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z' fill='%23E4474E'/></svg>">
+<script>try{document.documentElement.dataset.ccTheme=localStorage.getItem("cc-theme")==="neutre"?"neutre":"usa";}catch(e){document.documentElement.dataset.ccTheme="usa";}</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Campus Caddie</title>
+<style>
+:root{
+  --ground:#f4f7f1; --panel:#ffffff; --panel2:#eef2ea;
+  --ink:#182016; --muted:#5c6a58; --faint:#8a9785; 
+  --line:#dde3d6; --accent:#2e6b43; --accent-ink:#225032;
+  --h5:#a3372a; --h4:#bd6a26; --h3:#3f7d52; --h2:#5f7d5a; --h1:#8a9885;
+  --chip-d2:#2e6b43; --chip-naia:#7a5a2e; --chip-juco:#2f5d8a; --chip-d1:#8a2f4f; --chip-d3:#5a4a8a;
+  --shadow:0 1px 2px #1820160f,0 4px 16px #18201610;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#11150e; --panel:#191f14; --panel2:#212819;
+  --ink:#e9ede1; --muted:#9aa891; --faint:#6a7862;
+  --line:#2b3323; --accent:#74c288; --accent-ink:#a6e0b4;
+  --h5:#e8776a; --h4:#e0a05a; --h3:#74c288; --h2:#8fae86; --h1:#6a7862;
+  --chip-d2:#74c288; --chip-naia:#c9a76a; --chip-juco:#7fb2e0; --chip-d1:#e08aa8; --chip-d3:#aa9ae0;
+  --shadow:0 1px 2px #0006,0 6px 20px #0004;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.55 "Inter",system-ui,sans-serif}
+.ai{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+.ai h1{font-family:"Space Grotesk",sans-serif;font-size:2rem;margin:.2rem 0 .3rem;color:var(--accent)}
+.ai .lede{color:var(--muted);margin:0 0 1.2rem}
+.ai h2{font-family:"Space Grotesk",sans-serif;font-size:1.3rem;margin:2.2rem 0 .6rem;color:var(--accent);scroll-margin-top:90px}
+.ai p{margin:.5rem 0}
+.ai ul,.ai ol{margin:.5rem 0;padding-left:1.3rem}
+.ai li{margin:.25rem 0}
+.ai code{background:var(--panel2);border-radius:5px;padding:.05rem .35rem;font-size:.9em}
+.ai .sommaire{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.92rem}
+.ai .sommaire a{color:var(--accent);font-weight:600;text-decoration:none}
+.ai .sommaire a:hover{text-decoration:underline}
+.ai .tab{overflow-x:auto;margin:.6rem 0}
+.ai table{width:100%;border-collapse:collapse;font-size:.9rem;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.ai th{text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:.5rem .6rem;border-bottom:1px solid var(--line)}
+.ai td{padding:.5rem .6rem;border-bottom:1px solid var(--panel2);vertical-align:top}
+.ai tr:last-child td{border-bottom:0}
+.ai td.n{text-align:right;white-space:nowrap}
+.ai tr.total td{font-weight:700;color:var(--accent)}
+.ai .encart{background:var(--panel2);border-radius:12px;padding:12px 16px;margin:1rem 0}
+.ai a{color:var(--accent)}
+</style>
+<style>
+/* ---------- thèmes Campus Caddie : mêmes noms de variables que la page d'origine ---------- */
+:root[data-cc-theme="usa"]{
+  --ground:#F5F7FA; --panel:#FFFFFF; --panel2:#EEF2F7;
+  --ink:#101B2D; --muted:#5B6B82; --faint:#7E8BA0;
+  --line:#E1E6EE; --accent:#0B2A55; --accent-ink:#061A36;
+  --h5:#C1272D; --h4:#D2642C; --h3:#2F5D8A; --h2:#6E84A3; --h1:#A3AEBE;
+  --chip-d1:#8A2F4F; --chip-d2:#0B2A55; --chip-d3:#5A4A8A; --chip-naia:#7A5A2E; --chip-juco:#2F6F8A;
+  --shadow:0 1px 2px #101B2D0F,0 4px 16px #101B2D12;
+  --cc-marque:#0B2A55; --cc-marque2:#C1272D; --cc-etoile:#E4474E;
+  --cc-lisere:linear-gradient(90deg,#0B2A55 0 18%,transparent 18%),repeating-linear-gradient(180deg,#C1272D 0 2px,#FFFFFF 2px 4px);
+}
+:root[data-cc-theme="neutre"]{
+  --ground:#FAFAF8; --panel:#FFFFFF; --panel2:#F2F2EE;
+  --ink:#22272C; --muted:#6B7178; --faint:#8E9399;
+  --line:#ECECE7; --accent:#4F7A65; --accent-ink:#3B5E4D;
+  --h5:#C4663F; --h4:#D08A4E; --h3:#4F7A65; --h2:#7E9A8B; --h1:#AEB6B1;
+  --chip-d1:#8A5A6A; --chip-d2:#4F7A65; --chip-d3:#6A6A8A; --chip-naia:#8A6A44; --chip-juco:#4A7484;
+  --shadow:0 1px 2px #22272C0D,0 4px 16px #22272C0F;
+  --cc-marque:#4F7A65; --cc-marque2:#4F7A65; --cc-etoile:#FFFFFF00;
+  --cc-lisere:none;
+}
+@media (prefers-color-scheme:dark){
+  :root[data-cc-theme="usa"]:not([data-theme="light"]){
+    --ground:#0E1522; --panel:#151E2E; --panel2:#1C2738;
+    --ink:#E6EBF3; --muted:#9AA8BD; --faint:#6B7A90;
+    --line:#26324A; --accent:#8FB3E8; --accent-ink:#B9D0F2;
+    --h5:#F06A6F; --h4:#EE9A5C; --h3:#8FB3E8; --h2:#7F93B0; --h1:#56657C;
+    --chip-d1:#E08AA8; --chip-d2:#8FB3E8; --chip-d3:#AA9AE0; --chip-naia:#C9A76A; --chip-juco:#7FC4E0;
+    --shadow:0 1px 2px #0006,0 6px 20px #0004;
+    --cc-marque:#2A4E86; --cc-marque2:#F06A6F;
+  }
+  :root[data-cc-theme="neutre"]:not([data-theme="light"]){
+    --ground:#131614; --panel:#1A1E1B; --panel2:#222723;
+    --ink:#E8EBE8; --muted:#A0A8A2; --faint:#6E766F;
+    --line:#2C322D; --accent:#86B49C; --accent-ink:#B2D6C3;
+    --h5:#E59472; --h4:#E0B07A; --h3:#86B49C; --h2:#8FA597; --h1:#5E6760;
+    --shadow:0 1px 2px #0006,0 6px 20px #0004;
+    --cc-marque:#3F6B56; --cc-marque2:#86B49C;
+  }
+}
+/* ---------- typographie ---------- */
+body{font-family:"Inter",system-ui,sans-serif}
+h1,h2,.cc-titre,.tile .n{font-family:"Space Grotesk",system-ui,sans-serif!important;letter-spacing:-.02em}
+h1{color:var(--accent)}
+/* ---------- en-tête ---------- */
+#cc-barre{position:sticky;top:0;z-index:4000;background:var(--panel);border-bottom:1px solid var(--line)}
+#cc-barre[hidden]{display:none}
+.cc-lisere{height:6px;background:var(--cc-lisere)}
+.cc-barre-in{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 1.3rem;max-width:1080px;margin:0 auto;box-sizing:content-box}
+.cc-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.cc-logo-ic{width:38px;height:38px;border-radius:10px;background:var(--cc-marque);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cc-etoile{fill:var(--cc-etoile)}
+.cc-logo-txt{display:flex;flex-direction:column;line-height:1}
+.cc-logo-txt b{font-family:"Space Grotesk",sans-serif;font-size:21px;font-weight:700;letter-spacing:-.3px}
+.cc-logo-txt b span{color:var(--cc-marque2)}
+.cc-devise{font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.cc-usa{cursor:pointer;border-radius:3px;transition:color .15s}.cc-usa:hover,.cc-usa.joue{color:var(--cc-marque2)}
+:root[data-cc-theme="neutre"] .cc-devise{font-size:0;letter-spacing:0}:root[data-cc-theme="neutre"] .cc-devise::after{content:"College golf";font-size:10px;letter-spacing:2.5px}
+.cc-nav{display:flex;gap:4px;background:var(--panel2);padding:4px;border-radius:12px;font-size:14px;font-weight:600}
+.cc-nav a{text-decoration:none;color:var(--muted);padding:9px 16px;border-radius:9px;min-height:20px}
+.cc-nav a[hidden]{display:none}
+.cc-neuf{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:var(--cc-marque2);color:#fff;padding:2px 6px;border-radius:999px;margin-left:4px;vertical-align:1px}
+.cc-nav a.ici{background:var(--panel);color:var(--accent);box-shadow:0 1px 2px #0000001f}
+#cc-maj{font-size:12px;color:var(--faint);flex:1}
+.cc-compte{position:relative}
+#cc-compte-btn{font:inherit;font-size:14px;display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 14px 4px 4px;color:var(--ink);cursor:pointer;min-height:44px;max-width:280px}
+#cc-qui{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cc-av{width:32px;height:32px;border-radius:50%;background:var(--cc-marque);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-transform:uppercase}
+#cc-menu{position:absolute;right:0;top:52px;width:300px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px #0000002e;padding:16px;display:flex;flex-direction:column;gap:12px;z-index:4100;color:var(--ink)}
+#cc-menu[hidden]{display:none}
+.cc-menu-mel{margin:0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.cc-menu-titre{margin:0;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.cc-themes{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--panel2);border-radius:10px;padding:4px}
+.cc-themes button{font:inherit;font-size:14px;font-weight:600;min-height:44px;border:0;border-radius:8px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer}
+.cc-themes button[aria-checked="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px #0000001f}
+.cc-pastille{width:14px;height:14px;border-radius:50%}
+.cc-p-usa{background:#0B2A55;box-shadow:6px 0 0 #C1272D}.cc-p-neutre{background:#4F7A65;box-shadow:6px 0 0 #C4663F}
+.cc-menu-liens{border-top:1px solid var(--line);padding-top:6px;display:flex;flex-direction:column}
+.cc-menu-liens>button{font:inherit;font-size:14px;text-align:left;background:none;border:0;padding:10px 4px;color:var(--ink);cursor:pointer;min-height:44px}
+#cc-mdp-form{display:flex;flex-direction:column;gap:8px;padding:4px 0 8px}
+#cc-mdp-form[hidden]{display:none}
+#cc-mdp-form label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+#cc-mdp-form input{font:inherit;padding:.55rem .6rem;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink)}
+#cc-mdp-form button{font:inherit;font-weight:600;padding:.6rem;border:0;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer}
+:root[data-cc-theme] #cc-mdp-form button{color:var(--panel)}
+#cc-mdp-msg{margin:0;font-size:12px;color:var(--muted)}
+@media (max-width:640px){#cc-maj{display:none}#cc-qui{display:none}#cc-compte-btn{padding:4px}.cc-barre-in{gap:10px;padding:10px .8rem}.cc-nav{order:3;width:100%}.cc-nav a{flex:1;text-align:center}.cc-compte{margin-left:auto}}
+/* ---------- écran de connexion ---------- */
+#cc-ecran{position:fixed;inset:0;z-index:5000;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);background:var(--ground);overflow:auto}
+#cc-ecran[data-vue=chargement]{grid-template-columns:1fr}#cc-ecran[data-vue=chargement] .cc-accueil{display:none}
+.cc-accueil{--acc2:#FF9A9E;background:var(--cc-marque);color:#fff;display:flex;flex-direction:column;min-height:100%}
+:root[data-cc-theme="neutre"] .cc-accueil{--acc2:#CFE3D8}
+.cc-acc-in{flex:1;display:flex;flex-direction:column;justify-content:center;gap:30px;padding:48px clamp(24px,6vw,88px);max-width:640px;box-sizing:border-box}
+.cc-accueil .cc-logo{color:#fff}
+:root:not([data-cc-theme="neutre"]) .cc-accueil .cc-lisere{background:linear-gradient(90deg,#FFFFFF33 0 18%,transparent 18%),repeating-linear-gradient(180deg,#C1272D 0 2px,#FFFFFF 2px 4px)}
+.cc-accueil .cc-logo-ic{background:#FFFFFF1F;box-shadow:inset 0 0 0 1px #FFFFFF40}
+.cc-accueil .cc-logo-txt b{color:#fff}.cc-accueil .cc-logo-txt b span{color:var(--acc2)}
+.cc-accueil .cc-devise{color:#FFFFFFB3}.cc-accueil .cc-usa:hover,.cc-accueil .cc-usa.joue{color:var(--acc2)}
+.cc-acc-titre{margin:0;font-size:clamp(1.9rem,3.3vw,2.7rem);line-height:1.1;color:#fff;text-wrap:balance}
+.cc-points{list-style:none;margin:0;padding:0;display:grid;gap:18px}
+.cc-points li{padding-left:16px;border-left:3px solid var(--acc2);line-height:1.45;color:#FFFFFFCC}
+.cc-points b{display:block;color:#fff;font-size:1.02rem}
+.cc-acc-pied{margin:0;font-size:.85rem;letter-spacing:.04em;color:#FFFFFF99}
+.cc-acc-droite{display:grid;place-items:center;padding:32px 16px}
+#cc-ecran[hidden]{display:none}
+.cc-boite{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:30px 26px;box-shadow:var(--shadow);color:var(--ink);box-sizing:border-box}
+.cc-titre{margin:0;font-size:1.7rem;color:var(--accent)}
+@media (max-width:860px){
+  #cc-ecran{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .cc-acc-in{padding:22px 16px 26px;gap:14px;justify-content:flex-start}
+  .cc-acc-titre{font-size:1.45rem}
+  .cc-points{gap:8px}.cc-points li span{display:none}.cc-points li{padding-left:10px}
+  .cc-points b{font-size:.92rem;font-weight:600}
+  .cc-acc-pied{display:none}
+  .cc-acc-droite{place-items:start center;padding:20px 16px 32px}
+}
+.cc-sous{margin:.2rem 0 1.4rem;color:var(--muted)}
+.cc-boite label{display:block;margin:0 0 .9rem;font-size:.9rem;color:var(--muted)}
+.cc-boite input{display:block;width:100%;box-sizing:border-box;margin-top:.3rem;padding:.65rem .75rem;font:inherit;border:1px solid var(--line);border-radius:10px;background:var(--ground);color:var(--ink);min-height:44px}
+.cc-boite button[type=submit]{width:100%;padding:.75rem;font:inherit;font-weight:600;border:0;border-radius:10px;background:var(--cc-marque);color:#fff;cursor:pointer;min-height:44px}
+.cc-liens{margin:.9rem 0 0;font-size:.85rem;color:var(--muted);text-align:center}
+.cc-liens button,.cc-liens a{font:inherit;background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline}
+#cc-msg{min-height:1.2em;margin:.8rem 0 0;font-size:.9rem;color:var(--h5)}#cc-msg.ok{color:var(--muted)}
+.cc-charge{color:var(--muted);font-style:italic}
+/* ---------- outils de l'atelier : réservés à l'administrateur ---------- */
+body:not(.cc-admin) label:has(#hideempty),body:not(.cc-admin) label:has(#saisoncourante),body:not(.cc-admin) label:has(#todofiche),
+body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(.cc-admin) .fscore{display:none!important}
+</style>
+</head><body>
+<div id="cc-barre" hidden>
+  <div class="cc-lisere" aria-hidden="true"></div>
+  <div class="cc-barre-in">
+    <a class="cc-logo" href="index.html" aria-label="Campus Caddie, accueil">
+      <span class="cc-logo-ic"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M7 19V4l9 3.8L7 11.6" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><path class="cc-etoile" d="M16.5 13.2l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z"/></svg></span>
+      <span class="cc-logo-txt"><b>Campus<span>Caddie</span></b><small class="cc-devise">College golf · <span class="cc-usa" title="Clique pour le son">USA</span></small></span>
+    </a>
+    <nav class="cc-nav" aria-label="Navigation"><a href="explorer.html">Explorer <span class="cc-neuf">nouveau</span></a><a href="index.html">Programmes</a><a href="carte.html">Carte</a><a class="ici" href="aide.html">Aide</a><a class="cc-si-admin" href="admin.html" hidden>Accès</a></nav>
+    <span id="cc-maj"></span>
+    <div class="cc-compte">
+      <button type="button" id="cc-compte-btn" aria-expanded="false" aria-controls="cc-menu"><span class="cc-av" id="cc-av">·</span><span id="cc-qui"></span></button>
+      <div id="cc-menu" hidden>
+        <p class="cc-menu-mel" id="cc-menu-mel"></p>
+        <p class="cc-menu-titre" id="cc-theme-titre">Apparence</p>
+        <div class="cc-themes" role="radiogroup" aria-labelledby="cc-theme-titre">
+          <button type="button" role="radio" aria-checked="true" data-theme-choix="usa"><span class="cc-pastille cc-p-usa" aria-hidden="true"></span>USA</button>
+          <button type="button" role="radio" aria-checked="false" data-theme-choix="neutre"><span class="cc-pastille cc-p-neutre" aria-hidden="true"></span>Neutre</button>
+        </div>
+        <div class="cc-menu-liens">
+          <button type="button" id="cc-mdp-btn" aria-expanded="false">Changer mon mot de passe</button>
+          <form id="cc-mdp-form" hidden>
+            <label>Nouveau mot de passe (10 caractères au moins)<input id="cc-mdp2" type="password" autocomplete="new-password" minlength="10" required></label>
+            <button type="submit">Enregistrer</button>
+            <p id="cc-mdp-msg" role="status"></p>
+          </form>
+          <button type="button" id="cc-sortir">Se déconnecter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="cc-ecran">
+  <section class="cc-accueil" aria-label="Campus Caddie">
+    <div class="cc-lisere" aria-hidden="true"></div>
+    <div class="cc-acc-in">
+      <div class="cc-logo">
+        <span class="cc-logo-ic"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M7 19V4l9 3.8L7 11.6" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><path class="cc-etoile" d="M16.5 13.2l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z"/></svg></span>
+        <span class="cc-logo-txt"><b>Campus<span>Caddie</span></b><small class="cc-devise">College golf · <span class="cc-usa" title="Clique pour le son">USA</span></small></span>
+      </div>
+      <h2 class="cc-acc-titre">Trouve la fac américaine où une place de golf se libère pour toi.</h2>
+      <ul class="cc-points">
+        <li><b>Les places 2027</b><span>Fac par fac, les joueurs qui partent, donc les places qui s'ouvrent.</span></li>
+        <li><b>Ton niveau</b><span>Ta moyenne comparée aux joueurs qui restent dans chaque équipe.</span></li>
+        <li><b>Le vrai coût</b><span>Scolarité, logement et assurance pour un étudiant étranger, face à ton budget.</span></li>
+      </ul>
+      <p class="cc-acc-pied">D1 · D2 · D3 · NAIA · JUCO — accès sur invitation</p>
+    </div>
+  </section>
+  <div class="cc-acc-droite">
+  <div class="cc-boite">
+    <h1 class="cc-titre">Connexion</h1>
+    <p class="cc-sous">Avec l'e-mail de ton invitation.</p>
+    <div data-vue="chargement"><p>Chargement…</p></div>
+    <form data-vue="connexion" id="cc-form-mdp" hidden>
+      <label>E-mail<input id="cc-mel" type="email" autocomplete="username" required></label>
+      <label>Mot de passe<input id="cc-mdp" type="password" autocomplete="current-password"></label>
+      <button type="submit">Se connecter</button>
+      <p class="cc-liens"><button type="button" id="cc-oubli">Mot de passe oublié ?</button></p>
+    </form>
+    <form data-vue="nouveau" id="cc-form-nouveau" hidden>
+      <p>Bienvenue ! Choisis ton mot de passe (10 caractères au moins).</p>
+      <label>Nouveau mot de passe<input id="cc-nouveau" type="password" autocomplete="new-password" required minlength="10"></label>
+      <button type="submit">Enregistrer et entrer</button>
+    </form>
+    <div data-vue="refuse" hidden><p>Le compte <b id="cc-refuse-mel"></b> n'a pas accès à cette page.</p><p class="cc-liens"><a href="index.html">Retour à la liste</a></p></div>
+    <p id="cc-msg" role="status"></p>
+  </div>
+  </div>
+</div>
+
+<main class="ai" id="ai" hidden>
+<h1>Comment ça marche</h1>
+<p class="lede">Campus Caddie aide un golfeur à trouver la fac américaine où une place se libère dans l'équipe masculine de golf pour la rentrée 2027, et qui correspond à son niveau, à son budget et à ses études.</p>
+<nav class="sommaire" aria-label="Sommaire">
+  <a href="#profil">Mon profil</a><a href="#chercher">Chercher</a><a href="#filtres">Filtres</a>
+  <a href="#ponderation">Pondération de Recommandé</a><a href="#fiche">La fiche</a><a href="#selection">Ma sélection</a><a href="#donnees">Les données</a><a href="#connexion">Connexion</a>
+</nav>
+
+<ul>
+  <li><b>1 132 programmes</b> de golf masculin : NCAA D1, D2, D3, NAIA et JUCO (NJCAA, cursus de 2 ans).</li>
+  <li>Pour chaque fac : les <b>places 2027</b> (joueurs qui partent), le niveau de l'équipe, le coût pour un étranger, quatre notes (golf, études, sécurité, cadre de vie) et l'offre de formation.</li>
+  <li>Le site est <b>sur invitation</b> : chacun a son compte, où sont gardés son profil et sa sélection.</li>
+</ul>
+
+<h2 id="profil">Remplir Mon profil</h2>
+<p>Remplis ton profil en premier : sans lui, le site ne peut pas dire si une équipe est à ta portée, si la fac tient dans ton budget ni si ton domaine y est enseigné. Dans <a href="explorer.html">Explorer</a>, clique sur <b>« Mon profil »</b> sous la barre de recherche (ou sur <b>Filtres</b>). Tout est gardé dans ton compte.</p>
+<div class="tab"><table>
+<tr><th>Champ</th><th>Ce qu'on saisit</th><th>À quoi ça sert</th></tr>
+<tr><td>Moyenne sur 18 trous</td><td><code>76</code>, <code>75,4</code>, ou <code>+4</code> (coups au-dessus du par 72)</td><td>Ton niveau face à chaque équipe : À ta portée, Au niveau, Ambitieux</td></tr>
+<tr><td>Budget par an ($)</td><td><code>35000</code>, <code>35 000</code> ou <code>35k</code></td><td>Comparer au coût de chaque fac pour un étranger</td></tr>
+<tr><td>Mon projet d'études</td><td>Un ou plusieurs domaines, ou des spécialités précises</td><td>Badge, filtre et critère « études » du tri Recommandé</td></tr>
+<tr><td>Poursuivre mes études en France après</td><td>Case à cocher</td><td>Ajoute dans chaque fiche une ligne « Poursuivre en France »</td></tr>
+</table></div>
+<p><b>Choisir son projet d'études.</b> 5 domaines se déplient : Sciences et ingénierie, Santé et vivant, Commerce et droit, Sciences humaines et arts, Golf et sport (34 spécialités en tout).</p>
+<ul>
+  <li><b>« Tout le domaine »</b> : n'importe quelle spécialité du domaine te convient.</li>
+  <li><b>Une spécialité</b> (par exemple Physique) : seulement celle-là. On peut en cocher plusieurs, dans plusieurs domaines.</li>
+  <li>Exemple : ingénierie + physique + maths = « une fac qui enseigne au moins l'une des trois ».</li>
+</ul>
+
+<h2 id="chercher">Explorer et chercher</h2>
+<p>L'onglet <a href="explorer.html">Explorer</a> montre la liste des programmes à gauche et la carte à droite. Les deux suivent les mêmes filtres.</p>
+<p><b>La barre de recherche</b> trouve :</p>
+<ul>
+  <li>une fac par son nom (<code>Campbell</code>) ou sa ville (<code>Fort Myers</code>) ;</li>
+  <li>toutes les facs d'un État par son code à deux lettres (<code>TX</code>, <code>FL</code>) ;</li>
+  <li>un joueur par son nom, à partir de 3 lettres : la carte de sa fac affiche « Joueur : … ».</li>
+</ul>
+<p>Les accents et les majuscules ne comptent pas.</p>
+<p><b>Les divisions</b> (Toutes, D1, D2, D3, NAIA, JUCO) : un clic sur une division n'affiche qu'elle ; un clic sur une autre l'ajoute ; « Toutes » remet tout.</p>
+<p><b>La carte</b> : zoomer ou déplacer la carte limite la liste à ce qu'on voit. L'étiquette « Zone de la carte » apparaît ; une croix la retire. Un clic sur un point ouvre un résumé, puis « Voir la fiche ».</p>
+<p><b>Sur téléphone</b> : le bouton « Voir sur la carte » / « Voir la liste » passe de l'une à l'autre. La barre du bas donne Explorer, Ma sélection et Profil.</p>
+<div class="encart"><p><b>Une méthode qui marche</b></p>
+<ol>
+  <li>Remplis ton profil (moyenne, budget, projet d'études).</li>
+  <li>Garde le tri <b>Recommandé</b> : les facs les plus cohérentes avec ton profil viennent en tête.</li>
+  <li>Resserre avec les filtres : « Avec des places 2027 », « À ta portée » ou « Au niveau », « Seulement si mon domaine est enseigné ».</li>
+  <li>Ouvre les fiches, et mets une étoile aux facs qui t'intéressent.</li>
+  <li>Compare ta sélection avec d'autres tris (coût, note, places), puis écris aux coachs.</li>
+</ol></div>
+
+<h2 id="filtres">Les filtres</h2>
+<p>Le bouton <b>Filtres</b> ouvre le panneau. Chaque filtre actif apparaît en étiquette sous la recherche ; une croix le retire, « Tout effacer » les retire tous (la recherche, les divisions et le tri restent).</p>
+<div class="tab"><table>
+<tr><th>Filtre</th><th>Garde les facs…</th><th>Il faut</th></tr>
+<tr><td>Niveau visé : À ta portée</td><td>où tu serais dans les 5 premiers des joueurs qui restent, ou dont l'équipe joue au moins 2 coups au-dessus de toi</td><td>ta moyenne</td></tr>
+<tr><td>Niveau visé : Au niveau</td><td>où tu serais 6e à 8e, ou à ± 2 coups de l'équipe</td><td>ta moyenne</td></tr>
+<tr><td>Niveau visé : Ambitieux</td><td>où tu serais au-delà, ou derrière tous les joueurs qui restent</td><td>ta moyenne</td></tr>
+<tr><td>Seulement dans mon budget</td><td>dont le coût pour un étranger est sous ton budget</td><td>ton budget</td></tr>
+<tr><td>Seulement si mon domaine est enseigné</td><td>qui proposent au moins une spécialité de ton projet</td><td>ton projet d'études</td></tr>
+<tr><td>Note de la fac, au moins</td><td>dont la note globale atteint 2, 2,5, 3 ou 3,5 sur 5</td><td>—</td></tr>
+<tr><td>État</td><td>d'un seul État</td><td>—</td></tr>
+<tr><td>Avec des places 2027</td><td>où au moins un joueur part en 2027</td><td>—</td></tr>
+<tr><td>Avec un joueur français</td><td>qui ont un Français dans l'effectif</td><td>—</td></tr>
+<tr><td>Avec des internationaux</td><td>qui ont au moins un joueur étranger</td><td>—</td></tr>
+<tr><td>Golf indoor (pour l'hiver)</td><td>qui ont une installation couverte</td><td>—</td></tr>
+<tr><td>Parcours à 10 km ou moins</td><td>dont le parcours de l'équipe est à 10 km du campus au plus</td><td>—</td></tr>
+</table></div>
+<p>Le rang se calcule sur les joueurs qui restent l'an prochain et qui ont une moyenne publiée (au moins 3). Sinon, c'est la moyenne de l'équipe qui sert. En JUCO, seule la moyenne de l'équipe compte.</p>
+
+<h2 id="ponderation">Les tris et la pondération de Recommandé</h2>
+<p>Le tri <b>Recommandé</b> (par défaut) classe les facs selon un score de <b>Pertinence sur 100</b>, affiché sur chaque carte. Il additionne cinq critères, chacun noté de 0 à 1 puis multiplié par son poids.</p>
+<div class="tab"><table>
+<tr><th>Critère</th><th>Poids</th><th>Comment il est noté (0 à 1)</th><th>Sans l'information</th></tr>
+<tr><td>Places 2027</td><td class="n">30</td><td>Racine carrée du nombre de départs, plafonné à 12 : 1 place = 0,29 ; 3 = 0,5 ; 6 = 0,71 ; 12 et plus = 1</td><td>—</td></tr>
+<tr><td>Niveau</td><td class="n">20</td><td>À ta portée 1 ; Au niveau 0,85 ; Ambitieux 0,3. Équipe plus faible que toi de plus de 3 coups : − 0,12 par coup au-delà, minimum 0,3 (moins d'intérêt sportif)</td><td>0,5 (pas de moyenne)</td></tr>
+<tr><td>Études</td><td class="n">20</td><td>La meilleure spécialité de ton projet présente dans la fac (détail ci-dessous) ; aucune : 0</td><td>0,5 (pas de projet)</td></tr>
+<tr><td>Note de la fac</td><td class="n">15</td><td>(note globale − 1) / 4 ; note partielle × 0,8</td><td>0,4</td></tr>
+<tr><td>Budget</td><td class="n">15</td><td>1 sous ton budget ; au-dessus : 1 − dépassement / budget (0 si le prix fait le double)</td><td>0,5 (pas de budget ou prix inconnu)</td></tr>
+</table></div>
+<p>Un roster pas encore lu divise le score par deux. À égalité, la fac qui a le plus de places passe devant.</p>
+<p><b>Le critère études, spécialité par spécialité :</b></p>
+<div class="tab"><table>
+<tr><th>La fac propose</th><th>Valeur</th></tr>
+<tr><td>Un bachelor, avec l'accréditation de référence quand le domaine en a une (ABET, AACSB, CCNE ou ACEN, ACS, NASM, NASAD, PGA, CAATE, COSMA)</td><td class="n">1</td></tr>
+<tr><td>Un bachelor sans cette accréditation</td><td class="n">0,8</td></tr>
+<tr><td>Un associate en JUCO (le bachelor se fera après le transfert)</td><td class="n">0,7</td></tr>
+<tr><td>Un associate seul, dans une fac de 4 ans</td><td class="n">0,5 (0,4 sans accréditation)</td></tr>
+<tr><td>Un master seulement</td><td class="n">0,4 (entraînement sportif : 1, le diplôme se fait en master)</td></tr>
+<tr><td>Rien de ton projet, mais un tronc commun de transfert (JUCO)</td><td class="n">0,3</td></tr>
+</table></div>
+<p><b>Exemple</b> : Southern Arkansas (D2), avec une moyenne de 75,4, un budget de 16 500 $ et un projet ingénierie, physique et maths.</p>
+<div class="tab"><table>
+<tr><th>Critère</th><th>Donnée</th><th>Calcul</th><th>Points</th></tr>
+<tr><td>Places</td><td>3 départs</td><td>30 × 0,5</td><td class="n">15</td></tr>
+<tr><td>Niveau</td><td>Au niveau</td><td>20 × 0,85</td><td class="n">17</td></tr>
+<tr><td>Études</td><td>Ingénierie, bachelor accrédité ABET</td><td>20 × 1</td><td class="n">20</td></tr>
+<tr><td>Note</td><td>3,1 sur 5</td><td>15 × 0,525</td><td class="n">7,9</td></tr>
+<tr><td>Budget</td><td>26 640 $, soit 10 140 $ au-dessus</td><td>15 × 0,385</td><td class="n">5,8</td></tr>
+<tr class="total"><td>Pertinence</td><td></td><td></td><td class="n">66</td></tr>
+</table></div>
+<p><b>Les autres tris</b> : Places 2027 (le plus de départs d'abord), Note de la fac, Coût (le moins cher d'abord), Niveau (à ta portée d'abord), Nom. Ils ignorent la pertinence : utile pour comparer ta sélection sous un seul angle.</p>
+
+<h2 id="fiche">Lire la fiche d'une fac</h2>
+<p>Un clic sur le nom d'une fac ouvre sa fiche à la place de la carte. Elle se ferme avec « Revenir à la carte », la touche Échap, ou toute seule si un filtre l'exclut.</p>
+<div class="tab"><table>
+<tr><th>Partie</th><th>Ce qu'elle dit</th></tr>
+<tr><td>Places 2027</td><td>Joueurs qui partent à la fin de la saison (seniors en général), et combien de plus en 2028</td></tr>
+<tr><td>Effectif</td><td>Nombre de joueurs, par année d'études (FR, SO, JR, SR)</td></tr>
+<tr><td>Niveau de l'équipe</td><td>Moyenne de score de l'équipe, et ta position : « tu serais n° 4 sur 9 »</td></tr>
+<tr><td>Notes de la fac</td><td>Golf, Études, Sécurité, Cadre de vie, sur 5, et la note globale</td></tr>
+<tr><td>Coût pour un étranger</td><td>Scolarité, logement, assurance, par an, avant bourse ; l'écart avec ton budget</td></tr>
+<tr><td>Études</td><td>Avec un projet : tes spécialités présentes (niveau, accréditation, diplômés par an), celles qui manquent, et « Poursuivre en France » si la case est cochée. Sans projet : toute l'offre, domaine par domaine. Toujours : la ligne ABET et les accréditations, avec un lien vers chaque annuaire</td></tr>
+<tr><td>En bref</td><td>Présentation de la fac</td></tr>
+<tr><td>Joueurs qui partent en 2027</td><td>Leurs noms et leur moyenne ; « Voir l'effectif complet » montre tout le monde</td></tr>
+<tr><td>Actions</td><td>Écrire au coach, roster officiel, site de l'université</td></tr>
+</table></div>
+<p><b>Fiche détaillée</b> : le bouton du haut affiche tout ce que contient la base (ambiance, sécurité détaillée, parcours, salle de sport, sources). Ce choix est gardé dans ton compte.</p>
+<p>Les places 2027 sont une <b>projection</b> : un senior est un départ probable, pas certain. À confirmer avec le coach.</p>
+
+<h2 id="selection">Ma sélection</h2>
+<p>L'étoile d'une carte ou d'une fiche ajoute la fac à ta sélection ; un second clic la retire. Le bouton <b>Ma sélection</b> (avec le nombre de facs) n'affiche plus qu'elles, et les filtres et les tris s'y appliquent aussi. La sélection est gardée dans ton compte : tu la retrouves sur un autre ordinateur ou sur ton téléphone.</p>
+
+<h2 id="donnees">D'où viennent les données, et leurs limites</h2>
+<p>Les données sont mises à jour à chaque collecte ; la date figure en haut de la page (« données du … »).</p>
+<div class="tab"><table>
+<tr><th>Donnée</th><th>Source</th><th>Limite</th></tr>
+<tr><td>Rosters, départs, moyennes</td><td>Sites officiels des équipes</td><td>Un roster pas encore publié pour la saison n'est pas compté ; moyenne seulement si la fac la publie</td></tr>
+<tr><td>Coût, diplômes, effectifs</td><td><a href="https://collegescorecard.ed.gov/" target="_blank" rel="noopener">College Scorecard</a> (ministère américain de l'Éducation), tarif international du site de la fac quand il est relevé</td><td>Prix avant bourse ; « estimation » quand le tarif étranger n'est pas publié</td></tr>
+<tr><td>Offre de formation</td><td>College Scorecard, diplômes de la dernière année publiée</td><td>Un programme tout petit ou récent peut manquer</td></tr>
+<tr><td>Accréditations</td><td>Annuaires officiels : ABET, AACSB, CCNE, ACEN, ACS, NASM, NASAD, CAATE, PGA of America, COSMA ; annuaire GCSAA (terrains de golf)</td><td>Lus en novembre 2026 ; la liste GCSAA est déclarative, pas une accréditation</td></tr>
+<tr><td>Sécurité</td><td>Statistiques Clery déclarées par chaque campus</td><td>Faits déclarés, pas toute la délinquance du quartier</td></tr>
+<tr><td>Fiches (parcours, indoor, ambiance)</td><td>Recherche sur les sites officiels, vérifiée affirmation par affirmation</td><td>Peut dater d'avant un changement récent</td></tr>
+</table></div>
+<div class="encart"><p><b>À retenir</b> : Campus Caddie aide à trier et à préparer le contact. Les places, les bourses, l'admission et l'équivalence des diplômes en France se confirment toujours auprès du coach, de la fac et de l'université française.</p></div>
+
+<h2 id="connexion">Se connecter</h2>
+<ol>
+  <li>Tu reçois une <b>invitation par e-mail</b>. Le lien te fait choisir ton mot de passe.</li>
+  <li>Ensuite, tu te connectes avec ton e-mail et ce mot de passe.</li>
+  <li>Mot de passe perdu : <b>« Mot de passe oublié ? »</b> sur l'écran de connexion, un lien arrive par e-mail.</li>
+</ol>
+<p>Si l'e-mail n'arrive pas, regarde dans les indésirables. Le menu de ton compte, en haut à droite, permet de changer de thème (USA ou Neutre), de changer de mot de passe et de se déconnecter.</p>
+</main>
+<script type="text/plain" id="cc-app">/* aide */
+document.getElementById("ai").hidden = false;
+if (location.hash) { const c = document.getElementById(location.hash.slice(1)); if (c) c.scrollIntoView(); }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js"></script>
+<script>window.CC_PAGE="aide";
+/* Campus Caddie — connexion, chargement des données, fiche à la demande.
+   Inséré par page/construire.py dans chaque page (window.CC_PAGE = "liste" | "carte" | "admin").
+   La page d'origine (son script, type="text/plain" id="cc-app") ne démarre qu'une fois
+   la personne connectée et les données chargées : elle trouve alors window.CC_DATA. */
+(() => {
+  const SB_URL = "https://vdhwwvobnfmryertxlog.supabase.co";
+  const SB_CLE = "sb_publishable__8UNmME51sNlal1jCdv_Qw_20rP75Yx";   // clé publique : faite pour être ici
+  const PAGE = window.CC_PAGE || "liste";
+  const ICI = location.origin + location.pathname;
+  // arrivée par un lien d'invitation / de mot de passe oublié : lu AVANT que supabase-js ne nettoie l'adresse
+  const ARRIVEE = /(?:^#|&)type=(invite|recovery)\b/.exec(location.hash)?.[1] || null;
+  const sb = supabase.createClient(SB_URL, SB_CLE,
+    { auth: { storageKey: "cc-auth", detectSessionInUrl: true, persistSession: true } });
+  window.ccSb = sb;
+
+  const $ = id => document.getElementById(id);
+  // le « USA » du logo joue l'hymne du site (un 2e clic l'arrête)
+  let sonUSA = null;
+  document.addEventListener("click", e => {
+    const u = e.target.closest(".cc-usa"); if (!u) return;
+    e.preventDefault(); e.stopPropagation();
+    if (!sonUSA) { sonUSA = new Audio("usa.mp3"); sonUSA.addEventListener("ended", () => u.classList.remove("joue")); }
+    if (!sonUSA.paused) { sonUSA.pause(); sonUSA.currentTime = 0; u.classList.remove("joue"); return; }
+    sonUSA.play().then(() => u.classList.add("joue")).catch(() => {});
+  }, true);
+  const ecran = $("cc-ecran"), msg = $("cc-msg");
+  const montrer = vue => {
+    ecran.hidden = !vue;
+    ecran.dataset.vue = vue || "";
+    document.querySelectorAll("#cc-ecran [data-vue]").forEach(el => { el.hidden = el.dataset.vue !== vue; });
+    msg.textContent = "";
+  };
+  const dire = (txt, ok) => { msg.textContent = txt; msg.className = ok ? "ok" : ""; };
+
+  // ------------------------------------------------------------ connexion
+  $("cc-form-mdp").addEventListener("submit", async e => {
+    e.preventDefault();
+    dire("Connexion…", true);
+    const { error } = await sb.auth.signInWithPassword({ email: $("cc-mel").value.trim(), password: $("cc-mdp").value });
+    if (error) return dire("E-mail ou mot de passe incorrect.");
+    demarrer();
+  });
+  $("cc-oubli").addEventListener("click", async () => {
+    const email = $("cc-mel").value.trim();
+    if (!email) { $("cc-mel").focus(); return dire("Indique ton e-mail ci-dessus, puis clique à nouveau."); }
+    dire("Envoi…", true);
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: ICI });
+    dire(error ? "Envoi impossible pour le moment, réessaie dans une minute." : "Si cette adresse a un accès, un e-mail vient de partir : son lien te connecte et te fait choisir un nouveau mot de passe.", !error);
+  });
+  $("cc-form-nouveau").addEventListener("submit", async e => {
+    e.preventDefault();
+    const p = $("cc-nouveau").value;
+    if (p.length < 10) return dire("10 caractères au moins.");
+    const { error } = await sb.auth.updateUser({ password: p });
+    if (error) return dire("Impossible d'enregistrer ce mot de passe : " + error.message);
+    demarrer(true);
+  });
+  $("cc-sortir").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
+
+  // ------------------------------------------------------------ menu du compte, thème
+  const menu = $("cc-menu"), boutonCompte = $("cc-compte-btn");
+  const ouvrirMenu = ouvert => { menu.hidden = !ouvert; boutonCompte.setAttribute("aria-expanded", ouvert); };
+  boutonCompte.addEventListener("click", e => { e.stopPropagation(); ouvrirMenu(menu.hidden); });
+  document.addEventListener("click", e => { if (!menu.hidden && !e.target.closest(".cc-compte")) ouvrirMenu(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !menu.hidden) { ouvrirMenu(false); boutonCompte.focus(); } });
+  function appliquerTheme(theme) {
+    theme = theme === "neutre" ? "neutre" : "usa";               // USA par défaut
+    document.documentElement.dataset.ccTheme = theme;
+    try { localStorage.setItem("cc-theme", theme); } catch { /* navigation privée */ }
+    document.querySelectorAll("[data-theme-choix]").forEach(b => b.setAttribute("aria-checked", b.dataset.themeChoix === theme));
+  }
+  document.querySelectorAll("[data-theme-choix]").forEach(b => b.addEventListener("click", async () => {
+    appliquerTheme(b.dataset.themeChoix);
+    await sb.auth.updateUser({ data: { theme: b.dataset.themeChoix } });   // le choix suit la personne
+  }));
+  $("cc-mdp-btn").addEventListener("click", () => {
+    const f = $("cc-mdp-form"); f.hidden = !f.hidden; $("cc-mdp-btn").setAttribute("aria-expanded", !f.hidden);
+    if (!f.hidden) $("cc-mdp2").focus();
+  });
+  $("cc-mdp-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const p = $("cc-mdp2").value;
+    if (p.length < 10) { $("cc-mdp-msg").textContent = "10 caractères au moins."; return; }
+    const { error } = await sb.auth.updateUser({ password: p });
+    $("cc-mdp-msg").textContent = error ? "Impossible : " + error.message : "Mot de passe changé.";
+    if (!error) { $("cc-mdp2").value = ""; }
+  });
+
+  // ------------------------------------------------------------ données
+  async function toutesLesFacs() {
+    const out = [];
+    for (let debut = 0; ; debut += 1000) {
+      const { data, error } = await sb.from("facs").select("liste").order("id").range(debut, debut + 999);
+      if (error) throw error;
+      out.push(...data.map(r => r.liste));
+      if (data.length < 1000) return out.sort((a, b) => (a._ordre ?? 0) - (b._ordre ?? 0));   // ordre de l'export
+    }
+  }
+
+  // fiche + roster d'une fac, chargés une seule fois à sa première ouverture ; puis apres(t) la redessine.
+  // attente : élément où afficher « Chargement… » (facultatif).
+  const charges = new Map();
+  window.ccCharger = (nom, apres, attente) => {
+    const t = (window.CC_DATA || []).find(x => x.name === nom);
+    if (!t || t._complet) return;
+    if (!charges.has(nom)) {
+      if (attente) attente.insertAdjacentHTML("afterbegin", '<p class="cc-charge">Chargement de la fiche…</p>');
+      charges.set(nom, Promise.all([sb.rpc("fiche", { p_id: nom }), sb.rpc("roster", { p_id: nom })])
+        .then(([f, r]) => {
+          if (f.error || r.error) throw f.error || r.error;
+          Object.assign(t, f.data || {});
+          if (Array.isArray(r.data)) t.players = r.data;
+          t._complet = true;
+        }));
+    }
+    charges.get(nom).then(() => apres(t)).catch(() => {
+      charges.delete(nom);
+      const c = document.querySelector(".cc-charge");
+      if (c) c.textContent = "Fiche indisponible pour le moment (réessaie).";
+    });
+  };
+
+  // ------------------------------------------------------------ démarrage
+  let lance = false;
+  async function demarrer(apresMdp) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return montrer("connexion");
+    if (ARRIVEE && !apresMdp) return montrer("nouveau");   // invité / mot de passe oublié : il choisit son mot de passe
+    if (lance) return;
+    montrer("chargement");
+    const { data: ok, error } = await sb.rpc(PAGE === "admin" ? "est_admin" : "est_autorise");
+    if (error || !ok) { montrer("refuse"); $("cc-refuse-mel").textContent = session.user.email; return; }
+    const { data: admin } = PAGE === "admin" ? { data: true } : await sb.rpc("est_admin");
+    if (PAGE !== "admin" && PAGE !== "aide") {      // l'aide n'a besoin d'aucune donnée
+      let facs, pub;
+      try {
+        [facs, { data: pub }] = await Promise.all([toutesLesFacs(), sb.from("publication").select("*").maybeSingle()]);
+      } catch (e) {
+        montrer("connexion"); return dire("Chargement impossible : " + (e.message || e));
+      }
+      // la carte ne montre que les facs lues et localisées (comme write_map_report)
+      window.CC_DATA = PAGE === "carte" ? facs.filter(t => !t.empty && t.lat != null) : facs;
+      document.querySelectorAll(".cc-nteams").forEach(el => { el.textContent = facs.length; });
+      document.querySelectorAll(".cc-nsen").forEach(el => { el.textContent = facs.reduce((a, t) => a + (t.seniors || 0), 0); });
+      document.querySelectorAll(".cc-ncarte").forEach(el => { el.textContent = window.CC_DATA.length; });
+      if (pub && pub.genere_le) $("cc-maj").textContent = "données du " + new Date(pub.genere_le).toLocaleDateString("fr-FR");
+    }
+    lance = true;
+    window.CC_USER = session.user;          // Explorer : profil et sélection gardés dans le compte
+    window.CC_ADMIN = !!admin;
+    document.body.classList.toggle("cc-admin", !!admin);
+    appliquerTheme((session.user.user_metadata || {}).theme);
+    $("cc-qui").textContent = session.user.email;
+    $("cc-menu-mel").textContent = session.user.email;
+    $("cc-av").textContent = (session.user.email || "?").charAt(0);
+    document.querySelectorAll(".cc-si-admin").forEach(el => { el.hidden = !admin; });
+    $("cc-barre").hidden = false;
+    montrer(null);
+    const s = document.createElement("script");
+    s.textContent = $("cc-app").textContent;   // la page d'origine démarre maintenant
+    document.body.appendChild(s);
+  }
+  sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_OUT") location.reload(); });
+  demarrer();
+})();
+</script>
+</body></html>

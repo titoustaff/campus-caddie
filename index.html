@@ -489,7 +489,7 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
       <span class="cc-logo-ic"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M7 19V4l9 3.8L7 11.6" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><path class="cc-etoile" d="M16.5 13.2l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z"/></svg></span>
       <span class="cc-logo-txt"><b>Campus<span>Caddie</span></b><small class="cc-devise">College golf · <span class="cc-usa" title="Clique pour le son">USA</span></small></span>
     </a>
-    <nav class="cc-nav" aria-label="Navigation"><a href="explorer.html">Explorer <span class="cc-neuf">nouveau</span></a><a class="ici" href="index.html">Programmes</a><a href="carte.html">Carte</a><a class="cc-si-admin" href="admin.html" hidden>Accès</a></nav>
+    <nav class="cc-nav" aria-label="Navigation"><a href="explorer.html">Explorer <span class="cc-neuf">nouveau</span></a><a class="ici" href="index.html">Programmes</a><a href="carte.html">Carte</a><a href="aide.html">Aide</a><a class="cc-si-admin" href="admin.html" hidden>Accès</a></nav>
     <span id="cc-maj"></span>
     <div class="cc-compte">
       <button type="button" id="cc-compte-btn" aria-expanded="false" aria-controls="cc-menu"><span class="cc-av" id="cc-av">·</span><span id="cc-qui"></span></button>
@@ -1736,7 +1736,7 @@ lienLu=true; if(facDemandee) ouvrirFac(facDemandee); else ecrireLien();
     const { data: ok, error } = await sb.rpc(PAGE === "admin" ? "est_admin" : "est_autorise");
     if (error || !ok) { montrer("refuse"); $("cc-refuse-mel").textContent = session.user.email; return; }
     const { data: admin } = PAGE === "admin" ? { data: true } : await sb.rpc("est_admin");
-    if (PAGE !== "admin") {
+    if (PAGE !== "admin" && PAGE !== "aide") {      // l'aide n'a besoin d'aucune donnée
       let facs, pub;
       try {
         [facs, { data: pub }] = await Promise.all([toutesLesFacs(), sb.from("publication").select("*").maybeSingle()]);
