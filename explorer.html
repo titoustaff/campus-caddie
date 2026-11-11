@@ -159,8 +159,17 @@ button{cursor:pointer}
 .ex-b.dans{background:#E6F2EC;color:#1D5E3F}
 .ex-b.hors{background:#FDECEC;color:#9E1F24}
 .ex-b.fr{background:var(--panel2);color:var(--ink)}
+.ex-b.dom{background:#E6F2EC;color:#1D5E3F}
+.fi-etudes{border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;font-size:13px}
+.fi-etudes p{margin:0}
+.fi-etudes .ligne{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.fi-etudes .ligne span{color:var(--muted);text-align:right}
+.fi-etudes .non{color:var(--muted)}
+.fi-etudes .note{font-size:12px;color:var(--muted)}
+.fi-etudes .acc{font-size:12px;color:var(--muted)}
+.fi-etudes .acc a{color:inherit}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ex-b.niveau{background:#4A3315;color:#F5C98B}
-  :root:not([data-theme="light"]) .ex-b.dans{background:#16382A;color:#9BD8B6}:root:not([data-theme="light"]) .ex-b.hors{background:#43191B;color:#F4A9AC}}
+  :root:not([data-theme="light"]) .ex-b.dans,:root:not([data-theme="light"]) .ex-b.dom{background:#16382A;color:#9BD8B6}:root:not([data-theme="light"]) .ex-b.hors{background:#43191B;color:#F4A9AC}}
 .ex-plus{margin:6px auto 0;min-height:44px}
 .ex-vide{padding:30px 10px;text-align:center;color:var(--muted)}
 
@@ -260,6 +269,17 @@ button{cursor:pointer}
 .fl-case{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:46px;border-bottom:1px solid var(--panel2);cursor:pointer}
 .fl-case input{width:22px;height:22px;accent-color:var(--accent);flex-shrink:0}
 .fl-case.off{opacity:.5}
+.fl-dom{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.fl-dom details{border-bottom:1px solid var(--panel2)}
+.fl-dom details:last-child{border-bottom:0}
+.fl-dom summary{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 12px;cursor:pointer;list-style:none;font-weight:600}
+.fl-dom summary::-webkit-details-marker{display:none}
+.fl-dom summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+.fl-dom details[open] summary::after{transform:rotate(225deg) translateY(-2px)}
+.fl-dom summary small{font-weight:500;color:var(--accent);font-size:12px}
+.fl-dom .fl-puces{padding:0 12px 12px}
+.fl-dom .fl-puces button{min-height:36px;padding:0 12px;font-size:13px;font-weight:500}
+.fl-dom .fl-puces button[data-bloc]{font-weight:700}
 .fl-pied{display:flex;gap:10px;padding:12px 20px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
 .fl-pied .ex-lien{font-size:15px;color:var(--accent);min-height:48px}
 .fl-pied .voir{flex:1;height:48px;border:0;border-radius:12px;background:var(--accent);color:var(--panel);font-weight:600;font-size:15px}
@@ -554,6 +574,12 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
       </div>
       <p class="fl-aide">Gardé dans ton compte. Sert à dire si une équipe est à ta portée et si la fac tient dans ton budget.</p>
     </div>
+    <fieldset class="fl-bloc"><legend>Mon projet d'études</legend>
+      <div class="fl-dom" id="fl-etudes"></div>
+      <p class="fl-aide">Choisis un domaine entier ou ouvre-le pour préciser. Gardé dans ton compte, comme ta moyenne.</p>
+      <label class="fl-case"><span>Poursuivre mes études en France après</span><input type="checkbox" id="fl-france"></label>
+      <label class="fl-case" id="fl-domaine-case"><span>Seulement si mon domaine est enseigné</span><input type="checkbox" id="fl-domaine"></label>
+    </fieldset>
     <fieldset class="fl-bloc"><legend>Niveau visé</legend>
       <div class="fl-puces" id="fl-niveaux">
         <button type="button" data-niv="portee" aria-pressed="false">À ta portée</button>
@@ -945,13 +971,67 @@ function niveau(t) {
   return { k, txt: ec >= 0 ? `équipe à +${virg(ec)} coups de toi` : `équipe meilleure de ${virg(-ec)} coups` };
 }
 const NIV_TXT = { portee: "À ta portée", niveau: "Au niveau", ambitieux: "Ambitieux" };
+
+// ------------------------------------------------------------ domaines d'études (phase 5)
+// Mêmes clés que college-golf-search/domaines_etudes.py (BLOCS, SPECIALITES, REFERENCE).
+// t.etu = {spécialité: code} : « a » associate, « b » bachelor, « m » master, « + » accréditation de référence.
+const BLOCS = [
+  ["sci", "Sciences et ingénierie", [["inge", "Ingénierie"], ["info", "Informatique"], ["maths", "Maths"], ["physique", "Physique"], ["chimie", "Chimie"], ["environnement", "Environnement et sciences de la Terre"], ["archi", "Architecture"], ["aviation", "Aviation"], ["technique", "Métiers techniques"]]],
+  ["sante", "Santé et vivant", [["bio", "Biologie (et pré-médecine)"], ["infirmier", "Soins infirmiers"], ["kine", "Kiné et rééducation"], ["sante_autre", "Autres métiers de santé"], ["agri", "Agriculture et agronomie"]]],
+  ["commerce", "Commerce et droit", [["management", "Commerce et management"], ["finance", "Finance"], ["compta", "Comptabilité"], ["marketing", "Marketing"], ["eco", "Économie"], ["droit", "Droit et justice"], ["hotellerie", "Hôtellerie, tourisme et événementiel"]]],
+  ["humain", "Sciences humaines et arts", [["psycho", "Psychologie"], ["socio", "Sciences sociales et politiques"], ["com", "Communication et journalisme"], ["education", "Éducation"], ["lettres", "Langues et lettres"], ["histoire", "Histoire, philosophie, religion"], ["arts", "Arts et design"], ["musique", "Musique"]]],
+  ["sport", "Golf et sport", [["pga", "PGA Golf Management"], ["gazon", "Gestion des terrains de golf"], ["sport_sci", "Sciences du sport"], ["entrainement", "Entraînement sportif"], ["sport_mgmt", "Management du sport"]]],
+];
+const SPEC = new Map(BLOCS.flatMap(([b, , l]) => l.map(([k, nom]) => [k, { nom, bloc: b }])));
+const BLOC_NOM = new Map(BLOCS.map(([b, nom]) => [b, nom]));
+const REF = { inge: "ABET", chimie: "ACS", infirmier: "CCNE ou ACEN", management: "AACSB", finance: "AACSB", compta: "AACSB",
+  marketing: "AACSB", eco: "AACSB", musique: "NASM", arts: "NASAD", pga: "PGA of America", entrainement: "CAATE", sport_mgmt: "COSMA" };
+const ACCR = {
+  abet: ["ABET", "ingénierie", "https://amspub.abet.org/aps/name-search"],
+  aacsb: ["AACSB", "commerce", "https://www.aacsb.edu/accredited"],
+  ccne: ["CCNE", "soins infirmiers", "https://directory.ccnecommunity.org/reports/accprog.asp"],
+  acen: ["ACEN", "soins infirmiers", "https://www.acenursing.org/search-programs"],
+  acs: ["ACS", "chimie", "https://www.acs.org/education/policies/acs-approval-program/approved-programs.html"],
+  nasm: ["NASM", "musique", "https://nasm.arts-accredit.org/directory-lists/accredited-institutions/"],
+  nasad: ["NASAD", "arts et design", "https://nasad.arts-accredit.org/directory-lists/accredited-institutions/"],
+  caate: ["CAATE", "entraînement sportif", "https://accreditation.caate.net/directory/"],
+  pga: ["PGA Golf Management", "métiers du golf", "https://pga.org/membership/university-program/participating-universities"],
+  sport_mgmt: ["COSMA", "management du sport", "https://www.cosmaweb.org/directory-of-accredited-programs.html"],
+  gazon: ["GCSAA", "terrains de golf, formation déclarée", "https://www.gcsaa.org/career/students/turf-program-directory"],
+};
+const NIV_ETU = { a: "associate", b: "bachelor", m: "master" };
+// le projet du profil : clés de blocs et de spécialités -> ensemble des spécialités visées
+function specsVisees(liste) {
+  const r = new Set();
+  for (const k of liste || []) { const b = BLOCS.find(x => x[0] === k); if (b) b[2].forEach(([s]) => r.add(s)); else if (SPEC.has(k)) r.add(k); }
+  return r;
+}
+// une spécialité, dans une fac : 1 = bachelor avec son accréditation de référence quand elle existe ; 0,8 sans elle ;
+// 0,7 associate en JUCO (le bachelor se fera après le transfert) ; 0,5 associate seul dans une fac de 4 ans ; 0,4 master seul
+function valeurSpec(t, k) {
+  const c = (t.etu || {})[k]; if (!c) return 0;
+  if (t.juco) return c.includes("a") || c.includes("b") ? (k === "infirmier" && !c.includes("+") ? 0.56 : 0.7) : 0;   // seule l'ACEN accrédite des associates
+  let v = c.includes("b") ? 1 : c.includes("a") ? 0.5 : 0.4;
+  if (k === "entrainement" && c.includes("m")) v = 1;          // CAATE : le diplôme se fait en master depuis 2022
+  if (REF[k] && !c.includes("+")) v *= 0.8;
+  return v;
+}
+// meilleure spécialité visée présente dans la fac
+function domaine(t) {
+  if (!MES_SPECS.size) return null;
+  let best = null;
+  for (const k of MES_SPECS) { const v = valeurSpec(t, k); if (v > 0 && (!best || v > best.v)) best = { k, v }; }
+  return best;
+}
 const prixTot = t => (t.prix && t.prix.tot != null) ? t.prix.tot : null;
 
 // ------------------------------------------------------------ état
 let MON_SCORE = lireScore((META.profil || {}).score), MON_BUDGET = lireBudget((META.profil || {}).budget);
+let MES_ETUDES = ((META.profil || {}).etudes || []).filter(k => SPEC.has(k) || BLOC_NOM.has(k));
+let MES_SPECS = specsVisees(MES_ETUDES), FRANCE = !!(META.profil || {}).france;
 const SEL = new Set((META.selection || []).filter(n => DATA.some(t => t.name === n)));
 const DEF = () => ({ q: "", divs: new Set(DIVK), note: "", st: "", places: false, fr: false, intl: false, indoor: false,
-  proche: false, niveaux: new Set(), dansBudget: false, sel: false, zone: null, tri: "reco" });
+  proche: false, niveaux: new Set(), dansBudget: false, domaine: false, sel: false, zone: null, tri: "reco" });
 let S = DEF(), LIM = 40, FAC = null, TOUT_EFFECTIF = false;
 let DETAIL = META.fiche === "detail";      // fiche détaillée (celle de la page Programmes) : choix gardé dans le compte
 const PAR_NOM = new Map(DATA.map(t => [t.name, t]));
@@ -979,6 +1059,7 @@ function filtrer(avecZone = true) {
     if (S.note !== "") { const g = gNote(t); if (g == null || g < +S.note) return false; }
     if (S.niveaux.size && MON_SCORE != null) { const n = niveau(t); if (!n || !S.niveaux.has(n.k)) return false; }
     if (S.dansBudget && MON_BUDGET != null) { const p = prixTot(t); if (p == null || p > MON_BUDGET) return false; }
+    if (S.domaine && MES_SPECS.size && !domaine(t)) return false;
     if (avecZone && S.zone && !(t.lat != null && S.zone.contains([t.lat, t.lon]))) return false;
     if (q) {
       const ok = sansAcc(t.name).includes(q) || sansAcc(t.city).includes(q) || sansAcc(t.state) === q
@@ -990,7 +1071,8 @@ function filtrer(avecZone = true) {
 }
 const ORDRE_NIV = { portee: 0, niveau: 1, ambitieux: 2 };
 // « Recommandé » : un score 0-100 qui mélange les critères, pour ne pas classer sur les seules places
-//   places 35 · niveau 25 · note de la fac 25 · budget 15 ; roster pas lu = moitié du score
+//   places 30 · niveau 20 · études 20 · note de la fac 15 · budget 15 (PLAN, phase 5) ; roster pas lu = moitié du score
+//   critère sans donnée du profil (moyenne, budget, projet d'études) : compté pour moitié
 function pertinence(t) {
   const pl = Math.sqrt(Math.min(t.seniors || 0, 12) / 12);
   let nv = 0.5;
@@ -1005,7 +1087,9 @@ function pertinence(t) {
   let bu = 0.5;
   const p = prixTot(t);
   if (MON_BUDGET != null && p != null) bu = p <= MON_BUDGET ? 1 : Math.max(0, 1 - (p - MON_BUDGET) / MON_BUDGET);
-  const sc = 35 * pl + 25 * nv + 25 * nt + 15 * bu;
+  let et = 0.5;
+  if (MES_SPECS.size) { const d = domaine(t); et = d ? d.v : (t.juco && t.etu_gen ? 0.3 : 0); }   // JUCO : tronc commun de transfert
+  const sc = 30 * pl + 20 * nv + 20 * et + 15 * nt + 15 * bu;
   return Math.round(t.empty ? sc / 2 : sc);
 }
 function trier(r) {
@@ -1030,6 +1114,11 @@ function trier(r) {
 function badges(t, q) {
   const b = [];
   const n = niveau(t); if (n) b.push(`<span class="ex-b ${n.k}" title="${esc(n.txt)}">${NIV_TXT[n.k]}</span>`);
+  if (MES_SPECS.size) {
+    const d = domaine(t);
+    if (d) { const c = t.etu[d.k]; b.push(`<span class="ex-b dom" title="Formation dans ton projet d'études">${esc(SPEC.get(d.k).nom)}${c.includes("+") ? " · " + esc(REF[d.k]) : ""}</span>`); }
+    else b.push(`<span class="ex-b hors">Pas ton domaine</span>`);
+  }
   const g = noteGlobale(t); if (g) b.push(`<span class="ex-b note"${g.partiel ? ' title="Note partielle : peu d\'axes renseignés"' : ""}>Note ${virg(g.n)}${g.partiel ? "·" : ""}</span>`);
   const p = prixTot(t);
   if (p != null) {
@@ -1052,7 +1141,7 @@ function carteFac(t, q) {
   <div class="ex-haut"><div><button type="button" class="ex-nom" data-ouvrir>${esc(t.name)}</button><div class="ex-sous">${sousTitre(t)}</div></div>
   <div class="ex-places${t.seniors ? "" : " zero"}"><b>${vide ? "—" : t.seniors || 0}</b><small>places 2027</small></div>
   <button type="button" class="ex-etoile" data-etoile aria-pressed="${dans}" aria-label="${dans ? "Retirer" : "Ajouter"} ${esc(t.name)} ${dans ? "de" : "à"} ma sélection">${ETOILE}</button></div>
-  <div class="ex-badges">${S.tri === "reco" ? `<span class="ex-b ex-reco" title="Places, niveau, note de la fac et budget réunis">Pertinence ${pertinence(t)}</span>` : ""}${badges(t, q)}</div></article>`;
+  <div class="ex-badges">${S.tri === "reco" ? `<span class="ex-b ex-reco" title="Places, niveau, études, note de la fac et budget réunis">Pertinence ${pertinence(t)}</span>` : ""}${badges(t, q)}</div></article>`;
 }
 
 // ------------------------------------------------------------ rendu
@@ -1089,6 +1178,7 @@ function majActifs(n) {
   if (S.zone) tag("zone", "Zone de la carte");
   if (S.niveaux.size && MON_SCORE != null) tag("niveaux", [...S.niveaux].map(k => NIV_TXT[k]).join(" ou "));
   if (S.dansBudget && MON_BUDGET != null) tag("dansBudget", "Dans mon budget");
+  if (S.domaine && MES_SPECS.size) tag("domaine", "Mon domaine enseigné");
   if (S.note !== "") tag("note", `Note ≥ ${S.note.replace(".", ",")}`);
   if (S.st) tag("st", S.st);
   if (S.places) tag("places", "Avec places 2027");
@@ -1098,9 +1188,11 @@ function majActifs(n) {
   if (S.proche) tag("proche", "Parcours à 10 km");
   const nPanneau = tags.length - (S.sel ? 1 : 0) - (S.zone ? 1 : 0);
   $("ex-nfiltres").hidden = !nPanneau; $("ex-nfiltres").textContent = nPanneau;
-  const prof = MON_SCORE != null || MON_BUDGET != null
-    ? `Mon profil : ${[MON_SCORE != null ? "moyenne " + moy(MON_SCORE) : "", MON_BUDGET != null ? "budget " + fmt(MON_BUDGET) + " $/an" : ""].filter(Boolean).join(" · ")} <u>modifier</u>`
-    : "Indique ta moyenne et ton budget <u>ici</u>";
+  const etu = MES_ETUDES.length ? MES_ETUDES.map(k => BLOC_NOM.get(k) || SPEC.get(k).nom) : [];
+  const prof = MON_SCORE != null || MON_BUDGET != null || etu.length
+    ? `Mon profil : ${[MON_SCORE != null ? "moyenne " + moy(MON_SCORE) : "", MON_BUDGET != null ? "budget " + fmt(MON_BUDGET) + " $/an" : "",
+        etu.length ? esc(etu.length > 2 ? etu.slice(0, 2).join(", ") + "…" : etu.join(", ")) : ""].filter(Boolean).join(" · ")} <u>modifier</u>`
+    : "Indique ta moyenne, ton budget et tes études <u>ici</u>";
   const tout = S.divs.size === DIVK.length ? "tous les USA" : [...S.divs].join(", ");
   $("ex-actifs").innerHTML = `<button type="button" class="ex-profil" id="ex-profil"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5.5" r="2.8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 14c.8-2.8 3-4 5.5-4s4.7 1.2 5.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>${prof}</button>`
     + (tags.length ? `<span class="ex-sep"></span>${tags.join("")}<button type="button" class="ex-lien" id="ex-effacer">Tout effacer</button>` : "")
@@ -1198,6 +1290,41 @@ function blocCout(t) {
     <p>${parts.map(([k, v]) => `${k} ${fmt(v)}`).join(" · ")}${p.src === "estime" ? " · estimation" : ""} · avant bourse</p>` : ""}
     ${ecart != null ? `<p class="ecart${ecart <= 0 ? " ok" : ""}">${ecart <= 0 ? `Dans ton budget (${fmt(-ecart)} $ de marge)` : `${fmt(ecart)} $ au-dessus de ton budget`}</p>` : ""}</div>`;
 }
+function blocEtudes(t) {
+  const etu = t.etu || {}, dip = t.etudes_dip || {};
+  if (!Object.keys(etu).length && !t.inge) return "";
+  const niv = c => [...c.replace("+", "")].map(x => NIV_ETU[x]).join(", ");
+  const ligne = k => { const c = etu[k];
+    return `<p class="ligne"><b>${esc(SPEC.get(k).nom)}</b><span>${esc(niv(c))}${c.includes("+") ? " · accrédité " + esc(REF[k]) : ""}${dip[k] ? ` · ${fmt(dip[k])} diplômés/an` : ""}</span></p>`; };
+  const h = [];
+  if (MES_SPECS.size) {
+    // le projet : spécialités visées présentes ; celles qu'on a cochées une à une et qui manquent
+    const oui = [...MES_SPECS].filter(k => etu[k]).sort((a, b) => valeurSpec(t, b) - valeurSpec(t, a));
+    h.push(`<p class="fi-titre">Ton projet d'études</p>`);
+    h.push(oui.length ? oui.map(ligne).join("") : `<p class="non">Aucune formation de ton projet ici.</p>`);
+    const manque = MES_ETUDES.filter(k => SPEC.has(k) && !etu[k]).map(k => SPEC.get(k).nom);
+    if (oui.length && manque.length) h.push(`<p class="non">Pas de : ${esc(manque.join(", "))}.</p>`);
+    if (t.juco) h.push(`<p class="note">Cursus de 2 ans : on y prépare un associate, puis on transfère vers une fac de 4 ans pour le bachelor${t.etu_gen ? " (tronc commun de transfert proposé)" : ""}.</p>`);
+    if (MES_SPECS.has("bio") || MES_SPECS.has("sante_autre")) h.push(`<p class="note">Médecine : aux USA, ce n'est pas un bachelor. On fait un « pre-med » (souvent en biologie), puis la medical school après.</p>`);
+    if (MES_SPECS.has("entrainement") && etu.entrainement) h.push(`<p class="note">Entraînement sportif : depuis 2022, le diplôme qui mène au métier (CAATE) se fait en master.</p>`);
+    if (FRANCE) {
+      const bach = oui.filter(k => etu[k].includes("b"));
+      h.push(`<p class="note"><b>Poursuivre en France :</b> ${bach.length ? `bachelor dans ton domaine ici (${esc(bach.map(k => SPEC.get(k).nom).join(", "))}). ` : t.juco ? "pas de bachelor ici (2 ans) : il se fera dans la fac de 4 ans après le transfert. " : "pas de bachelor dans ton domaine ici. "}L'équivalence (par exemple pour entrer en licence ou en master) est à faire valider par l'université française.</p>`);
+    }
+  } else {
+    // pas de projet : toute l'offre, bloc par bloc
+    h.push(`<p class="fi-titre">Études <small>· indique ton projet dans Mon profil</small></p>`);
+    for (const [b, nom, l] of BLOCS) {
+      const ks = l.map(([k]) => k).filter(k => etu[k] && (etu[k].includes("b") || (t.juco && etu[k].includes("a"))));
+      if (ks.length) h.push(`<p><b>${esc(nom)}</b> : ${ks.map(k => esc(SPEC.get(k).nom) + (etu[k].includes("+") ? ` (${esc(REF[k])})` : "")).join(", ")}</p>`);
+    }
+  }
+  if (t.inge) h.push(`<p><b>Ingénierie${t.juco ? "" : " (ABET)"}</b> : ${esc(t.inge)}</p>`);
+  const acc = (t.accr || []).filter(k => ACCR[k]);
+  if (acc.length) h.push(`<p class="acc">Accréditations : ${acc.map(k => `<a href="${ACCR[k][2]}" target="_blank" rel="noopener">${esc(ACCR[k][0])}</a> (${esc(ACCR[k][1])})`).join(" · ")}</p>`);
+  h.push(`<p class="acc">Offre de formation : College Scorecard (diplômes de la dernière année publiée).</p>`);
+  return `<div class="fi-etudes">${h.join("")}</div>`;
+}
 function texteFiche(v) { return typeof v === "string" && v.length > 4 ? v : ""; }   // « oui » = aperçu avant chargement
 function blocJoueurs(t) {
   const js = (t.players || []).slice();
@@ -1242,6 +1369,7 @@ function dessinerFiche(t) {
         <div class="fi-col">
           <div style="display:flex;flex-direction:column;gap:10px"><p class="fi-titre">Notes de la fac${g ? ` <small>· ${virg(g.n)} sur 5${g.partiel ? ", partielle" : ""}</small>` : ""}</p>${AXES.map(([k, nom]) => axe(t, k, nom)).join("")}</div>
           ${blocCout(t)}
+          ${blocEtudes(t)}
           ${tags.length ? `<div class="ex-badges">${tags.map(x => `<span class="ex-b">${x}</span>`).join("")}</div>` : ""}
         </div>
         <div class="fi-col">
@@ -1308,6 +1436,8 @@ const dlg = $("ex-filtres");
 function remplirPanneau() {
   $("fl-score").value = (META.profil || {}).score || "";
   $("fl-budget").value = (META.profil || {}).budget || "";
+  $("fl-france").checked = FRANCE;
+  dessinerEtudes();
   majPanneau();
 }
 function majPanneau() {
@@ -1316,9 +1446,36 @@ function majPanneau() {
     : "À ta portée : tu serais dans les 5 premiers des joueurs qui restent (ou l'équipe joue 2 coups au-dessus de toi). Au niveau : 6e à 8e (ou ±2 coups).";
   $("fl-dansbudget").disabled = MON_BUDGET == null; $("fl-budget-case").classList.toggle("off", MON_BUDGET == null);
   $("fl-dansbudget").checked = S.dansBudget;
+  $("fl-domaine").disabled = !MES_SPECS.size; $("fl-domaine-case").classList.toggle("off", !MES_SPECS.size);
+  $("fl-domaine").checked = S.domaine;
   document.querySelectorAll("#fl-note button").forEach(b => b.setAttribute("aria-pressed", b.dataset.note === S.note));
   $("fl-etat").value = S.st;
   for (const [id, k] of [["fl-places", "places"], ["fl-fr", "fr"], ["fl-intl", "intl"], ["fl-indoor", "indoor"], ["fl-proche", "proche"]]) $(id).checked = S[k];
+}
+function dessinerEtudes() {
+  const ouverts = new Set([...document.querySelectorAll("#fl-etudes details[open]")].map(d => d.dataset.bloc));
+  $("fl-etudes").innerHTML = BLOCS.map(([b, nom, l]) => {
+    const tout = MES_ETUDES.includes(b), n = l.filter(([k]) => MES_SPECS.has(k)).length;
+    return `<details data-bloc="${b}"${ouverts.has(b) ? " open" : ""}><summary>${esc(nom)}${n ? `<small>${tout ? "tout le domaine" : n + " choisi" + (n > 1 ? "s" : "")}</small>` : ""}</summary>
+      <div class="fl-puces"><button type="button" data-bloc="${b}" aria-pressed="${tout}">Tout le domaine</button>${l.map(([k, s]) => `<button type="button" data-spec="${k}" aria-pressed="${MES_SPECS.has(k)}">${esc(s)}</button>`).join("")}</div></details>`;
+  }).join("");
+}
+function choisirEtude(b) {
+  const bloc = b.dataset.bloc, spec = b.dataset.spec;
+  let l = MES_ETUDES.slice();
+  if (bloc) l = l.includes(bloc) ? l.filter(k => k !== bloc) : [...l.filter(k => !(SPEC.get(k) && SPEC.get(k).bloc === bloc)), bloc];
+  else {
+    const bl = SPEC.get(spec).bloc;
+    if (l.includes(bl)) l = [...l.filter(k => k !== bl), ...BLOCS.find(x => x[0] === bl)[2].map(([k]) => k).filter(k => k !== spec)];   // tout le domaine sauf celle-ci
+    else l = l.includes(spec) ? l.filter(k => k !== spec) : [...l, spec];
+  }
+  MES_ETUDES = l; MES_SPECS = specsVisees(l);
+  enregistrerProfil(); dessinerEtudes(); majPanneau(); renderBientot();
+  if (FAC != null) dessinerFiche(PAR_NOM.get(FAC));
+}
+function enregistrerProfil() {
+  META.profil = { score: $("fl-score").value.trim(), budget: $("fl-budget").value.trim(), etudes: MES_ETUDES, france: FRANCE };
+  garderMeta({ profil: META.profil });
 }
 function ouvrirFiltres(profil) {
   remplirPanneau();
@@ -1330,8 +1487,7 @@ function majProfil() {
   $("fl-score").style.borderColor = $("fl-score").value.trim() && MON_SCORE == null ? "var(--h5)" : "";
   $("fl-budget").style.borderColor = $("fl-budget").value.trim() && MON_BUDGET == null ? "var(--h5)" : "";
   CCFICHE.monScore(MON_SCORE);
-  META.profil = { score: $("fl-score").value.trim(), budget: $("fl-budget").value.trim() };
-  garderMeta({ profil: META.profil });
+  enregistrerProfil();
   majPanneau(); renderBientot();
 }
 
@@ -1395,6 +1551,9 @@ $("fl-niveaux").addEventListener("click", e => { const b = e.target.closest("[da
 $("fl-note").addEventListener("click", e => { const b = e.target.closest("[data-note]"); if (!b) return; S.note = b.dataset.note; majPanneau(); renderBientot(); });
 $("fl-etat").addEventListener("change", e => { S.st = e.target.value; renderBientot(); });
 $("fl-dansbudget").addEventListener("change", e => { S.dansBudget = e.target.checked; renderBientot(); });
+$("fl-domaine").addEventListener("change", e => { S.domaine = e.target.checked; renderBientot(); });
+$("fl-france").addEventListener("change", e => { FRANCE = e.target.checked; enregistrerProfil(); if (FAC != null) dessinerFiche(PAR_NOM.get(FAC)); });
+$("fl-etudes").addEventListener("click", e => { const b = e.target.closest("button[data-bloc], button[data-spec]"); if (b) choisirEtude(b); });
 for (const [id, k] of [["fl-places", "places"], ["fl-fr", "fr"], ["fl-intl", "intl"], ["fl-indoor", "indoor"], ["fl-proche", "proche"]])
   $(id).addEventListener("change", e => { S[k] = e.target.checked; renderBientot(); });
 $("fl-effacer").addEventListener("click", () => { const keep = { tri: S.tri, q: S.q, divs: S.divs, sel: S.sel, zone: S.zone }; S = Object.assign(DEF(), keep); majPanneau(); renderBientot(); });
