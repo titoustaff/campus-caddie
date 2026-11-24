@@ -183,7 +183,7 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
       <span class="cc-logo-ic"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M7 19V4l9 3.8L7 11.6" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><path class="cc-etoile" d="M16.5 13.2l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z"/></svg></span>
       <span class="cc-logo-txt"><b>Campus<span>Caddie</span></b><small class="cc-devise">College golf · <span class="cc-usa" title="Clique pour le son">USA</span></small></span>
     </a>
-    <nav class="cc-nav" aria-label="Navigation"><a href="explorer.html">Explorer <span class="cc-neuf">nouveau</span></a><a href="index.html">Programmes</a><a href="carte.html">Carte</a><a class="ici" href="aide.html">Aide</a><a class="cc-si-admin" href="admin.html" hidden>Accès</a></nav>
+    <nav class="cc-nav" aria-label="Navigation"><a href="explorer.html">Explorer <span class="cc-neuf">nouveau</span></a><a href="index.html">Programmes</a><a href="carte.html">Carte</a><a href="fieldlevel.html">FieldLevel</a><a class="ici" href="aide.html">Aide</a><a class="cc-si-admin" href="admin.html" hidden>Accès</a></nav>
     <span id="cc-maj"></span>
     <div class="cc-compte">
       <button type="button" id="cc-compte-btn" aria-expanded="false" aria-controls="cc-menu"><span class="cc-av" id="cc-av">·</span><span id="cc-qui"></span></button>
@@ -397,7 +397,7 @@ if (location.hash) { const c = document.getElementById(location.hash.slice(1)); 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js"></script>
 <script>window.CC_PAGE="aide";
 /* Campus Caddie — connexion, chargement des données, fiche à la demande.
-   Inséré par page/construire.py dans chaque page (window.CC_PAGE = "liste" | "carte" | "admin").
+   Inséré par page/construire.py dans chaque page (window.CC_PAGE = "liste" | "carte" | "fieldlevel" | "admin"…).
    La page d'origine (son script, type="text/plain" id="cc-app") ne démarre qu'une fois
    la personne connectée et les données chargées : elle trouve alors window.CC_DATA. */
 (() => {
@@ -537,7 +537,10 @@ if (location.hash) { const c = document.getElementById(location.hash.slice(1)); 
         montrer("connexion"); return dire("Chargement impossible : " + (e.message || e));
       }
       // la carte ne montre que les facs lues et localisées (comme write_map_report)
-      window.CC_DATA = PAGE === "carte" ? facs.filter(t => !t.empty && t.lat != null) : facs;
+      window.CC_DATA = PAGE === "carte" ? facs.filter(t => !t.empty && t.lat != null)
+        : PAGE === "fieldlevel" ? facs.filter(t => t.lat != null)    // FieldLevel : aussi les facs au roster non lu
+        : facs;
+      window.CC_FL_HORS = (pub && pub.fieldlevel && pub.fieldlevel.hors) || [];   // 003_fieldlevel.sql
       document.querySelectorAll(".cc-nteams").forEach(el => { el.textContent = facs.length; });
       document.querySelectorAll(".cc-nsen").forEach(el => { el.textContent = facs.reduce((a, t) => a + (t.seniors || 0), 0); });
       document.querySelectorAll(".cc-ncarte").forEach(el => { el.textContent = window.CC_DATA.length; });
