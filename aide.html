@@ -304,7 +304,7 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
 <tr><td>Niveau visé : À ta portée</td><td>où tu serais dans les 5 premiers des joueurs qui restent, ou dont l'équipe joue au moins 2 coups au-dessus de toi</td><td>ta moyenne</td></tr>
 <tr><td>Niveau visé : Au niveau</td><td>où tu serais 6e à 8e, ou à ± 2 coups de l'équipe</td><td>ta moyenne</td></tr>
 <tr><td>Niveau visé : Ambitieux</td><td>où tu serais au-delà, ou derrière tous les joueurs qui restent</td><td>ta moyenne</td></tr>
-<tr><td>Seulement dans mon budget</td><td>dont le coût pour un étranger est sous ton budget</td><td>ton budget</td></tr>
+<tr><td>Seulement dans mon budget (+25 % de marge)</td><td>dont le coût pour un étranger ne dépasse pas ton budget de plus de 25 % (au-delà, il faudrait une grosse bourse). <b>Actif d'office dès que tu indiques un budget</b> ; retire son étiquette pour tout voir. Badge vert : dans le budget ; orange : la bourse nécessaire</td><td>ton budget</td></tr>
 <tr><td>Seulement si mon domaine est enseigné</td><td>qui proposent au moins une spécialité de ton projet</td><td>ton projet d'études</td></tr>
 <tr><td>Note de la fac, au moins</td><td>dont la note globale atteint 2, 2,5, 3 ou 3,5 sur 5</td><td>—</td></tr>
 <tr><td>État</td><td>d'un seul État</td><td>—</td></tr>
@@ -324,9 +324,9 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
 <tr><td>Niveau</td><td class="n">20</td><td>À ta portée 1 ; Au niveau 0,85 ; Ambitieux 0,3. Équipe plus faible que toi de plus de 3 coups : − 0,12 par coup au-delà, minimum 0,3 (moins d'intérêt sportif)</td><td>0,5 (pas de moyenne)</td></tr>
 <tr><td>Études</td><td class="n">20</td><td>La meilleure spécialité de ton projet présente dans la fac (détail ci-dessous) ; aucune : 0</td><td>0,5 (pas de projet)</td></tr>
 <tr><td>Note de la fac</td><td class="n">15</td><td>(note globale − 1) / 4 ; note partielle × 0,8</td><td>0,4</td></tr>
-<tr><td>Budget</td><td class="n">15</td><td>1 sous ton budget ; au-dessus : 1 − dépassement / budget (0 si le prix fait le double)</td><td>0,5 (pas de budget ou prix inconnu)</td></tr>
+<tr><td>Budget</td><td class="n">15</td><td>1 sous ton budget ; de 0 à 25 % au-dessus : descend jusqu'à 0 (1 − dépassement / (25 % du budget)) ; plus de 25 % au-dessus : 0 <b>et score total divisé par deux</b></td><td>0,5 (pas de budget ou prix inconnu)</td></tr>
 </table></div>
-<p>Un roster pas encore lu divise le score par deux. À égalité, la fac qui a le plus de places passe devant.</p>
+<p>Un roster pas encore lu divise le score par deux ; un prix à plus de 25 % au-dessus de ton budget aussi. À égalité, la fac qui a le plus de places passe devant.</p>
 <p><b>Le critère études, spécialité par spécialité :</b></p>
 <div class="tab"><table>
 <tr><th>La fac propose</th><th>Valeur</th></tr>
@@ -337,15 +337,15 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
 <tr><td>Un master seulement</td><td class="n">0,4 (entraînement sportif : 1, le diplôme se fait en master)</td></tr>
 <tr><td>Rien de ton projet, mais un tronc commun de transfert (JUCO)</td><td class="n">0,3</td></tr>
 </table></div>
-<p><b>Exemple</b> : Southern Arkansas (D2), avec une moyenne de 75,4, un budget de 16 500 $ et un projet ingénierie, physique et maths.</p>
+<p><b>Exemple</b> : Southern Arkansas (D2), avec une moyenne de 75,4, un budget de 22 000 $ et un projet ingénierie, physique et maths.</p>
 <div class="tab"><table>
 <tr><th>Critère</th><th>Donnée</th><th>Calcul</th><th>Points</th></tr>
 <tr><td>Places</td><td>3 départs</td><td>30 × 0,5</td><td class="n">15</td></tr>
 <tr><td>Niveau</td><td>Au niveau</td><td>20 × 0,85</td><td class="n">17</td></tr>
 <tr><td>Études</td><td>Ingénierie, bachelor accrédité ABET</td><td>20 × 1</td><td class="n">20</td></tr>
 <tr><td>Note</td><td>3,1 sur 5</td><td>15 × 0,525</td><td class="n">7,9</td></tr>
-<tr><td>Budget</td><td>26 640 $, soit 10 140 $ au-dessus</td><td>15 × 0,385</td><td class="n">5,8</td></tr>
-<tr class="total"><td>Pertinence</td><td></td><td></td><td class="n">66</td></tr>
+<tr><td>Budget</td><td>26 640 $, soit 4 640 $ au-dessus (21 %, dans la marge)</td><td>15 × (1 − 4 640 / 5 500) = 15 × 0,156</td><td class="n">2,3</td></tr>
+<tr class="total"><td>Pertinence</td><td></td><td></td><td class="n">62</td></tr>
 </table></div>
 <p><b>Les autres tris</b> : Places 2027 (le plus de départs d'abord), Note de la fac, Coût (le moins cher d'abord), Niveau (à ta portée d'abord), Nom. Ils ignorent la pertinence : utile pour comparer ta sélection sous un seul angle.</p>
 

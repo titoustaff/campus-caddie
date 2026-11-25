@@ -600,7 +600,7 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
       </div>
       <p class="fl-aide" id="fl-niv-aide">À ta portée : tu serais dans les 5 premiers des joueurs qui restent (ou l'équipe joue 2 coups au-dessus de toi). Au niveau : 6e à 8e (ou ±2 coups).</p>
     </fieldset>
-    <label class="fl-case" id="fl-budget-case"><span>Seulement dans mon budget</span><input type="checkbox" id="fl-dansbudget"></label>
+    <label class="fl-case" id="fl-budget-case"><span>Seulement dans mon budget (+25 % de marge)</span><input type="checkbox" id="fl-dansbudget"></label>
     <fieldset class="fl-bloc"><legend>Note de la fac, au moins</legend>
       <div class="fl-seg" id="fl-note">
         <button type="button" data-note="" aria-pressed="true">Toutes</button>
@@ -1069,6 +1069,9 @@ function domaine(t) {
   return best;
 }
 const prixTot = t => (t.prix && t.prix.tot != null) ? t.prix.tot : null;
+// budget du profil : filtre actif par défaut, avec une marge (fac accessible avec une petite bourse)
+const MARGE = 1.25;
+const plafond = () => MON_BUDGET * MARGE;
 
 // ------------------------------------------------------------ état
 let MON_SCORE = lireScore((META.profil || {}).score), MON_BUDGET = lireBudget((META.profil || {}).budget);
@@ -1076,7 +1079,7 @@ let MES_ETUDES = ((META.profil || {}).etudes || []).filter(k => SPEC.has(k) || B
 let MES_SPECS = specsVisees(MES_ETUDES), FRANCE = !!(META.profil || {}).france;
 const SEL = new Set((META.selection || []).filter(n => DATA.some(t => t.name === n)));
 const DEF = () => ({ q: "", divs: new Set(DIVK), note: "", st: "", places: false, fr: false, intl: false, indoor: false,
-  proche: false, niveaux: new Set(), dansBudget: false, domaine: false, sel: false, zone: null, tri: "reco" });
+  proche: false, niveaux: new Set(), dansBudget: true, domaine: false, sel: false, zone: null, tri: "reco" });
 let S = DEF(), LIM = 40, FAC = null, TOUT_EFFECTIF = false;
 let DETAIL = META.fiche === "detail";      // fiche détaillée (celle de la page Programmes) : choix gardé dans le compte
 const PAR_NOM = new Map(DATA.map(t => [t.name, t]));
@@ -1103,7 +1106,7 @@ function filtrer(avecZone = true) {
     if (S.st && t.state !== S.st) return false;
     if (S.note !== "") { const g = gNote(t); if (g == null || g < +S.note) return false; }
     if (S.niveaux.size && MON_SCORE != null) { const n = niveau(t); if (!n || !S.niveaux.has(n.k)) return false; }
-    if (S.dansBudget && MON_BUDGET != null) { const p = prixTot(t); if (p == null || p > MON_BUDGET) return false; }
+    if (S.dansBudget && MON_BUDGET != null) { const p = prixTot(t); if (p == null || p > plafond()) return false; }
     if (S.domaine && MES_SPECS.size && !domaine(t)) return false;
     if (avecZone && S.zone && !(t.lat != null && S.zone.contains([t.lat, t.lon]))) return false;
     if (q) {
@@ -1131,11 +1134,12 @@ function pertinence(t) {
   const nt = g ? Math.max(0, (g.n - 1) / 4) * (g.partiel ? 0.8 : 1) : 0.4;
   let bu = 0.5;
   const p = prixTot(t);
-  if (MON_BUDGET != null && p != null) bu = p <= MON_BUDGET ? 1 : Math.max(0, 1 - (p - MON_BUDGET) / MON_BUDGET);
+  if (MON_BUDGET != null && p != null) bu = p <= MON_BUDGET ? 1 : Math.max(0, 1 - (p - MON_BUDGET) / (plafond() - MON_BUDGET));   // 0 à +25 %
   let et = 0.5;
   if (MES_SPECS.size) { const d = domaine(t); et = d ? d.v : (t.juco && t.etu_gen ? 0.3 : 0); }   // JUCO : tronc commun de transfert
   const sc = 30 * pl + 20 * nv + 20 * et + 15 * nt + 15 * bu;
-  return Math.round(t.empty ? sc / 2 : sc);
+  const tropCher = MON_BUDGET != null && p != null && p > plafond();          // au-delà de la marge : score divisé par deux
+  return Math.round(sc / (t.empty ? 2 : 1) / (tropCher ? 2 : 1));
 }
 function trier(r) {
   const o = t => t._ordre ?? 0;
@@ -1171,7 +1175,9 @@ function badges(t, q) {
   const p = prixTot(t);
   if (p != null) {
     if (MON_BUDGET == null) b.push(`<span class="ex-b">${fmt(p)} $/an</span>`);
-    else b.push(`<span class="ex-b ${p <= MON_BUDGET ? "dans" : "hors"}">${fmt(p)} $/an · ${p <= MON_BUDGET ? "dans le budget" : "au-dessus du budget"}</span>`);
+    else if (p <= MON_BUDGET) b.push(`<span class="ex-b dans">${fmt(p)} $/an · dans le budget</span>`);
+    else if (p <= plafond()) b.push(`<span class="ex-b niveau" title="Accessible avec une bourse d'environ ${fmt(p - MON_BUDGET)} $ par an">${fmt(p)} $/an · bourse ≈ ${fmt(p - MON_BUDGET)} $ nécessaire</span>`);
+    else b.push(`<span class="ex-b hors">${fmt(p)} $/an · au-dessus du budget</span>`);
   }
   if (t.french > 0) b.push(`<span class="ex-b fr">Joueur français</span>`);
   if (t.intl > 0 && !(t.french > 0)) b.push(`<span class="ex-b">${t.intl} internationa${t.intl > 1 ? "ux" : "l"}</span>`);
@@ -1225,7 +1231,7 @@ function majActifs(n) {
   if (S.sel) tag("sel", "Ma sélection");
   if (S.zone) tag("zone", "Zone de la carte");
   if (S.niveaux.size && MON_SCORE != null) tag("niveaux", [...S.niveaux].map(k => NIV_TXT[k]).join(" ou "));
-  if (S.dansBudget && MON_BUDGET != null) tag("dansBudget", "Dans mon budget");
+  if (S.dansBudget && MON_BUDGET != null) tag("dansBudget", `Budget ≤ ${fmt(plafond())} $ (+25 %)`);
   if (S.domaine && MES_SPECS.size) tag("domaine", "Mon domaine enseigné");
   if (S.note !== "") tag("note", `Note ≥ ${S.note.replace(".", ",")}`);
   if (S.st) tag("st", S.st);
@@ -1532,7 +1538,9 @@ function ouvrirFiltres(profil) {
   if (profil) $("fl-score").focus();
 }
 function majProfil() {
+  const avant = MON_BUDGET;
   MON_SCORE = lireScore($("fl-score").value); MON_BUDGET = lireBudget($("fl-budget").value);
+  if (avant == null && MON_BUDGET != null) S.dansBudget = true;      // budget saisi : le filtre s'active
   $("fl-score").style.borderColor = $("fl-score").value.trim() && MON_SCORE == null ? "var(--h5)" : "";
   $("fl-budget").style.borderColor = $("fl-budget").value.trim() && MON_BUDGET == null ? "var(--h5)" : "";
   CCFICHE.monScore(MON_SCORE);
@@ -1565,7 +1573,7 @@ $("ex-liste").addEventListener("mouseover", e => { const c = e.target.closest(".
 $("ex-liste").addEventListener("mouseleave", () => surligner(null));
 $("ex-actifs").addEventListener("click", e => {
   if (e.target.closest("#ex-profil")) return ouvrirFiltres(true);
-  if (e.target.closest("#ex-effacer")) { const tri = S.tri, q = S.q, divs = S.divs; S = DEF(); Object.assign(S, { tri, q, divs }); toutLesUSA(); return relancer(); }
+  if (e.target.closest("#ex-effacer")) { const tri = S.tri, q = S.q, divs = S.divs; S = DEF(); Object.assign(S, { tri, q, divs, dansBudget: false }); toutLesUSA(); return relancer(); }
   const b = e.target.closest("[data-retirer]"); if (!b) return;
   const k = b.dataset.retirer;
   if (k === "niveaux") S.niveaux = new Set(); else if (k === "zone") { S.zone = null; toutLesUSA(); } else if (k === "note" || k === "st") S[k] = ""; else S[k] = false;
@@ -1605,7 +1613,7 @@ $("fl-france").addEventListener("change", e => { FRANCE = e.target.checked; enre
 $("fl-etudes").addEventListener("click", e => { const b = e.target.closest("button[data-bloc], button[data-spec]"); if (b) choisirEtude(b); });
 for (const [id, k] of [["fl-places", "places"], ["fl-fr", "fr"], ["fl-intl", "intl"], ["fl-indoor", "indoor"], ["fl-proche", "proche"]])
   $(id).addEventListener("change", e => { S[k] = e.target.checked; renderBientot(); });
-$("fl-effacer").addEventListener("click", () => { const keep = { tri: S.tri, q: S.q, divs: S.divs, sel: S.sel, zone: S.zone }; S = Object.assign(DEF(), keep); majPanneau(); renderBientot(); });
+$("fl-effacer").addEventListener("click", () => { const keep = { tri: S.tri, q: S.q, divs: S.divs, sel: S.sel, zone: S.zone }; S = Object.assign(DEF(), keep, { dansBudget: false }); majPanneau(); renderBientot(); });
 MOBILE.addEventListener("change", () => { if (!MOBILE.matches) { document.body.classList.remove("ex-vue-carte"); initCarte(); setTimeout(() => map && map.invalidateSize(), 30); } });
 
 // ------------------------------------------------------------ démarrage
