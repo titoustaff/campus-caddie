@@ -160,6 +160,18 @@ button{cursor:pointer}
 .ex-b.hors{background:#FDECEC;color:#9E1F24}
 .ex-b.fr{background:var(--panel2);color:var(--ink)}
 .ex-b.dom{background:#E6F2EC;color:#1D5E3F}
+/* ---------- onglet FieldLevel (même page, window.CC_PAGE = "fieldlevel") ---------- */
+.ex-fl{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 16px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.ex-fl p{margin:0}
+.ex-fl b{color:var(--ink)}
+.ex-fl details summary{cursor:pointer;color:var(--accent);font-weight:600;min-height:32px;display:flex;align-items:center}
+.ex-fl ul{margin:4px 0 0;padding-left:18px;columns:2 220px;column-gap:18px}
+.ex-fl li{break-inside:avoid;margin-bottom:3px}
+.ex-b.fl{background:color-mix(in srgb,var(--accent) 12%,var(--panel));color:var(--accent)}
+.ex-b.flecart{background:#FFF1DD;color:#8A4A00}
+.fi-fl{border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.fi-fl p{margin:0}
+.fi-fl .ecart{color:#8A4A00;font-weight:600}
 .fi-etudes{border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;font-size:13px}
 .fi-etudes p{margin:0}
 .fi-etudes .ligne{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
@@ -927,6 +939,39 @@ const sansAcc = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").to
 const ETOILE = '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 7.8l5-.7z" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 const MOBILE = matchMedia("(max-width:820px)");
 
+// ------------------------------------------------------------ onglet FieldLevel : même page, autres données
+// cc.js ne garde que les facs vues sur FieldLevel (t.fl, copié à la main : le site interdit la collecte
+// automatique) ; window.CC_FL_HORS = programmes FieldLevel absents de notre base (publication.fieldlevel).
+const FL = window.CC_PAGE === "fieldlevel";
+const FL_HORS = FL ? (window.CC_FL_HORS || []) : [];
+const FL_DIV = { "NCAA D1": "D1", "NCAA D2": "D2", "NCAA D3": "D3", "NAIA": "NAIA",
+  "NJCAA D1": "NJCAA I", "NJCAA D2": "NJCAA II", "NJCAA D3": "NJCAA III" };
+// division affichée par FieldLevel différente de celle de notre base (base peut-être périmée)
+const flEcart = t => !!(t.fl && FL_DIV[t.fl.asso] && t.division && FL_DIV[t.fl.asso] !== t.division);
+const dateFr = s => s ? new Date(s + "T12:00:00").toLocaleDateString("fr-FR") : "";
+function bandeauFL(n) {
+  if (!FL) return "";
+  const vu = DATA.map(t => t.fl && t.fl.vu_le).filter(Boolean).sort().pop();
+  const ecarts = DATA.filter(flEcart).length;
+  const parAsso = {};
+  for (const p of FL_HORS) (parAsso[p.asso || "?"] = parAsso[p.asso || "?"] || []).push(p);
+  const hors = Object.keys(parAsso).sort().map(a => `<li><b>${esc(a)}</b> : ${parAsso[a].map(p =>
+    esc(p.nom) + (p.ecartee ? ` <small>(${esc(p.ecartee)})</small>` : ` <small>(${esc([p.ville, p.etat].filter(Boolean).join(", "))})</small>`)).join(" · ")}</li>`).join("");
+  return `<div class="ex-fl"><p><b>${DATA.length}</b> programmes de notre base sont présents sur FieldLevel${vu ? ` (listes relevées le ${dateFr(vu)})` : ""}${n !== DATA.length ? ` · ${n} avec les filtres` : ""}.
+    Listes copiées à la main depuis fieldlevel.com : la présence d'une équipe ne veut pas dire qu'elle recrute pour 2027.</p>
+    ${ecarts ? `<p>${ecarts} programme${ecarts > 1 ? "s ont" : " a"} une division différente sur FieldLevel (badge orange) : notre base est peut-être en retard.</p>` : ""}
+    ${FL_HORS.length ? `<details><summary>${FL_HORS.length} programme${FL_HORS.length > 1 ? "s" : ""} FieldLevel absent${FL_HORS.length > 1 ? "s" : ""} de notre base</summary><ul>${hors}</ul></details>` : ""}</div>`;
+}
+function blocFL(t) {
+  if (!FL || !t.fl) return "";
+  const f = t.fl, an = f.annonces || [];
+  return `<div class="fi-fl"><p class="fi-titre">Sur FieldLevel</p>
+    <p>${esc(f.asso)} · ${esc([f.ville, f.etat].filter(Boolean).join(", "))}${f.vu_le ? ` · vu le ${dateFr(f.vu_le)}` : ""}</p>
+    ${flEcart(t) ? `<p class="ecart">Division ${esc(f.asso)} sur FieldLevel, ${esc(t.division)} dans notre base : à vérifier.</p>` : ""}
+    ${an.length ? an.map(a => `<p>Recrute pour la promo <b>${esc(a.promo || "?")}</b>${a.publiee_le ? ` · annonce du ${esc(a.publiee_le)}` : ""}${a.coach ? ` · ${esc(a.coach)}` : ""}</p>`).join("")
+      : `<p class="fi-avert">Pas d'annonce de recrutement relevée. Consulte la page de l'équipe sur fieldlevel.com.</p>`}</div>`;
+}
+
 // ------------------------------------------------------------ règles (mêmes que la page Programmes)
 const DIVK = ["D1", "D2", "D3", "NAIA", "JUCO"];
 const divKey = t => t.juco ? "JUCO" : (["D1", "D2", "D3"].includes(t.division) ? t.division : "NAIA");
@@ -1113,6 +1158,9 @@ function trier(r) {
 // ------------------------------------------------------------ cartes de la liste
 function badges(t, q) {
   const b = [];
+  if (FL && t.fl) b.push(flEcart(t)
+    ? `<span class="ex-b flecart" title="Division différente dans notre base (${esc(t.division)})">FieldLevel · ${esc(t.fl.asso)}</span>`
+    : `<span class="ex-b fl">FieldLevel · ${esc(t.fl.asso)}</span>`);
   const n = niveau(t); if (n) b.push(`<span class="ex-b ${n.k}" title="${esc(n.txt)}">${NIV_TXT[n.k]}</span>`);
   if (MES_SPECS.size) {
     const d = domaine(t);
@@ -1154,9 +1202,9 @@ function render() {
   // la fiche ouverte ne correspond plus aux critères : on la ferme et on revient à la carte
   if (FAC != null && !r.some(t => t.name === FAC)) fermer();
   if (!r.length) {
-    liste.innerHTML = `<p class="ex-vide">${S.sel && !SEL.size ? "Ta sélection est vide : clique sur l'étoile d'une fac pour l'y ajouter." : S.zone ? "Aucun programme dans cette partie de la carte : dézoome ou déplace-la." : "Aucun programme ne correspond. Retire un filtre pour élargir."}</p>`;
+    liste.innerHTML = bandeauFL(0) + `<p class="ex-vide">${S.sel && !SEL.size ? "Ta sélection est vide : clique sur l'étoile d'une fac pour l'y ajouter." : S.zone ? "Aucun programme dans cette partie de la carte : dézoome ou déplace-la." : "Aucun programme ne correspond. Retire un filtre pour élargir."}</p>`;
   } else {
-    liste.innerHTML = r.slice(0, LIM).map(t => carteFac(t, q)).join("")
+    liste.innerHTML = bandeauFL(r.length) + r.slice(0, LIM).map(t => carteFac(t, q)).join("")
       + (r.length > LIM ? `<button type="button" class="ex-btn ex-plus" id="ex-plus">Afficher ${Math.min(40, r.length - LIM)} de plus (encore ${r.length - LIM})</button>` : "");
   }
   majActifs(r.length);
@@ -1365,6 +1413,7 @@ function dessinerFiche(t) {
         <div class="fi-ch"><span>Effectif</span><b>${effectif || "—"}</b><small>${annees || "&nbsp;"}</small></div>
         <div class="fi-ch"><span>Niveau de l'équipe</span><b>${t.team_avg != null ? virg(t.team_avg) : "—"}</b><small>${n ? `<b style="font:inherit;font-weight:700;color:var(--accent)">${NIV_TXT[n.k]}</b> · ${esc(n.txt)}` : MON_SCORE == null ? "moyenne · indique la tienne" : "moyenne de score"}</small></div>
       </div>
+      ${blocFL(t)}
       ${DETAIL ? `<div class="fi-detail">${t._complet ? CCFICHE.blocFac(t) : ""}</div>` : `<div class="fi-deux">
         <div class="fi-col">
           <div style="display:flex;flex-direction:column;gap:10px"><p class="fi-titre">Notes de la fac${g ? ` <small>· ${virg(g.n)} sur 5${g.partiel ? ", partielle" : ""}</small>` : ""}</p>${AXES.map(([k, nom]) => axe(t, k, nom)).join("")}</div>
@@ -1715,7 +1764,7 @@ if (lien && PAR_NOM.has(lien)) ouvrir(lien, true);
       }
       // la carte ne montre que les facs lues et localisées (comme write_map_report)
       window.CC_DATA = PAGE === "carte" ? facs.filter(t => !t.empty && t.lat != null)
-        : PAGE === "fieldlevel" ? facs.filter(t => t.lat != null)    // FieldLevel : aussi les facs au roster non lu
+        : PAGE === "fieldlevel" ? facs.filter(t => t.fl)             // FieldLevel : Explorer limité aux facs vues sur FieldLevel
         : facs;
       window.CC_FL_HORS = (pub && pub.fieldlevel && pub.fieldlevel.hors) || [];   // 003_fieldlevel.sql
       document.querySelectorAll(".cc-nteams").forEach(el => { el.textContent = facs.length; });

@@ -3,11 +3,13 @@
 <script>try{document.documentElement.dataset.ccTheme=localStorage.getItem("cc-theme")==="neutre"?"neutre":"usa";}catch(e){document.documentElement.dataset.ccTheme="usa";}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow, noarchive">
 <title>Campus Caddie</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <style>
 :root{
   --ground:#f4f7f1; --panel:#ffffff; --panel2:#eef2ea;
@@ -92,82 +94,248 @@ ul.roster mark{background:color-mix(in srgb,var(--h4) 30%,transparent);color:inh
 .niveau b{color:var(--ink)}
 .prixsrc{margin-top:.3rem}.prixsrc summary{cursor:pointer;color:var(--accent)}.prixsrc p{margin:.3rem 0}
 
-.more{margin:-.3rem 0 1rem}
-.more>summary{cursor:pointer;font-size:.85rem;font-weight:600;color:var(--accent);width:max-content;padding:.2rem 0;list-style:none}
-.more>summary::-webkit-details-marker{display:none}
-.more>summary::before{content:"▸";display:inline-block;margin-right:.35rem;transition:transform .15s}
-.more[open]>summary::before{transform:rotate(90deg)}
-.more>.controls{margin-top:.6rem;padding:.8rem 1rem;background:var(--panel2);border-radius:8px}
-#morecount{font-weight:400;color:var(--muted)}
-.controls{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-bottom:1rem}
-.seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
-.seg button{font:inherit;font-size:.85rem;border:0;background:transparent;color:var(--muted);
-  padding:.35rem .7rem;border-radius:6px;cursor:pointer}
-.seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:var(--shadow);font-weight:600}
-.seg label{display:inline-flex;align-items:center;gap:.3rem;font-size:.85rem;color:var(--muted);
-  padding:.35rem .7rem;border-radius:6px;cursor:pointer;user-select:none}
-.seg label:has(input:checked){background:var(--panel);color:var(--ink);box-shadow:var(--shadow);font-weight:600}
-.seg input[type=checkbox]{accent-color:var(--accent);margin:0}
-input[type=search]{font:inherit;font-size:.9rem;background:var(--panel);color:var(--ink);
-  border:1px solid var(--line);border-radius:8px;padding:.45rem .7rem;min-width:180px;flex:1}
-input[type=search]:focus-visible,.seg button:focus-visible,th[tabindex]:focus-visible,a:focus-visible{
-  outline:2px solid var(--accent);outline-offset:2px}
-label.minlab{font-size:.85rem;color:var(--muted);display:inline-flex;align-items:center;gap:.5rem}
-.sep{width:1px;align-self:stretch;background:var(--line);margin:0 .25rem}
-.sur-carte .liste-seule{display:none}   /* réglages qui n'ont de sens que sur la liste */
-.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.7rem;margin-top:.6rem;align-items:start}
-.fgroup{margin:0;padding:.55rem .8rem .7rem;border:1px solid var(--line);border-radius:10px;background:var(--panel);
-  display:flex;flex-direction:column;gap:.4rem;min-width:0}
-.fgroup legend{padding:0 .3rem;font-size:.78rem;font-weight:700;letter-spacing:.03em;color:var(--accent)}
-.frow{display:flex;align-items:center;justify-content:space-between;gap:.6rem;font-size:.85rem;color:var(--muted)}
-.frow select,.frow input{font:inherit;font-size:.85rem;padding:.3rem .45rem;border-radius:7px;border:1px solid var(--line);
-  background:var(--panel2);color:var(--ink);width:8.5rem;flex:none}
-.frow input::placeholder{color:var(--faint)}
-.fcase{display:flex;align-items:center;gap:.45rem;font-size:.85rem;color:var(--muted);cursor:pointer}
-.fcase input{accent-color:var(--accent);margin:0}
-.fcase:has(input:checked){color:var(--ink)}
-.freset-all{font:inherit;font-size:.82rem;font-weight:600;color:var(--accent);background:var(--panel);border:1px solid var(--line);
-  border-radius:8px;padding:.4rem .7rem;cursor:pointer;white-space:nowrap}
-.freset-all:hover{border-color:var(--accent)}
-.freset{align-self:flex-start;font:inherit;font-size:.78rem;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
-.fnote{margin:.1rem 0 0;font-size:.75rem;line-height:1.35;color:var(--faint)}
-.fnote b{color:var(--muted)}
+/* Explorer : la liste et la carte réunies. Couleurs = variables des thèmes Campus Caddie (construire.py). */
+*{box-sizing:border-box}
+html,body{height:100%}
+body.ex-page{margin:0;background:var(--ground);color:var(--ink);font:15px/1.45 "Inter",system-ui,sans-serif;display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+body.ex-page .cc-barre-in{max-width:none;padding:10px 24px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.ex-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#ex{flex:1;min-height:0;display:flex;flex-direction:column}
+#ex[hidden]{display:none}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
 
-*{box-sizing:border-box}body{margin:0;background:var(--ground);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif}
-header{padding:1rem 1.1rem .4rem}
-h1{font-family:Georgia,serif;font-weight:600;font-size:clamp(1.3rem,3.5vw,1.9rem);margin:0}
-.sub{color:var(--muted);font-size:.9rem;margin:.2rem 0 .6rem}
-.controls{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;padding:0 1.1rem .6rem}
-.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
-.seg button{font:inherit;font-size:.85rem;border:0;background:transparent;color:var(--muted);padding:.35rem .7rem;border-radius:6px;cursor:pointer}
-.seg button[aria-pressed=true]{background:var(--accent);color:#fff;font-weight:600}
-.seg label{display:inline-flex;align-items:center;gap:.3rem;font-size:.85rem;color:var(--muted);padding:.35rem .7rem;border-radius:6px;cursor:pointer;user-select:none}
-.seg label:has(input:checked){background:var(--accent);color:#fff;font-weight:600}
-.seg input[type=checkbox]{accent-color:#fff;margin:0}
-input[type=search]{font:inherit;font-size:.9rem;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:.4rem .7rem;min-width:180px}
-#map{height:52vh;margin:0 1.1rem .8rem;border:1px solid var(--line);border-radius:12px}
-.legend{padding:0 1.1rem .8rem;font-size:.82rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:.3rem 1rem}
-.dot{display:inline-block;width:.8rem;height:.8rem;border-radius:50%;vertical-align:middle;margin-right:.25rem;border:1px solid #0003}
-a.nav{color:var(--accent);font-size:.85rem;text-decoration:none;font-weight:600}
-/* panneau de détail (fiche fac) en bas */
-#detail{margin:0 1.1rem 2rem;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.2rem;min-height:80px}
-#detail .empty{color:var(--muted);font-size:.9rem}
-#detail h2{margin:0 0 .1rem;font-family:Georgia,serif;font-size:1.35rem}
-#detail .meta{color:var(--muted);font-size:.9rem;margin-bottom:.7rem}
-#detail h2 a{color:inherit;text-decoration:none;border-bottom:1px dotted currentColor}
-#detail .fiche-box{margin-top:.6rem}
-.flbox{background:var(--panel2,#eef2ea);border-left:3px solid #2e6b43;border-radius:0 8px 8px 0;padding:.55rem .8rem;margin:.3rem 0 .8rem;font-size:.9rem}
-.flbox.non{border-left-color:#8a9885;color:var(--muted)}
-.flbox ul{margin:.3rem 0 0;padding-left:1.1rem}
-#fltable{margin:0 1.1rem 1.4rem;overflow-x:auto}
-#fltable table{width:100%;border-collapse:collapse;font-size:.88rem;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-#fltable th{text-align:left;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:.5rem .6rem;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;user-select:none}
-#fltable td{padding:.45rem .6rem;border-bottom:1px solid var(--line);white-space:nowrap}
-#fltable td.n{text-align:right;font-variant-numeric:tabular-nums}
-#fltable tbody tr{cursor:pointer}#fltable tbody tr:hover{background:var(--panel2,#eef2ea)}
-#flhors{margin:0 1.1rem 2rem;font-size:.88rem;color:var(--muted)}
-#flhors h3,#fltable h3{font-family:Georgia,serif;color:var(--ink);font-size:1.05rem;margin:.2rem 0 .5rem}
-</style><style>
+/* ---------- barre d'outils ---------- */
+.ex-outils{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 24px 8px}
+.ex-cherche{display:flex;align-items:center;gap:10px;flex:1 1 260px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:0 14px;height:46px;color:var(--muted)}
+.ex-cherche input{border:0;outline:0;flex:1;min-width:0;background:transparent;color:var(--ink);font-size:15px}
+.ex-divs{display:flex;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:3px;font-size:14px;font-weight:600}
+.ex-divs button{height:38px;padding:0 12px;border:0;border-radius:9px;background:transparent;color:var(--ink)}
+.ex-divs button[aria-pressed="true"]{background:var(--accent);color:var(--panel)}
+.ex-btn{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 15px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:14px;font-weight:600;white-space:nowrap}
+.ex-btn.fort{border-color:var(--accent);color:var(--accent)}
+.ex-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.ex-btn svg{flex-shrink:0}
+.ex-pastille{background:var(--accent);color:var(--panel);font-size:11px;padding:1px 7px;border-radius:999px}
+.ex-btn[aria-pressed="true"] .ex-pastille{background:var(--panel);color:var(--accent)}
+.ex-tri{display:flex;align-items:center;gap:6px;height:46px;padding:0 10px 0 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);font-size:14px;color:var(--muted)}
+.ex-tri select{border:0;background:transparent;font-weight:600;color:var(--ink);height:40px}
+
+.ex-actifs{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:0 24px 12px;font-size:13px}
+.ex-profil{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;border-radius:999px;border:0;background:color-mix(in srgb,var(--accent) 12%,var(--panel));color:var(--accent);font-weight:600}
+.ex-profil u{font-weight:500}
+.ex-sep{width:1px;height:20px;background:var(--line)}
+.ex-tag{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px 0 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.ex-lien{border:0;background:none;color:var(--muted);text-decoration:underline;min-height:36px;padding:0 6px}
+.ex-compte{margin-left:auto;color:var(--muted)}
+.ex-compte b{color:var(--ink);font-family:"Space Grotesk",sans-serif;font-size:15px}
+
+/* ---------- corps : liste + carte ---------- */
+.ex-corps{flex:1;min-height:0;display:grid;grid-template-columns:minmax(360px,580px) minmax(0,1fr);gap:18px;padding:0 24px 18px}
+.ex-liste{overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:2px 6px 24px 2px;overscroll-behavior:contain}
+.ex-carte-fac{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:border-color .12s,box-shadow .12s}
+.ex-carte-fac:hover,.ex-carte-fac.survol{border-color:var(--accent);box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 14%,transparent)}
+.ex-carte-fac.ouverte{border:2px solid var(--accent);padding:13px 15px}
+.ex-haut{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:14px;align-items:start}
+.ex-nom{all:unset;cursor:pointer;font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:700;color:var(--accent);line-height:1.2;overflow-wrap:anywhere}
+.ex-nom:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px;border-radius:4px}
+.ex-sous{font-size:13px;color:var(--muted);margin-top:3px}
+.ex-places{display:flex;flex-direction:column;align-items:flex-end;line-height:1}
+.ex-places b{font-family:"Space Grotesk",sans-serif;font-size:28px;color:var(--h5)}
+.ex-places small{font-size:11px;color:var(--muted);margin-top:3px}
+.ex-places.zero b{color:var(--faint)}
+.ex-etoile{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--panel);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.ex-etoile svg path{fill:none;stroke:currentColor}
+.ex-etoile[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.ex-etoile[aria-pressed="true"] svg path{fill:currentColor}
+.ex-badges{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;font-weight:600}
+.ex-b{padding:4px 10px;border-radius:999px;background:var(--panel2);color:var(--muted)}
+.ex-b.ex-reco{background:var(--accent);color:#fff}
+.ex-b.note{background:color-mix(in srgb,var(--accent) 12%,var(--panel));color:var(--accent)}
+.ex-b.portee{background:var(--accent);color:var(--panel)}
+.ex-b.niveau{background:#FFF1DD;color:#8A4A00}
+.ex-b.ambitieux{background:var(--panel2);color:var(--muted);border:1px dashed var(--faint);padding:3px 9px}
+.ex-b.dans{background:#E6F2EC;color:#1D5E3F}
+.ex-b.hors{background:#FDECEC;color:#9E1F24}
+.ex-b.fr{background:var(--panel2);color:var(--ink)}
+.ex-b.dom{background:#E6F2EC;color:#1D5E3F}
+/* ---------- onglet FieldLevel (même page, window.CC_PAGE = "fieldlevel") ---------- */
+.ex-fl{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 16px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.ex-fl p{margin:0}
+.ex-fl b{color:var(--ink)}
+.ex-fl details summary{cursor:pointer;color:var(--accent);font-weight:600;min-height:32px;display:flex;align-items:center}
+.ex-fl ul{margin:4px 0 0;padding-left:18px;columns:2 220px;column-gap:18px}
+.ex-fl li{break-inside:avoid;margin-bottom:3px}
+.ex-b.fl{background:color-mix(in srgb,var(--accent) 12%,var(--panel));color:var(--accent)}
+.ex-b.flecart{background:#FFF1DD;color:#8A4A00}
+.fi-fl{border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.fi-fl p{margin:0}
+.fi-fl .ecart{color:#8A4A00;font-weight:600}
+.fi-etudes{border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;font-size:13px}
+.fi-etudes p{margin:0}
+.fi-etudes .ligne{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.fi-etudes .ligne span{color:var(--muted);text-align:right}
+.fi-etudes .non{color:var(--muted)}
+.fi-etudes .note{font-size:12px;color:var(--muted)}
+.fi-etudes .acc{font-size:12px;color:var(--muted)}
+.fi-etudes .acc a{color:inherit}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ex-b.niveau{background:#4A3315;color:#F5C98B}
+  :root:not([data-theme="light"]) .ex-b.dans,:root:not([data-theme="light"]) .ex-b.dom{background:#16382A;color:#9BD8B6}:root:not([data-theme="light"]) .ex-b.hors{background:#43191B;color:#F4A9AC}}
+.ex-plus{margin:6px auto 0;min-height:44px}
+.ex-vide{padding:30px 10px;text-align:center;color:var(--muted)}
+
+.ex-droite{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--panel2);min-height:0}
+#ex-map{position:absolute;inset:0;background:var(--panel2)}
+#ex-map .leaflet-tile-pane{filter:grayscale(.9) contrast(.92) brightness(1.04)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #ex-map .leaflet-tile-pane{filter:grayscale(1) invert(.9) hue-rotate(180deg) brightness(.85)}}
+.ex-legende{position:absolute;left:12px;bottom:12px;z-index:600;background:color-mix(in srgb,var(--panel) 92%,transparent);border-radius:10px;padding:7px 11px;font-size:12px;color:var(--muted);pointer-events:none}
+/* points et regroupements */
+.ex-pt{background:var(--accent);border:2px solid var(--panel);border-radius:50%;box-shadow:0 1px 3px #0005}
+.ex-pt.zero{background:var(--faint)}
+.ex-pt.choisi{background:var(--h5);box-shadow:0 0 0 4px color-mix(in srgb,var(--h5) 35%,transparent)}
+.ex-grappe{background:color-mix(in srgb,var(--accent) 90%,transparent);border:2px solid var(--panel);border-radius:50%;color:var(--panel);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px #0004;font-family:"Space Grotesk",sans-serif}
+.ex-grappe.choisi{box-shadow:0 0 0 4px var(--h5)}
+.leaflet-popup-content-wrapper{border-radius:14px;background:var(--panel);color:var(--ink)}
+.leaflet-popup-tip{background:var(--panel)}
+.leaflet-popup-content{margin:12px 14px;min-width:210px;font:13px/1.4 "Inter",sans-serif}
+.ex-pop b{font-family:"Space Grotesk",sans-serif;font-size:16px;color:var(--accent)}
+.ex-pop .p{float:right;font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:700;color:var(--h5);margin-left:10px}
+.ex-pop p{margin:4px 0 8px;color:var(--muted)}
+.ex-pop button{border:0;background:none;padding:6px 0;color:var(--accent);font-weight:600;text-decoration:underline}
+
+/* ---------- fiche ---------- */
+#ex-fiche{position:absolute;inset:0;z-index:1100;background:var(--panel);display:flex;flex-direction:column}
+#ex-fiche[hidden]{display:none}
+.fi-barre{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);flex-shrink:0}
+.fi-barre .ex-btn{height:44px}
+.fi-barre .ex-etoile{margin-left:auto}
+.fi-corps{flex:1;overflow-y:auto;padding:20px 24px 28px;display:flex;flex-direction:column;gap:18px}
+.fi-sur{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--h5)}
+.fi-corps h2{margin:4px 0 4px;font-size:30px;line-height:1.1;color:var(--accent)}
+.fi-lieu{color:var(--muted);font-size:14px}
+.fi-chiffres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fi-ch{background:var(--panel2);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.fi-ch span{font-size:12px;color:var(--muted);font-weight:600}
+.fi-ch b{font-family:"Space Grotesk",sans-serif;font-size:28px;color:var(--accent);line-height:1.15}
+.fi-ch small{font-size:12px;color:var(--muted)}
+.fi-ch.fort{background:var(--cc-marque,var(--accent))}
+.fi-ch.fort span,.fi-ch.fort small{color:#FFFFFFC7}.fi-ch.fort b{color:#fff}
+.fi-deux{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+.fi-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.fi-titre{font-size:13px;font-weight:700;margin:0}
+.fi-titre small{font-weight:500;color:var(--muted)}
+.fi-axe{display:grid;grid-template-columns:96px 1fr 34px;align-items:center;gap:10px;font-size:13px}
+.fi-axe span{font-weight:600}.fi-axe b{text-align:right}
+.fi-jauge{height:8px;border-radius:999px;background:var(--panel2);overflow:hidden}
+.fi-jauge i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.fi-axe.nn b,.fi-axe.nn span{color:var(--faint)}
+.fi-cout{background:var(--panel2);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.fi-cout .l{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.fi-cout .l span{font-size:13px;color:var(--muted);font-weight:600}
+.fi-cout .l b{font-family:"Space Grotesk",sans-serif;font-size:24px;color:var(--accent)}
+.fi-cout .l b small{font-family:"Inter",sans-serif;font-size:12px;font-weight:500;color:var(--muted)}
+.fi-barres{height:10px;border-radius:999px;overflow:hidden;display:flex}
+.fi-barres i:nth-child(1){background:var(--accent)}.fi-barres i:nth-child(2){background:var(--h2)}.fi-barres i:nth-child(3){background:var(--h5)}
+.fi-cout p{margin:0;font-size:12px;color:var(--muted)}
+.fi-cout .ecart{font-weight:600;color:#9E1F24}.fi-cout .ecart.ok{color:#1D5E3F}
+.fi-texte{margin:0;font-size:14px;color:var(--ink)}
+.fi-joueurs{border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13px}
+.fi-j{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:9px 12px;border-bottom:1px solid var(--panel2)}
+.fi-j:last-child{border-bottom:0}
+.fi-j span{color:var(--muted)}
+.fi-j em{font-style:normal;font-size:11px;font-weight:700;color:var(--muted);margin-right:6px}
+.fi-j.sr em{color:var(--h5)}
+.fi-joueurs button{width:100%;min-height:44px;border:0;background:var(--panel2);color:var(--accent);font-weight:600}
+.fi-actions{display:flex;flex-direction:column;gap:8px}
+.fi-actions a.principal{text-align:center;background:var(--accent);color:var(--panel);text-decoration:none;font-weight:600;padding:13px 16px;border-radius:12px}
+.fi-actions a.second{text-align:center;font-size:13px;font-weight:600;padding:8px;color:var(--accent)}
+.fi-avert{font-size:12px;color:var(--muted);margin:0}
+.fi-detail{border-top:1px solid var(--line);padding-top:14px;font-size:14px}
+.fi-detail .dbox,.fi-detail>div{max-width:none}
+#fi-detail[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.fi-plus{align-self:flex-start}
+
+/* ---------- panneau des filtres ---------- */
+#ex-filtres{border:0;padding:0;background:var(--panel);color:var(--ink);width:min(440px,100vw);max-width:100vw;height:100dvh;max-height:100dvh;margin:0 0 0 auto;display:none;flex-direction:column}
+#ex-filtres[open]{display:flex}
+#ex-filtres::backdrop{background:#101B2D80}
+.fl-tete{display:flex;align-items:center;justify-content:space-between;padding:8px 8px 8px 20px;border-bottom:1px solid var(--line)}
+.fl-tete h2{margin:0;font-size:20px;color:var(--accent)}
+.fl-x{width:44px;height:44px;border:0;background:transparent;border-radius:12px;color:var(--accent);font-size:22px;line-height:1}
+.fl-corps{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:20px;font-size:14px}
+.fl-bloc{display:flex;flex-direction:column;gap:8px;border:0;margin:0;padding:0}
+.fl-bloc legend,.fl-bloc>.fl-l{font-weight:700;padding:0;margin-bottom:8px}
+.fl-aide{margin:0;font-size:12px;color:var(--muted)}
+.fl-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fl-2 label,.fl-champ{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.fl-2 input{width:100%;min-width:0}
+.fl-2 input,.fl-champ select{font-size:16px;font-weight:600;color:var(--ink);height:44px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:var(--ground)}
+.fl-puces{display:flex;gap:6px;flex-wrap:wrap}
+.fl-puces button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:600}
+.fl-puces button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.fl-puces button:disabled{opacity:.45;cursor:not-allowed}
+.fl-seg{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:var(--panel2);border-radius:12px;padding:3px}
+.fl-seg button{height:38px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-weight:600}
+.fl-seg button[aria-pressed="true"]{background:var(--panel);color:var(--accent);box-shadow:0 1px 2px #0002}
+.fl-case{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:46px;border-bottom:1px solid var(--panel2);cursor:pointer}
+.fl-case input{width:22px;height:22px;accent-color:var(--accent);flex-shrink:0}
+.fl-case.off{opacity:.5}
+.fl-dom{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.fl-dom details{border-bottom:1px solid var(--panel2)}
+.fl-dom details:last-child{border-bottom:0}
+.fl-dom summary{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 12px;cursor:pointer;list-style:none;font-weight:600}
+.fl-dom summary::-webkit-details-marker{display:none}
+.fl-dom summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+.fl-dom details[open] summary::after{transform:rotate(225deg) translateY(-2px)}
+.fl-dom summary small{font-weight:500;color:var(--accent);font-size:12px}
+.fl-dom .fl-puces{padding:0 12px 12px}
+.fl-dom .fl-puces button{min-height:36px;padding:0 12px;font-size:13px;font-weight:500}
+.fl-dom .fl-puces button[data-bloc]{font-weight:700}
+.fl-pied{display:flex;gap:10px;padding:12px 20px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.fl-pied .ex-lien{font-size:15px;color:var(--accent);min-height:48px}
+.fl-pied .voir{flex:1;height:48px;border:0;border-radius:12px;background:var(--accent);color:var(--panel);font-weight:600;font-size:15px}
+
+/* ---------- téléphone ---------- */
+.ex-bascule,.ex-basnav{display:none}
+@media (max-width:820px){
+  body.ex-page .cc-barre-in{padding:8px 12px}
+  body.ex-page .cc-nav{display:none}
+  .ex-outils{padding:10px 12px 6px;gap:8px}
+  .ex-cherche{flex-basis:100%}
+  .ex-outils .ex-divs{order:3;flex:1 1 100%;overflow-x:auto;scrollbar-width:none}
+  .ex-outils .ex-divs button{flex-shrink:0}
+  .ex-outils #ex-ouvrir-filtres{order:2}
+  .ex-outils .ex-tri{order:2;flex:1}
+  .ex-outils .ex-tri select{flex:1;min-width:0}
+  .ex-outils #ex-masel{display:none}
+  .ex-actifs{padding:0 12px 8px}
+  .ex-profil{font-size:12px;text-align:left}
+  .ex-actifs .ex-sep{display:none}
+  .ex-compte{width:100%;margin:0}
+  .ex-corps{grid-template-columns:1fr;padding:0 12px;gap:0}
+  .ex-liste{padding-bottom:150px}
+  .ex-droite{display:none;border-radius:14px;margin-bottom:136px}
+  #ex-map .leaflet-control-attribution{font-size:9px;line-height:1.3}
+  body.ex-vue-carte .ex-liste{display:none}
+  body.ex-vue-carte .ex-droite{display:block}
+  body.ex-vue-carte .ex-actifs{display:none}
+  body.ex-fiche-ouverte .ex-droite{display:block}
+  .ex-legende{display:none}
+  body.ex-fiche-ouverte .ex-bascule,body.ex-fiche-ouverte .ex-basnav{display:none}
+  #ex-fiche{position:fixed;inset:0;z-index:4500}
+  .fi-corps{padding:16px 16px 100px}
+  .fi-corps h2{font-size:26px}
+  .fi-deux{grid-template-columns:1fr}
+  .fi-ch{padding:10px 12px}.fi-ch b{font-size:22px}
+  .ex-bascule{display:flex;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:900;height:46px;padding:0 20px;border-radius:999px;border:0;background:var(--accent);color:var(--panel);font-weight:600;font-size:14px;align-items:center;gap:8px;box-shadow:0 8px 20px #0B2A5559}
+  .ex-basnav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:950;background:var(--panel);border-top:1px solid var(--line);height:calc(64px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
+  .ex-basnav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:600;color:var(--muted)}
+  .ex-basnav button[aria-current="true"]{color:var(--accent)}
+  #ex-filtres{width:100vw;height:calc(100dvh - 28px);margin:auto 0 0;border-radius:20px 20px 0 0}
+}
+</style>
+<style>
 /* ---------- thèmes Campus Caddie : mêmes noms de variables que la page d'origine ---------- */
 :root[data-cc-theme="usa"]{
   --ground:#F5F7FA; --panel:#FFFFFF; --panel2:#EEF2F7;
@@ -296,7 +464,8 @@ h1{color:var(--accent)}
 body:not(.cc-admin) label:has(#hideempty),body:not(.cc-admin) label:has(#saisoncourante),body:not(.cc-admin) label:has(#todofiche),
 body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(.cc-admin) .fscore{display:none!important}
 </style>
-</head><body>
+</head>
+<body class="ex-page">
 <div id="cc-barre" hidden>
   <div class="cc-lisere" aria-hidden="true"></div>
   <div class="cc-barre-in">
@@ -367,113 +536,103 @@ body:not(.cc-admin) td.fiche,body:not(.cc-admin) th[data-sort="fiche"],body:not(
   </div>
 </div>
 
-<header><h1>📋 FieldLevel × nos facs</h1>
-<p class="sub"><span id="fl-resume"></span>, croisés avec notre base : prix, départs 2027, notes et fiche complète. <b id="nbcarte"></b>.</p>
-<div class="controls" style="padding:0">
-<span class="seg" id="flmode"><button type="button" data-v="fl" aria-pressed="true">Sur FieldLevel</button><button type="button" data-v="tout" aria-pressed="false">Toutes nos facs</button><button type="button" data-v="non" aria-pressed="false">Pas vues sur FieldLevel</button></span>
-<span class="seg"><label><input type="checkbox" id="flannonce"> avec annonce de recrutement</label></span>
-</div></header>
-<div class="sur-carte" style="padding:0 1.1rem"><div class="controls">
-  <div class="seg" id="divseg" role="group" aria-label="Divisions affichées" title="Décoche une division pour la retirer de la liste (choix mémorisé dans ce navigateur)">
-    <label><input type="checkbox" value="D1" checked>D1</label>
-    <label><input type="checkbox" value="D2" checked>D2</label>
-    <label><input type="checkbox" value="D3" checked>D3</label>
-    <label><input type="checkbox" value="NAIA" checked>NAIA</label>
-    <label><input type="checkbox" value="JUCO" checked>JUCO</label>
+<main id="ex" hidden>
+  <div class="ex-outils">
+    <label class="ex-cherche"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="ex-vh">Rechercher</span><input id="ex-q" type="search" placeholder="Fac, ville, État ou joueur…" autocomplete="off"></label>
+    <div class="ex-divs" id="ex-divs" role="group" aria-label="Divisions">
+      <button type="button" data-div="" aria-pressed="true">Toutes</button>
+      <button type="button" data-div="D1" aria-pressed="false">D1</button>
+      <button type="button" data-div="D2" aria-pressed="false">D2</button>
+      <button type="button" data-div="D3" aria-pressed="false">D3</button>
+      <button type="button" data-div="NAIA" aria-pressed="false">NAIA</button>
+      <button type="button" data-div="JUCO" aria-pressed="false">JUCO</button>
+    </div>
+    <button type="button" class="ex-btn fort" id="ex-ouvrir-filtres" aria-haspopup="dialog"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 4h14M5 9h8M7.5 14h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Filtres<span class="ex-pastille" id="ex-nfiltres" hidden></span></button>
+    <button type="button" class="ex-btn" id="ex-masel" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 7.8l5-.7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Ma sélection<span class="ex-pastille" id="ex-nsel">0</span></button>
+    <label class="ex-tri">Trier<select id="ex-tri">
+      <option value="reco">Recommandé</option>
+      <option value="places">Places 2027</option>
+      <option value="niveau">À ma portée d'abord</option>
+      <option value="note">Note de la fac</option>
+      <option value="cout">Coût, du moins cher</option>
+      <option value="nom">Nom</option>
+    </select></label>
   </div>
-  <label class="minlab">Départs 2027
-    <select id="minsel" style="font:inherit;padding:.35rem .5rem;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink)">
-      <option value="0" selected>toutes</option><option value="1">1+</option><option value="2">2+</option>
-      <option value="3">3+</option><option value="4">4+</option><option value="5">5+</option>
-    </select>
-  </label>
-  <label class="minlab">État
-    <select id="statesel" style="font:inherit;padding:.35rem .5rem;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink)">
-      <option value="" selected>tous</option>
-    </select>
-  </label>
-  <label class="minlab frtoggle"><input type="checkbox" id="intlonly"> 🌍 avec internationaux</label>
-  <label class="minlab frtoggle"><input type="checkbox" id="fronly"> 🇫🇷 avec Français</label>
-  <input type="search" id="q" placeholder="Fac, état (ex. FL) ou nom de joueur…" aria-label="Recherche">
-  <button type="button" class="freset-all" id="resetall" title="Toutes les divisions, aucun filtre, recherche vidée ; la moyenne du joueur et le budget sont effacés de ce navigateur">↺ tout remettre à zéro</button>
-</div>
+  <div class="ex-actifs" id="ex-actifs"></div>
+  <div class="ex-corps">
+    <section class="ex-liste" id="ex-liste" aria-label="Programmes" aria-live="polite" aria-busy="false"></section>
+    <section class="ex-droite" aria-label="Carte et fiche">
+      <div id="ex-map" role="region" aria-label="Carte des programmes"></div>
+      <div class="ex-legende">La liste suit la carte : zoome ou déplace-la pour filtrer</div>
+      <div id="ex-fiche" hidden role="dialog" aria-modal="false" aria-labelledby="fi-nom"></div>
+    </section>
+  </div>
+  <button type="button" class="ex-bascule" id="ex-bascule"></button>
+  <nav class="ex-basnav" aria-label="Navigation">
+    <button type="button" data-nav="explorer" aria-current="true"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 15l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Explorer</button>
+    <button type="button" data-nav="selection" aria-current="false"><svg width="22" height="22" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 7.8l5-.7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Ma sélection</button>
+    <button type="button" data-nav="profil" aria-current="false"><svg width="22" height="22" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5.5" r="2.8" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 14c.8-2.8 3-4 5.5-4s4.7 1.2 5.5 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Mon profil</button>
+  </nav>
+</main>
 
-<details class="more" id="more"><summary>Plus de filtres <span id="morecount"></span></summary>
-<div class="fgrid">
-  <fieldset class="fgroup"><legend>🏌 Niveau du joueur</legend>
-    <label class="frow" title="Moyenne de score du joueur sur 18 trous (ex. 75,4), ou nombre de coups au-dessus du par (ex. +15, compté sur un par 72)."><span>Sa moyenne</span><input type="text" id="monscore" inputmode="decimal" placeholder="75,4 ou +15"></label>
-    <label class="frow" title="Rang du joueur parmi ceux qui restent dans l’équipe l’an prochain (seniors exclus), d’après les moyennes 2025-26. Pas calculé en JUCO : les joueurs qui restent n’y ont presque jamais de moyenne."><span>Place dans l'équipe</span><select id="rangmax"><option value="" selected>peu importe</option><option value="1">n°1</option><option value="3">3 premiers</option><option value="5">5 premiers</option></select></label>
-    <label class="frow" title="Écarte les équipes nettement plus faibles que le joueur : moyenne d’équipe au plus N coups au-dessus de la sienne. Une équipe plus forte passe toujours."><span>Équipe pas plus faible que</span><select id="ecartmax"><option value="" selected>peu importe</option><option value="2">+2 coups</option><option value="4">+4 coups</option><option value="6">+6 coups</option><option value="10">+10 coups</option></select></label>
-    <button type="button" class="freset" data-reset="monscore,rangmax,ecartmax">↺ remettre à zéro</button>
-  </fieldset>
-  <fieldset class="fgroup"><legend>💵 Budget</legend>
-    <label class="frow" title="Ce que la famille peut payer par an, en dollars (scolarité, logement et repas, assurance santé)."><span>Payé par la famille / an ($)</span><input type="text" id="budget" inputmode="numeric" placeholder="ex. 20000"></label>
-    <label class="frow" title="Part du prix couverte par les bourses (sportive + mérite) qu’on espère obtenir. Les privées affichent cher mais remisent beaucoup ; les publiques remisent peu."><span>Bourse espérée</span><select id="bourseesp"><option value="0" selected>aucune</option><option value="25">25 %</option><option value="50">50 %</option><option value="75">75 %</option></select></label>
-    <p class="fnote" id="budgetnote">Le prix des fiches est <b>avant bourse</b>. Une fac est gardée si ce prix, moins la bourse espérée, tient dans ce que paie la famille.</p>
-    <button type="button" class="freset" data-reset="budget,bourseesp">↺ remettre à zéro</button>
-  </fieldset>
-  <fieldset class="fgroup"><legend>⭐ Notes minimales</legend>
-    <label class="frow" title="Note globale pondérée, selon tes curseurs"><span>⭐ Globale</span><select id="minnote"><option value="" selected>toutes</option></select></label>
-    <label class="frow" title="Installation couverte et parcours d’attache"><span>⛳ Golf</span><select id="mingolf"><option value="" selected>toutes</option></select></label>
-    <label class="frow" title="Coût, diplomation, rétention, revenus, largeur de l’offre"><span>🎓 Études</span><select id="minetudes"><option value="" selected>toutes</option></select></label>
-    <label class="frow" title="Clery pour 1 000 étudiants et dispositif de sécurité"><span>🛡 Sécurité</span><select id="minsecurite"><option value="" selected>toutes</option></select></label>
-    <label class="frow" title="Milieu, hiver, part d’étrangers, taille"><span>🏡 Cadre</span><select id="mincadre"><option value="" selected>toutes</option></select></label>
-    <label class="fcase" title="Une fac dont l’axe filtré n’est pas noté est écartée par défaut, pour ne pas te faire croire qu’elle a été évaluée"><input type="checkbox" id="garderNonNotes"> garder les non notées</label>
-    <button type="button" class="freset" data-reset="minnote,mingolf,minetudes,minsecurite,mincadre,garderNonNotes">↺ remettre à zéro</button>
-  </fieldset>
-  <fieldset class="fgroup"><legend>⛳ Golf &amp; études</legend>
-    <label class="fcase" title="Installation de golf couverte vérifiée (simulateur, postes de frappe, green)"><input type="checkbox" id="indooronly"> 🏌 golf indoor</label>
-    <label class="fcase" title="Parcours d’attache à 10 km du campus au plus"><input type="checkbox" id="nearonly"> ⛳ parcours ≤ 10 km</label>
-    <label class="fcase" title="Bachelor de physique, de maths ou de génie mécanique : ouvre le concours GEI-UNIV des écoles d’ingénieurs françaises (Arts et Métiers, IMT Atlantique, Polytechnique, Mines…)"><input type="checkbox" id="voieonly"> 🇫🇷 voie école d’ingénieur</label>
-    <button type="button" class="freset" data-reset="indooronly,nearonly,voieonly">↺ remettre à zéro</button>
-  </fieldset>
-  <fieldset class="fgroup"><legend>🗂 Données</legend>
-    <label class="fcase" title="Les équipes dont le roster n’a pas pu être lu (site protégé, page introuvable)"><input type="checkbox" id="hideempty"> masquer non récupérées</label>
-    <label class="fcase" title="N’affiche que les facs dont le roster publié est bien celui de 2026-27. Les JUCO restent affichées : la NJCAA n’arrête son classement qu’en fin de saison, 2025-26 est donc le roster le plus récent qui existe, et ses premières années sont précisément celles qui libèrent une place en 2027."><input type="checkbox" id="saisoncourante"> 🗓 données les plus récentes</label>
-    <label class="fcase" title="Fiche fac à moins de 4 informations renseignées sur 4 — la liste de ce qu’il reste à chercher"><input type="checkbox" id="todofiche"> 📋 fiche fac incomplète</label>
-    <label class="fcase liste-seule" title="Ajoute les 4 notes en colonnes ; clique un en-tête pour trier, reclique pour inverser le sens"><input type="checkbox" id="voirnotes"> 📊 notes en colonnes</label>
-    <button type="button" class="freset" data-reset="hideempty,saisoncourante,todofiche,voirnotes">↺ remettre à zéro</button>
-  </fieldset>
-</div>
-</details>
-</div>
-<div id="map"></div>
-<div id="avis-tuiles" style="display:none;margin:.5rem 0;padding:.5rem .7rem;border-left:3px solid #bd6a26;background:#fdf6ec;font-size:.85rem">
-<b>Fond de carte non chargé.</b> Si l'adresse ci-dessus commence par <code>file://</code>, c'est la cause : OpenStreetMap ne sert pas les pages ouvertes en fichier local. Lance <code>./voir.sh</code> puis ouvre <a href="fieldlevel.html">fieldlevel.html</a>. Les points et les fiches, eux, fonctionnent dans les deux cas.</div>
-<div class="legend"><span><span class="dot" style="background:#a3372a"></span>annonce de recrutement</span><span><span class="dot" style="background:#2e6b43"></span>sur FieldLevel</span><span><span class="dot" style="background:#8a9885"></span>pas vue sur FieldLevel</span> · les listes FieldLevel sont copiées à la main et peuvent être partielles : « pas vue » ne veut pas dire « absente ».</div>
-<div id="detail"><p class="empty">👆 Clique une fac sur la carte (ou dans la recherche) pour afficher sa fiche complète ici.</p></div>
-<div id="fltable"></div><div id="flhors"></div>
+<dialog id="ex-filtres" aria-labelledby="fl-titre">
+  <div class="fl-tete"><h2 id="fl-titre">Filtres</h2><button type="button" class="fl-x" id="fl-fermer" aria-label="Fermer les filtres">×</button></div>
+  <div class="fl-corps">
+    <div class="fl-bloc" id="fl-profil">
+      <span class="fl-l">Mon profil</span>
+      <div class="fl-2">
+        <label>Moyenne sur 18 trous<input id="fl-score" inputmode="decimal" placeholder="ex. 76 ou +4" autocomplete="off"></label>
+        <label>Budget par an ($)<input id="fl-budget" inputmode="numeric" placeholder="ex. 35 000" autocomplete="off"></label>
+      </div>
+      <p class="fl-aide">Gardé dans ton compte. Sert à dire si une équipe est à ta portée et si la fac tient dans ton budget.</p>
+    </div>
+    <fieldset class="fl-bloc"><legend>Mon projet d'études</legend>
+      <div class="fl-dom" id="fl-etudes"></div>
+      <p class="fl-aide">Choisis un domaine entier ou ouvre-le pour préciser. Gardé dans ton compte, comme ta moyenne. <a href="aide.html#ponderation" style="color:var(--accent)">Comment le tri Recommandé l'utilise</a></p>
+      <label class="fl-case"><span>Poursuivre mes études en France après</span><input type="checkbox" id="fl-france"></label>
+      <label class="fl-case" id="fl-domaine-case"><span>Seulement si mon domaine est enseigné</span><input type="checkbox" id="fl-domaine"></label>
+    </fieldset>
+    <fieldset class="fl-bloc"><legend>Niveau visé</legend>
+      <div class="fl-puces" id="fl-niveaux">
+        <button type="button" data-niv="portee" aria-pressed="false">À ta portée</button>
+        <button type="button" data-niv="niveau" aria-pressed="false">Au niveau</button>
+        <button type="button" data-niv="ambitieux" aria-pressed="false">Ambitieux</button>
+      </div>
+      <p class="fl-aide" id="fl-niv-aide">À ta portée : tu serais dans les 5 premiers des joueurs qui restent (ou l'équipe joue 2 coups au-dessus de toi). Au niveau : 6e à 8e (ou ±2 coups).</p>
+    </fieldset>
+    <label class="fl-case" id="fl-budget-case"><span>Seulement dans mon budget</span><input type="checkbox" id="fl-dansbudget"></label>
+    <fieldset class="fl-bloc"><legend>Note de la fac, au moins</legend>
+      <div class="fl-seg" id="fl-note">
+        <button type="button" data-note="" aria-pressed="true">Toutes</button>
+        <button type="button" data-note="2" aria-pressed="false">2</button>
+        <button type="button" data-note="2.5" aria-pressed="false">2,5</button>
+        <button type="button" data-note="3" aria-pressed="false">3</button>
+        <button type="button" data-note="3.5" aria-pressed="false">3,5</button>
+      </div>
+    </fieldset>
+    <label class="fl-champ"><span class="fl-l" style="font-size:14px;color:var(--ink);font-weight:700">État</span><select id="fl-etat"><option value="">Tous les États</option></select></label>
+    <div class="fl-bloc">
+      <span class="fl-l">Plus</span>
+      <label class="fl-case"><span>Avec des places 2027</span><input type="checkbox" id="fl-places"></label>
+      <label class="fl-case"><span>Avec un joueur français</span><input type="checkbox" id="fl-fr"></label>
+      <label class="fl-case"><span>Avec des internationaux</span><input type="checkbox" id="fl-intl"></label>
+      <label class="fl-case"><span>Golf indoor (pour l'hiver)</span><input type="checkbox" id="fl-indoor"></label>
+      <label class="fl-case"><span>Parcours à 10 km ou moins</span><input type="checkbox" id="fl-proche"></label>
+    </div>
+  </div>
+  <div class="fl-pied"><button type="button" class="ex-lien" id="fl-effacer">Tout effacer</button><button type="button" class="voir" id="fl-voir">Voir les programmes</button></div>
+</dialog>
 <script type="text/plain" id="cc-app">
-const DATA=window.CC_DATA;
-const map=L.map('map',{scrollWheelZoom:true}).setView([39.5,-98.35],4);
-/* Fond de carte OpenStreetMap.
-   1) PAS de forme {s}.tile.openstreetmap.org : les sous-domaines a/b/c sont
-      abandonnes par OSM. Le point d'entree documente est tile.openstreetmap.org,
-      sans sous-domaine, avec l'attribution complete exigee par sa politique.
-   2) Si les tuiles restent grises EN LOCAL alors que la page publiee sur GitHub
-      Pages s'affiche : c'est l'ouverture en file://. Le navigateur n'envoie alors
-      aucun en-tete Referer, et OSM refuse de servir une application qu'il ne peut
-      pas identifier (il renvoie vers osm.wiki/Blocked). Ce n'est ni le reseau ni
-      le fournisseur : il faut servir la page en HTTP. Voir ./voir.sh. */
-const fondOSM = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  {maxZoom:18, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
-map.attributionControl.addAttribution('<b>© Hans Leon 2026 — base de données protégée (CPI L341-1), reproduction interdite</b>');
-let tuilesKO = 0;
-fondOSM.on('tileerror', () => {
-  if (++tuilesKO !== 8) return;                  // une seule fois, apres 8 echecs
-  const av = document.getElementById('avis-tuiles');
-  if (av) av.style.display = 'block';
-});
-const heat=n=>n>=5?'#a3372a':n>=3?'#bd6a26':n>=1?'#3f7d52':'#8a9885';
-const rad=sz=>sz?Math.max(5,Math.min(16,Math.sqrt(sz)/18)):6;
+/* explorer.js */
+const CCFICHE = (() => {
+const DATA = window.CC_DATA || [];
+const heat=n=>n>=5?'var(--h5)':n>=4?'var(--h4)':n>=3?'var(--h3)':n>=2?'var(--h2)':'var(--h1)';
 const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let markers=[];
 const DIVK=['D1','D2','D3','NAIA','JUCO'];
 // toutes cochees par defaut : Hans a cru que Western Texas manquait quand JUCO etait decoche
 const DIVDEF=['D1','D2','D3','NAIA','JUCO'];
 const divKey=t=>t.juco?'JUCO':(['D1','D2','D3'].includes(t.division)?t.division:'NAIA');
 const state={divs:new Set(DIVDEF),min:0,q:'',sort:'seniors',dir:-1,fronly:false,intlonly:false,st:'',hideEmpty:false,saisonCourante:false,todofiche:false,minnote:'',mingolf:'',minetudes:'',minsecurite:'',mincadre:'',gardeNN:false,voirnotes:false,indooronly:false,nearonly:false,voieonly:false,rangmax:'',ecartmax:'',bourseesp:'0'};
-
 // --- niveau d'un joueur : sa moyenne saisie (n'importe quel joueur, pas seulement Quentin) ---
 // « 75,4 » = moyenne sur 18 trous ; « +15 » ou « 15 » = coups au-dessus d'un par 72
 function lireScore(txt){
@@ -759,266 +918,707 @@ function blocFac(t){
       ${ficheHTML(t)}`;
 }
 
-/* Points d'insertion propres à chaque page construite sur ce gabarit (carte.html,
-   fieldlevel.html) : garder(t) écarte des facs en plus des filtres communs,
-   styleMarker(t) dessine le point, avantFiche(t) ajoute un bloc en tête de fiche,
-   apresDraw(liste) reçoit les facs affichées. */
-let garder=t=>true, avantFiche=t=>'', apresDraw=l=>{};
-let styleMarker=t=>({radius:rad(t.size),fillColor:heat(t.seniors),color:'#0006',weight:1,fillOpacity:.85});
+BASE_FICHE='fieldlevel.html'; SUR_CARTE=true;
+return { blocFac, monScore: s => { MON_SCORE = s; } };
+})();
 
-/* Même code dans l'atelier (fieldlevel.html, données dans la page) et dans Campus Caddie
-   (construire.py : données chargées après connexion, FL_HORS lu dans la table publication). */
-const FL_HORS=window.CC_FL_HORS||[], FL_SANSPOS=[];
-(()=>{const vus=DATA.filter(t=>t.fl).map(t=>t.fl).concat(FL_HORS), assos={};
-  vus.forEach(f=>{const a=f.asso||'?'; assos[a]=(assos[a]||0)+1;});
-  const maj=vus.reduce((m,f)=>(f.vu_le||'')>m?f.vu_le:m,'');
-  document.getElementById('fl-resume').textContent=`${vus.length} programmes vus sur FieldLevel (${
-    Object.keys(assos).sort().map(a=>a+' : '+assos[a]).join(' · ')} · dernière saisie : ${maj||'jamais'})`;})();
-let flMode='fl', flAnnonce=false, flTri='prix', flDir=1;
-garder=t=>(flMode==='tout'||(flMode==='fl'?!!t.fl:!t.fl))&&(!flAnnonce||(t.fl&&t.fl.annonces.length>0));
-styleMarker=t=>t.fl
-  ?{radius:t.fl.annonces.length?9:7,fillColor:t.fl.annonces.length?'#a3372a':'#2e6b43',color:'#0008',weight:1,fillOpacity:.9}
-  :{radius:4,fillColor:'#8a9885',color:'#0005',weight:1,fillOpacity:.6};
-const flUsd=n=>n==null?'—':Math.round(n).toLocaleString('fr-FR')+' $';
-avantFiche=t=>{
-  if(!t.fl) return `<div class="flbox non">Pas vue sur FieldLevel dans les listes copiées.</div>`;
-  const f=t.fl, an=f.annonces||[];
-  return `<div class="flbox">📋 <b>Sur FieldLevel</b> : ${esc(f.nom)} · ${esc(f.asso||'')} · ${esc(f.ville||'')}, ${esc(f.etat||'')} <span style="color:var(--muted)">(vue le ${esc(f.vu_le||'?')})</span>`
-   +(an.length?`<ul>${an.map(a=>`<li>Recrute pour la promo <b>${esc(a.promo||'?')}</b>${a.publiee_le?` · annonce du ${esc(a.publiee_le)}`:''}${a.coach?` · ${esc(a.coach)}`:''}${a.lien?` · <a class="src" href="${esc(a.lien)}" target="_blank" rel="noopener">annonce ↗</a>`:''}</li>`).join('')}</ul>`
-              :`<br><span style="color:var(--muted)">Aucune annonce de recrutement saisie.</span>`)+`</div>`;
-};
-const FL_COLS=[['name','Fac',t=>t.name],['division','Div.',t=>t.juco?(t.division||'JUCO'):t.division],
-  ['lieu','Ville',t=>(t.city||'')+(t.state?', '+t.state:'')],['prix','Prix / an',t=>t.prix&&t.prix.tot],
-  ['seniors','Départs 2027',t=>t.empty?null:t.seniors],['note','Note',t=>gNote(t)],
-  ['fl','FieldLevel',t=>t.fl?(t.fl.annonces.length?2:1):0]];
-apresDraw=vues=>{
-  const col=FL_COLS.find(c=>c[0]===flTri)||FL_COLS[3];
-  const v=vues.slice().sort((a,b)=>{const x=col[2](a),y=col[2](b);
-    if(x==null&&y==null) return a.name.localeCompare(b.name); if(x==null) return 1; if(y==null) return -1;
-    return (typeof x==='string'?x.localeCompare(y):x-y)*flDir;});
-  const cell=(c,t)=>{const x=c[2](t);
-    if(c[0]==='prix') return `<td class="n">${flUsd(x)}</td>`;
-    if(c[0]==='seniors') return `<td class="n">${x==null?'—':x}</td>`;
-    if(c[0]==='note') return `<td class="n">${x==null?'—':x.toFixed(1)}</td>`;
-    if(c[0]==='fl') return `<td>${x===2?'🔴 annonce':x===1?'🟢 présente':'—'}</td>`;
-    return `<td>${esc(x||'')}</td>`;};
-  document.getElementById('fltable').innerHTML=`<h3>${v.length} facs affichées</h3><table><thead><tr>${
-    FL_COLS.map(c=>`<th data-k="${c[0]}">${c[1]}${c[0]===flTri?(flDir>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${
-    v.map(t=>`<tr data-n="${esc(t.name)}">${FL_COLS.map(c=>cell(c,t)).join('')}</tr>`).join('')}</tbody></table>`;
-};
-document.getElementById('fltable').addEventListener('click',e=>{
-  const th=e.target.closest('th'); if(th){const k=th.dataset.k; if(k===flTri) flDir=-flDir; else {flTri=k; flDir=1;} draw(); return;}
-  const tr=e.target.closest('tr[data-n]'); if(!tr) return;
-  const t=DATA.find(x=>x.name===tr.dataset.n); if(!t) return;
-  showFiche(t); map.setView([t.lat,t.lon],Math.max(map.getZoom(),6));
-});
-document.getElementById('flmode').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return;
-  flMode=b.dataset.v; document.querySelectorAll('#flmode button').forEach(x=>x.setAttribute('aria-pressed',x===b)); render();});
-document.getElementById('flannonce').addEventListener('change',e=>{flAnnonce=e.target.checked; render();});
-document.getElementById('flhors').innerHTML=
-  (FL_HORS.length?`<h3>Sur FieldLevel mais absentes de notre base (${FL_HORS.length})</h3><ul>${
-    FL_HORS.map(f=>`<li>${esc(f.nom)} — ${esc(f.asso||'')} · ${esc(f.ville||'')}, ${esc(f.etat||'')}${f.annonces&&f.annonces.length?' · 🔴 annonce':''}${f.ecartee?` · <i>écartée : ${esc(f.ecartee)}</i>`:''}</li>`).join('')}</ul>`:'')
-  +(FL_SANSPOS.length?`<p>En base mais non localisées (pas de point sur la carte) : ${FL_SANSPOS.map(esc).join(', ')}.</p>`:'');
+/* Explorer — la liste des programmes et la carte réunies, mêmes filtres pour les deux.
+   Démarré par cc.js une fois la personne connectée : DATA = window.CC_DATA (liste légère de chaque fac),
+   la fiche et le roster complets d'une fac arrivent à son ouverture (window.ccCharger).
+   Profil (moyenne, budget) et « Ma sélection » sont gardés dans le compte (user_metadata). */
+(() => {
+const DATA = window.CC_DATA || [];
+const sb = window.ccSb;
+const META = (window.CC_USER && window.CC_USER.user_metadata) || {};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const virg = (n, d = 1) => n.toFixed(d).replace(".", ",");
+const moy = n => (Number.isInteger(n) ? String(n) : virg(n));
+const fmt = n => Math.round(n).toLocaleString("fr-FR");
+const sansAcc = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const ETOILE = '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 7.8l5-.7z" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+const MOBILE = matchMedia("(max-width:820px)");
 
-BASE_FICHE='index.html'; SUR_CARTE=true;   // liens de la fiche : vers la liste ; pas de « voir sur la carte »
-// fiche : EXACTEMENT celle de la liste (blocFac, repris de template.html)
-let FICHE_NOM=null;
-function facOuverte(){return FICHE_NOM;}
-function showFiche(t,defiler=true){
-  FICHE_NOM=t.name; ecrireLien();
-  document.getElementById('detail').innerHTML=
-    `<h2>${t.site?`<a href="${t.site}" target="_blank" rel="noopener">${esc(t.name)}</a>`:esc(t.name)}</h2>`+avantFiche(t)+blocFac(t);
-  if(window.ccCharger)ccCharger(t.name,x=>{if(FICHE_NOM===x.name)showFiche(x,false);},document.getElementById('detail'));
-  if(defiler) document.getElementById('detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+// ------------------------------------------------------------ onglet FieldLevel : même page, autres données
+// cc.js ne garde que les facs vues sur FieldLevel (t.fl, copié à la main : le site interdit la collecte
+// automatique) ; window.CC_FL_HORS = programmes FieldLevel absents de notre base (publication.fieldlevel).
+const FL = window.CC_PAGE === "fieldlevel";
+const FL_HORS = FL ? (window.CC_FL_HORS || []) : [];
+const FL_DIV = { "NCAA D1": "D1", "NCAA D2": "D2", "NCAA D3": "D3", "NAIA": "NAIA",
+  "NJCAA D1": "NJCAA I", "NJCAA D2": "NJCAA II", "NJCAA D3": "NJCAA III" };
+// division affichée par FieldLevel différente de celle de notre base (base peut-être périmée)
+const flEcart = t => !!(t.fl && FL_DIV[t.fl.asso] && t.division && FL_DIV[t.fl.asso] !== t.division);
+const dateFr = s => s ? new Date(s + "T12:00:00").toLocaleDateString("fr-FR") : "";
+function bandeauFL(n) {
+  if (!FL) return "";
+  const vu = DATA.map(t => t.fl && t.fl.vu_le).filter(Boolean).sort().pop();
+  const ecarts = DATA.filter(flEcart).length;
+  const parAsso = {};
+  for (const p of FL_HORS) (parAsso[p.asso || "?"] = parAsso[p.asso || "?"] || []).push(p);
+  const hors = Object.keys(parAsso).sort().map(a => `<li><b>${esc(a)}</b> : ${parAsso[a].map(p =>
+    esc(p.nom) + (p.ecartee ? ` <small>(${esc(p.ecartee)})</small>` : ` <small>(${esc([p.ville, p.etat].filter(Boolean).join(", "))})</small>`)).join(" · ")}</li>`).join("");
+  return `<div class="ex-fl"><p><b>${DATA.length}</b> programmes de notre base sont présents sur FieldLevel${vu ? ` (listes relevées le ${dateFr(vu)})` : ""}${n !== DATA.length ? ` · ${n} avec les filtres` : ""}.
+    Listes copiées à la main depuis fieldlevel.com : la présence d'une équipe ne veut pas dire qu'elle recrute pour 2027.</p>
+    ${ecarts ? `<p>${ecarts} programme${ecarts > 1 ? "s ont" : " a"} une division différente sur FieldLevel (badge orange) : notre base est peut-être en retard.</p>` : ""}
+    ${FL_HORS.length ? `<details><summary>${FL_HORS.length} programme${FL_HORS.length > 1 ? "s" : ""} FieldLevel absent${FL_HORS.length > 1 ? "s" : ""} de notre base</summary><ul>${hors}</ul></details>` : ""}</div>`;
 }
-// les facs affichées : filtrer() de la liste (mêmes critères, même code)
-function draw(){
-  markers.forEach(m=>map.removeLayer(m)); markers=[];
-  // « voir sur la carte » depuis la liste : cette fac seule, jusqu'au premier changement de filtre
-  const vues=(SEULE&&FAC_FORCEE?DATA.filter(t=>t.name===FAC_FORCEE):filtrer().filter(t=>garder(t)||t.name===FAC_FORCEE)).filter(t=>t.lat!=null);
-  vues.forEach(t=>{
-     const m=L.circleMarker([t.lat,t.lon],styleMarker(t));
-     m.bindTooltip(t.name);
-     m.on('click',()=>showFiche(t));
-     m.addTo(map); markers.push(m);
-   });
-  document.getElementById('nbcarte').innerHTML=SEULE&&FAC_FORCEE
-    ? `seule cette fac est affichée · <a href="#" id="toutes">voir toutes les facs</a>`
-    : `${markers.length} facs affichées`;
-  apresDraw(vues);
+function blocFL(t) {
+  if (!FL || !t.fl) return "";
+  const f = t.fl, an = f.annonces || [];
+  return `<div class="fi-fl"><p class="fi-titre">Sur FieldLevel</p>
+    <p>${esc(f.asso)} · ${esc([f.ville, f.etat].filter(Boolean).join(", "))}${f.vu_le ? ` · vu le ${dateFr(f.vu_le)}` : ""}</p>
+    ${flEcart(t) ? `<p class="ecart">Division ${esc(f.asso)} sur FieldLevel, ${esc(t.division)} dans notre base : à vérifier.</p>` : ""}
+    ${an.length ? an.map(a => `<p>Recrute pour la promo <b>${esc(a.promo || "?")}</b>${a.publiee_le ? ` · annonce du ${esc(a.publiee_le)}` : ""}${a.coach ? ` · ${esc(a.coach)}` : ""}</p>`).join("")
+      : `<p class="fi-avert">Pas d'annonce de recrutement relevée. Consulte la page de l'équipe sur fieldlevel.com.</p>`}</div>`;
 }
-function render(){SEULE=false;draw();ecrireLien();}   // appelé par les filtres communs (un filtre touché : retour à toutes les facs)
-document.addEventListener('click',e=>{if(e.target.id==='toutes'){e.preventDefault();render();}});
-// les facs retenues par les filtres (liste ET carte : mêmes critères, même code)
-// FAC_FORCEE : fac demandée par un lien (#fac=…), montrée même si un filtre l'écarte
-let FAC_FORCEE=null;
-// SEULE : « voir sur la carte » depuis la liste (#seule=1) — la carte ne montre que cette fac
-let SEULE=false;
-function filtrer(){
-  let r=DATA.filter(t=>state.divs.has(divKey(t))&&t.seniors>=state.min
-    &&(!state.fronly||t.french>0)&&(!state.intlonly||t.intl>0)&&(!state.st||t.state===state.st)
-    &&(!state.hideEmpty||!t.empty)&&(!state.saisonCourante||t.empty||t.a_jour||t.juco)&&(!state.todofiche||(!t.empty&&scoreF(t)<4))
-    &&(!state.indooronly||t.indoor_oui===true)
-    &&(!state.nearonly||(t.course_km!=null&&t.course_km<=10))
-    &&(!state.voieonly||(t.voie||[]).length>0)
-    &&(MON_SCORE==null||!state.rangmax||((r=>r&&!r.dernier&&r.rang<=+state.rangmax)(rangJoueur(t,MON_SCORE))))
-    &&(MON_BUDGET==null||(t.prix&&t.prix.tot!=null&&t.prix.tot*(1-(+state.bourseesp||0)/100)<=MON_BUDGET))
-    &&(MON_SCORE==null||!state.ecartmax||(t.team_avg!=null&&t.team_avg-MON_SCORE<=+state.ecartmax))
-    &&passeNotes(t));
-  JOUEUR_CHERCHE='';
-  if(state.q){const q=state.q.toLowerCase();
-    r=r.filter(t=>t.name.toLowerCase().includes(q)||(t.state||'').toLowerCase().includes(q));
-    // un joueur cherché par son nom est trouvé même si les filtres masquent sa fac
-    const qj=sansAcc(state.q.trim());
-    if(qj.length>=3){JOUEUR_CHERCHE=qj;const vus=new Set(r.map(t=>t.name));
-      r=r.concat(DATA.filter(t=>!vus.has(t.name)&&joueursTrouves(t).length));}}
-  if(FAC_FORCEE&&!r.some(t=>t.name===FAC_FORCEE)){const t=DATA.find(x=>x.name===FAC_FORCEE); if(t) r.push(t);}
+
+// ------------------------------------------------------------ règles (mêmes que la page Programmes)
+const DIVK = ["D1", "D2", "D3", "NAIA", "JUCO"];
+const divKey = t => t.juco ? "JUCO" : (["D1", "D2", "D3"].includes(t.division) ? t.division : "NAIA");
+const DIV_NOM = { D1: "NCAA Division I", D2: "NCAA Division II", D3: "NCAA Division III", NAIA: "NAIA", JUCO: "NJCAA · cursus 2 ans" };
+const AXES = [["golf", "Golf"], ["etudes", "Études"], ["securite", "Sécurité"], ["cadre", "Cadre de vie"]];
+const POIDS = { golf: 3, etudes: 3, securite: 2, cadre: 2 };
+const noteAxe = (t, k) => ((t.notes || {})[k] || {}).note;
+function noteGlobale(t) {          // moyenne pondérée des seuls axes notés ; « partielle » si moins de la moitié du poids
+  let s = 0, p = 0, tot = 0;
+  for (const [k] of AXES) { tot += POIDS[k]; const n = noteAxe(t, k); if (n == null) continue; s += n * POIDS[k]; p += POIDS[k]; }
+  return p ? { n: Math.round(10 * s / p) / 10, partiel: p / tot < 0.5 } : null;
+}
+const gNote = t => { const g = noteGlobale(t); return g ? g.n : null; };
+function lireScore(txt) {          // « 75,4 » = moyenne sur 18 trous ; « +4 » ou « 4 » = coups au-dessus du par 72
+  const v = String(txt || "").trim().replace(",", "."); if (!v) return null;
+  const n = parseFloat(v); if (!isFinite(n)) return null;
+  return (v.startsWith("+") || n < 40) ? 72 + n : (n >= 55 && n <= 130 ? n : null);
+}
+function lireBudget(txt) {         // « 35000 », « 35 000 », « 35k »
+  const v = String(txt || "").trim().toLowerCase().replace(/[\s  $]/g, "").replace(",", "."); if (!v) return null;
+  const n = parseFloat(v) * (v.endsWith("k") ? 1000 : 1); return isFinite(n) && n > 0 ? n : null;
+}
+// rang parmi les joueurs qui RESTENT l'an prochain et ont une moyenne ; pas en JUCO, ni sous 3 moyennes
+function rangJoueur(t, s) {
+  if (s == null || t.juco || t.empty) return null;
+  const reste = (t.players || []).filter(p => !p.dep && p.score != null).map(p => p.score);
+  if (reste.length < 3) return null;
+  const rang = 1 + reste.filter(x => x < s).length;
+  return { rang, n: reste.length, dernier: rang > reste.length };
+}
+// À ta portée / Au niveau / Ambitieux : le rang d'abord, sinon l'écart avec la moyenne de l'équipe
+function niveau(t) {
+  if (MON_SCORE == null) return null;
+  const r = rangJoueur(t, MON_SCORE);
+  if (r) {
+    const k = r.dernier ? "ambitieux" : r.rang <= 5 ? "portee" : r.rang <= 8 ? "niveau" : "ambitieux";
+    return { k, txt: r.dernier ? `derrière les ${r.n} joueurs qui restent` : `tu serais n°${r.rang} sur ${r.n + 1}` };
+  }
+  if (t.team_avg == null) return null;
+  const ec = t.team_avg - MON_SCORE;
+  const k = ec >= 2 ? "portee" : ec > -2 ? "niveau" : "ambitieux";
+  return { k, txt: ec >= 0 ? `équipe à +${virg(ec)} coups de toi` : `équipe meilleure de ${virg(-ec)} coups` };
+}
+const NIV_TXT = { portee: "À ta portée", niveau: "Au niveau", ambitieux: "Ambitieux" };
+
+// ------------------------------------------------------------ domaines d'études (phase 5)
+// Mêmes clés que college-golf-search/domaines_etudes.py (BLOCS, SPECIALITES, REFERENCE).
+// t.etu = {spécialité: code} : « a » associate, « b » bachelor, « m » master, « + » accréditation de référence.
+const BLOCS = [
+  ["sci", "Sciences et ingénierie", [["inge", "Ingénierie"], ["info", "Informatique"], ["maths", "Maths"], ["physique", "Physique"], ["chimie", "Chimie"], ["environnement", "Environnement et sciences de la Terre"], ["archi", "Architecture"], ["aviation", "Aviation"], ["technique", "Métiers techniques"]]],
+  ["sante", "Santé et vivant", [["bio", "Biologie (et pré-médecine)"], ["infirmier", "Soins infirmiers"], ["kine", "Kiné et rééducation"], ["sante_autre", "Autres métiers de santé"], ["agri", "Agriculture et agronomie"]]],
+  ["commerce", "Commerce et droit", [["management", "Commerce et management"], ["finance", "Finance"], ["compta", "Comptabilité"], ["marketing", "Marketing"], ["eco", "Économie"], ["droit", "Droit et justice"], ["hotellerie", "Hôtellerie, tourisme et événementiel"]]],
+  ["humain", "Sciences humaines et arts", [["psycho", "Psychologie"], ["socio", "Sciences sociales et politiques"], ["com", "Communication et journalisme"], ["education", "Éducation"], ["lettres", "Langues et lettres"], ["histoire", "Histoire, philosophie, religion"], ["arts", "Arts et design"], ["musique", "Musique"]]],
+  ["sport", "Golf et sport", [["pga", "PGA Golf Management"], ["gazon", "Gestion des terrains de golf"], ["sport_sci", "Sciences du sport"], ["entrainement", "Entraînement sportif"], ["sport_mgmt", "Management du sport"]]],
+];
+const SPEC = new Map(BLOCS.flatMap(([b, , l]) => l.map(([k, nom]) => [k, { nom, bloc: b }])));
+const BLOC_NOM = new Map(BLOCS.map(([b, nom]) => [b, nom]));
+const REF = { inge: "ABET", chimie: "ACS", infirmier: "CCNE ou ACEN", management: "AACSB", finance: "AACSB", compta: "AACSB",
+  marketing: "AACSB", eco: "AACSB", musique: "NASM", arts: "NASAD", pga: "PGA of America", entrainement: "CAATE", sport_mgmt: "COSMA" };
+const ACCR = {
+  abet: ["ABET", "ingénierie", "https://amspub.abet.org/aps/name-search"],
+  aacsb: ["AACSB", "commerce", "https://www.aacsb.edu/accredited"],
+  ccne: ["CCNE", "soins infirmiers", "https://directory.ccnecommunity.org/reports/accprog.asp"],
+  acen: ["ACEN", "soins infirmiers", "https://www.acenursing.org/search-programs"],
+  acs: ["ACS", "chimie", "https://www.acs.org/education/policies/acs-approval-program/approved-programs.html"],
+  nasm: ["NASM", "musique", "https://nasm.arts-accredit.org/directory-lists/accredited-institutions/"],
+  nasad: ["NASAD", "arts et design", "https://nasad.arts-accredit.org/directory-lists/accredited-institutions/"],
+  caate: ["CAATE", "entraînement sportif", "https://accreditation.caate.net/directory/"],
+  pga: ["PGA Golf Management", "métiers du golf", "https://pga.org/membership/university-program/participating-universities"],
+  sport_mgmt: ["COSMA", "management du sport", "https://www.cosmaweb.org/directory-of-accredited-programs.html"],
+  gazon: ["GCSAA", "terrains de golf, formation déclarée", "https://www.gcsaa.org/career/students/turf-program-directory"],
+};
+const NIV_ETU = { a: "associate", b: "bachelor", m: "master" };
+// le projet du profil : clés de blocs et de spécialités -> ensemble des spécialités visées
+function specsVisees(liste) {
+  const r = new Set();
+  for (const k of liste || []) { const b = BLOCS.find(x => x[0] === k); if (b) b[2].forEach(([s]) => r.add(s)); else if (SPEC.has(k)) r.add(k); }
   return r;
 }
-function setDivs(ds){state.divs=new Set(ds);
-  document.querySelectorAll('#divseg input').forEach(x=>{x.checked=state.divs.has(x.value);});
-  document.querySelectorAll('#tiles .tile').forEach(x=>x.setAttribute('aria-pressed',state.divs.size===1&&state.divs.has(x.dataset.div)));
-  render();}
-document.getElementById('divseg').addEventListener('change',()=>
-  setDivs([...document.querySelectorAll('#divseg input:checked')].map(x=>x.value)));
-document.getElementById('minsel').addEventListener('change',e=>{state.min=+e.target.value;render();});
-document.getElementById('intlonly').addEventListener('change',e=>{state.intlonly=e.target.checked;render();});
-document.getElementById('fronly').addEventListener('change',e=>{state.fronly=e.target.checked;render();});
-document.getElementById('hideempty').addEventListener('change',e=>{state.hideEmpty=e.target.checked;render();});
-document.getElementById('saisoncourante').addEventListener('change',e=>{state.saisonCourante=e.target.checked;render();});
-// --- filtres par note ---------------------------------------------------
-['minnote','mingolf','minetudes','minsecurite','mincadre'].forEach(id=>{
-  const el=document.getElementById(id);
-  for(let v=1;v<=4.5;v+=0.5) el.insertAdjacentHTML('beforeend',
-    `<option value="${v}">${v.toFixed(1)} et plus</option>`);
-  el.addEventListener('change',e=>{state[id]=e.target.value;render();});
+// une spécialité, dans une fac : 1 = bachelor avec son accréditation de référence quand elle existe ; 0,8 sans elle ;
+// 0,7 associate en JUCO (le bachelor se fera après le transfert) ; 0,5 associate seul dans une fac de 4 ans ; 0,4 master seul
+function valeurSpec(t, k) {
+  const c = (t.etu || {})[k]; if (!c) return 0;
+  if (t.juco) return c.includes("a") || c.includes("b") ? (k === "infirmier" && !c.includes("+") ? 0.56 : 0.7) : 0;   // seule l'ACEN accrédite des associates
+  let v = c.includes("b") ? 1 : c.includes("a") ? 0.5 : 0.4;
+  if (k === "entrainement" && c.includes("m")) v = 1;          // CAATE : le diplôme se fait en master depuis 2022
+  if (REF[k] && !c.includes("+")) v *= 0.8;
+  return v;
+}
+// meilleure spécialité visée présente dans la fac
+function domaine(t) {
+  if (!MES_SPECS.size) return null;
+  let best = null;
+  for (const k of MES_SPECS) { const v = valeurSpec(t, k); if (v > 0 && (!best || v > best.v)) best = { k, v }; }
+  return best;
+}
+const prixTot = t => (t.prix && t.prix.tot != null) ? t.prix.tot : null;
+
+// ------------------------------------------------------------ état
+let MON_SCORE = lireScore((META.profil || {}).score), MON_BUDGET = lireBudget((META.profil || {}).budget);
+let MES_ETUDES = ((META.profil || {}).etudes || []).filter(k => SPEC.has(k) || BLOC_NOM.has(k));
+let MES_SPECS = specsVisees(MES_ETUDES), FRANCE = !!(META.profil || {}).france;
+const SEL = new Set((META.selection || []).filter(n => DATA.some(t => t.name === n)));
+const DEF = () => ({ q: "", divs: new Set(DIVK), note: "", st: "", places: false, fr: false, intl: false, indoor: false,
+  proche: false, niveaux: new Set(), dansBudget: false, domaine: false, sel: false, zone: null, tri: "reco" });
+let S = DEF(), LIM = 40, FAC = null, TOUT_EFFECTIF = false;
+let DETAIL = META.fiche === "detail";      // fiche détaillée (celle de la page Programmes) : choix gardé dans le compte
+const PAR_NOM = new Map(DATA.map(t => [t.name, t]));
+
+let attenteMeta = null;
+function garderMeta(data) {        // enregistré dans le compte, groupé (une écriture pour plusieurs clics)
+  Object.assign(garderMeta.lot || (garderMeta.lot = {}), data);
+  clearTimeout(attenteMeta);
+  attenteMeta = setTimeout(() => { const lot = garderMeta.lot; garderMeta.lot = null; if (sb) sb.auth.updateUser({ data: lot }); }, 700);
+}
+
+// ------------------------------------------------------------ filtrer, trier
+function joueursTrouves(t, q) { return (t.players || []).filter(p => sansAcc(p.name).includes(q)); }
+function filtrer(avecZone = true) {
+  const q = sansAcc(S.q.trim());
+  return DATA.filter(t => {
+    if (!S.divs.has(divKey(t))) return false;
+    if (S.sel && !SEL.has(t.name)) return false;
+    if (S.places && !(t.seniors > 0)) return false;
+    if (S.fr && !(t.french > 0)) return false;
+    if (S.intl && !(t.intl > 0)) return false;
+    if (S.indoor && t.indoor_oui !== true) return false;
+    if (S.proche && !(t.course_km != null && t.course_km <= 10)) return false;
+    if (S.st && t.state !== S.st) return false;
+    if (S.note !== "") { const g = gNote(t); if (g == null || g < +S.note) return false; }
+    if (S.niveaux.size && MON_SCORE != null) { const n = niveau(t); if (!n || !S.niveaux.has(n.k)) return false; }
+    if (S.dansBudget && MON_BUDGET != null) { const p = prixTot(t); if (p == null || p > MON_BUDGET) return false; }
+    if (S.domaine && MES_SPECS.size && !domaine(t)) return false;
+    if (avecZone && S.zone && !(t.lat != null && S.zone.contains([t.lat, t.lon]))) return false;
+    if (q) {
+      const ok = sansAcc(t.name).includes(q) || sansAcc(t.city).includes(q) || sansAcc(t.state) === q
+        || (q.length >= 3 && joueursTrouves(t, q).length > 0);
+      if (!ok) return false;
+    }
+    return true;
+  });
+}
+const ORDRE_NIV = { portee: 0, niveau: 1, ambitieux: 2 };
+// « Recommandé » : un score 0-100 qui mélange les critères, pour ne pas classer sur les seules places
+//   places 30 · niveau 20 · études 20 · note de la fac 15 · budget 15 (PLAN, phase 5) ; roster pas lu = moitié du score
+//   critère sans donnée du profil (moyenne, budget, projet d'études) : compté pour moitié
+function pertinence(t) {
+  const pl = Math.sqrt(Math.min(t.seniors || 0, 12) / 12);
+  let nv = 0.5;
+  const n = niveau(t);
+  if (n) {
+    nv = n.k === "portee" ? 1 : n.k === "niveau" ? 0.85 : 0.3;
+    const ec = t.team_avg != null ? t.team_avg - MON_SCORE : 0;   // équipe bien plus faible que toi : moins intéressant
+    if (n.k === "portee" && ec > 3) nv = Math.max(0.3, 1 - (ec - 3) * 0.12);
+  }
+  const g = noteGlobale(t);
+  const nt = g ? Math.max(0, (g.n - 1) / 4) * (g.partiel ? 0.8 : 1) : 0.4;
+  let bu = 0.5;
+  const p = prixTot(t);
+  if (MON_BUDGET != null && p != null) bu = p <= MON_BUDGET ? 1 : Math.max(0, 1 - (p - MON_BUDGET) / MON_BUDGET);
+  let et = 0.5;
+  if (MES_SPECS.size) { const d = domaine(t); et = d ? d.v : (t.juco && t.etu_gen ? 0.3 : 0); }   // JUCO : tronc commun de transfert
+  const sc = 30 * pl + 20 * nv + 20 * et + 15 * nt + 15 * bu;
+  return Math.round(t.empty ? sc / 2 : sc);
+}
+function trier(r) {
+  const o = t => t._ordre ?? 0;
+  const P = new Map();
+  const pe = t => { if (!P.has(t.name)) P.set(t.name, pertinence(t)); return P.get(t.name); };
+  const cmp = {
+    reco: (a, b) => pe(b) - pe(a) || (b.seniors || 0) - (a.seniors || 0) || o(a) - o(b),
+    places: (a, b) => (b.seniors || 0) - (a.seniors || 0) || o(a) - o(b),
+    note: (a, b) => (gNote(b) ?? -1) - (gNote(a) ?? -1) || o(a) - o(b),
+    cout: (a, b) => (prixTot(a) ?? 1e9) - (prixTot(b) ?? 1e9) || o(a) - o(b),
+    nom: (a, b) => a.name.localeCompare(b.name, "fr"),
+    niveau: (a, b) => {
+      const na = niveau(a), nb = niveau(b);
+      return (na ? ORDRE_NIV[na.k] : 3) - (nb ? ORDRE_NIV[nb.k] : 3) || (b.seniors || 0) - (a.seniors || 0) || o(a) - o(b);
+    },
+  }[S.tri] || (() => 0);
+  return r.slice().sort(cmp);
+}
+
+// ------------------------------------------------------------ cartes de la liste
+function badges(t, q) {
+  const b = [];
+  if (FL && t.fl) b.push(flEcart(t)
+    ? `<span class="ex-b flecart" title="Division différente dans notre base (${esc(t.division)})">FieldLevel · ${esc(t.fl.asso)}</span>`
+    : `<span class="ex-b fl">FieldLevel · ${esc(t.fl.asso)}</span>`);
+  const n = niveau(t); if (n) b.push(`<span class="ex-b ${n.k}" title="${esc(n.txt)}">${NIV_TXT[n.k]}</span>`);
+  if (MES_SPECS.size) {
+    const d = domaine(t);
+    if (d) { const c = t.etu[d.k]; b.push(`<span class="ex-b dom" title="Formation dans ton projet d'études">${esc(SPEC.get(d.k).nom)}${c.includes("+") ? " · " + esc(REF[d.k]) : ""}</span>`); }
+    else b.push(`<span class="ex-b hors">Pas ton domaine</span>`);
+  }
+  const g = noteGlobale(t); if (g) b.push(`<span class="ex-b note"${g.partiel ? ' title="Note partielle : peu d\'axes renseignés"' : ""}>Note ${virg(g.n)}${g.partiel ? "·" : ""}</span>`);
+  const p = prixTot(t);
+  if (p != null) {
+    if (MON_BUDGET == null) b.push(`<span class="ex-b">${fmt(p)} $/an</span>`);
+    else b.push(`<span class="ex-b ${p <= MON_BUDGET ? "dans" : "hors"}">${fmt(p)} $/an · ${p <= MON_BUDGET ? "dans le budget" : "au-dessus du budget"}</span>`);
+  }
+  if (t.french > 0) b.push(`<span class="ex-b fr">Joueur français</span>`);
+  if (t.intl > 0 && !(t.french > 0)) b.push(`<span class="ex-b">${t.intl} internationa${t.intl > 1 ? "ux" : "l"}</span>`);
+  if (t.indoor_oui === true) b.push(`<span class="ex-b">Golf indoor</span>`);
+  if (q && q.length >= 3) { const j = joueursTrouves(t, q); if (j.length) b.push(`<span class="ex-b note">Joueur : ${esc(j.map(x => x.name).join(", "))}</span>`); }
+  return b.join("");
+}
+function sousTitre(t) {
+  const n = (t.players || []).length;
+  return [divKey(t), [t.city, t.state].filter(Boolean).join(", "), n ? `${n} joueurs` : "", t.juco ? "cursus 2 ans" : ""].filter(Boolean).map(esc).join(" · ");
+}
+function carteFac(t, q) {
+  const dans = SEL.has(t.name), vide = t.empty;
+  return `<article class="ex-carte-fac${FAC === t.name ? " ouverte" : ""}" data-nom="${esc(t.name)}">
+  <div class="ex-haut"><div><button type="button" class="ex-nom" data-ouvrir>${esc(t.name)}</button><div class="ex-sous">${sousTitre(t)}</div></div>
+  <div class="ex-places${t.seniors ? "" : " zero"}"><b>${vide ? "—" : t.seniors || 0}</b><small>places 2027</small></div>
+  <button type="button" class="ex-etoile" data-etoile aria-pressed="${dans}" aria-label="${dans ? "Retirer" : "Ajouter"} ${esc(t.name)} ${dans ? "de" : "à"} ma sélection">${ETOILE}</button></div>
+  <div class="ex-badges">${S.tri === "reco" ? `<span class="ex-b ex-reco" title="Places, niveau, études, note de la fac et budget réunis">Pertinence ${pertinence(t)}</span>` : ""}${badges(t, q)}</div></article>`;
+}
+
+// ------------------------------------------------------------ rendu
+let DERNIER = [];
+function render() {
+  const q = sansAcc(S.q.trim());
+  const r = trier(filtrer());
+  DERNIER = r;
+  const liste = $("ex-liste");
+  // la fiche ouverte ne correspond plus aux critères : on la ferme et on revient à la carte
+  if (FAC != null && !r.some(t => t.name === FAC)) fermer();
+  if (!r.length) {
+    liste.innerHTML = bandeauFL(0) + `<p class="ex-vide">${S.sel && !SEL.size ? "Ta sélection est vide : clique sur l'étoile d'une fac pour l'y ajouter." : S.zone ? "Aucun programme dans cette partie de la carte : dézoome ou déplace-la." : "Aucun programme ne correspond. Retire un filtre pour élargir."}</p>`;
+  } else {
+    liste.innerHTML = bandeauFL(r.length) + r.slice(0, LIM).map(t => carteFac(t, q)).join("")
+      + (r.length > LIM ? `<button type="button" class="ex-btn ex-plus" id="ex-plus">Afficher ${Math.min(40, r.length - LIM)} de plus (encore ${r.length - LIM})</button>` : "");
+  }
+  majActifs(r.length);
+  majCarte();
+  $("fl-voir").textContent = `Voir ${r.length.toLocaleString("fr-FR")} programme${r.length > 1 ? "s" : ""}`;
+  $("ex-nsel").textContent = SEL.size;
+  $("ex-masel").setAttribute("aria-pressed", S.sel);
+  document.querySelectorAll(".ex-basnav [data-nav]").forEach(b => b.setAttribute("aria-current",
+    b.dataset.nav === (S.sel ? "selection" : "explorer")));
+}
+let attenteRendu = null;
+const renderBientot = () => { clearTimeout(attenteRendu); attenteRendu = setTimeout(() => { LIM = 40; render(); }, 140); };
+const relancer = () => { LIM = 40; $("ex-liste").scrollTop = 0; render(); };
+
+function majActifs(n) {
+  const tags = [];
+  const tag = (cle, txt) => tags.push(`<button type="button" class="ex-tag" data-retirer="${cle}" aria-label="Retirer le filtre ${esc(txt)}">${esc(txt)}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>`);
+  if (S.sel) tag("sel", "Ma sélection");
+  if (S.zone) tag("zone", "Zone de la carte");
+  if (S.niveaux.size && MON_SCORE != null) tag("niveaux", [...S.niveaux].map(k => NIV_TXT[k]).join(" ou "));
+  if (S.dansBudget && MON_BUDGET != null) tag("dansBudget", "Dans mon budget");
+  if (S.domaine && MES_SPECS.size) tag("domaine", "Mon domaine enseigné");
+  if (S.note !== "") tag("note", `Note ≥ ${S.note.replace(".", ",")}`);
+  if (S.st) tag("st", S.st);
+  if (S.places) tag("places", "Avec places 2027");
+  if (S.fr) tag("fr", "Joueur français");
+  if (S.intl) tag("intl", "Internationaux");
+  if (S.indoor) tag("indoor", "Golf indoor");
+  if (S.proche) tag("proche", "Parcours à 10 km");
+  const nPanneau = tags.length - (S.sel ? 1 : 0) - (S.zone ? 1 : 0);
+  $("ex-nfiltres").hidden = !nPanneau; $("ex-nfiltres").textContent = nPanneau;
+  const etu = MES_ETUDES.length ? MES_ETUDES.map(k => BLOC_NOM.get(k) || SPEC.get(k).nom) : [];
+  const prof = MON_SCORE != null || MON_BUDGET != null || etu.length
+    ? `Mon profil : ${[MON_SCORE != null ? "moyenne " + moy(MON_SCORE) : "", MON_BUDGET != null ? "budget " + fmt(MON_BUDGET) + " $/an" : "",
+        etu.length ? esc(etu.length > 2 ? etu.slice(0, 2).join(", ") + "…" : etu.join(", ")) : ""].filter(Boolean).join(" · ")} <u>modifier</u>`
+    : "Indique ta moyenne, ton budget et tes études <u>ici</u>";
+  const tout = S.divs.size === DIVK.length ? "tous les USA" : [...S.divs].join(", ");
+  $("ex-actifs").innerHTML = `<button type="button" class="ex-profil" id="ex-profil"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5.5" r="2.8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 14c.8-2.8 3-4 5.5-4s4.7 1.2 5.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>${prof}</button>`
+    + (tags.length ? `<span class="ex-sep"></span>${tags.join("")}<button type="button" class="ex-lien" id="ex-effacer">Tout effacer</button>` : "")
+    + `<span class="ex-compte"><b>${n.toLocaleString("fr-FR")}</b> programme${n > 1 ? "s" : ""}${S.zone ? " dans la zone" : " · " + esc(tout)}</span>`;
+}
+
+// ------------------------------------------------------------ carte
+let map = null, grappes = null, carteFaite = false, mouvementCode = false;
+const USA = [[25, -124], [49, -67]], USA_ENTIERS = [[28, -118], [46, -75]];
+const MARQ = new Map();
+function iconePoint(t) {
+  const s = t.seniors >= 10 ? 18 : t.seniors >= 5 ? 15 : t.seniors > 0 ? 12 : 10;
+  return L.divIcon({ className: "ex-pt" + (t.seniors ? "" : " zero") + (FAC === t.name ? " choisi" : ""), iconSize: [s, s] });
+}
+function initCarte() {
+  if (carteFaite || typeof L === "undefined") return;
+  carteFaite = true;
+  map = L.map("ex-map", { zoomSnap: 0.5, minZoom: 3, worldCopyJump: true }).setView([39, -96], 4);
+  mouvementCode = true; map.fitBounds(USA);
+  // fond OpenStreetMap (comme la page Carte), passé en gris par le CSS pour que les points ressortent
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(map);
+  map.attributionControl.addAttribution("<b>© Hans Leon 2026 — base de données protégée (CPI L341-1), reproduction interdite</b>");
+  grappes = L.markerClusterGroup({
+    showCoverageOnHover: false, maxClusterRadius: 52, spiderfyOnMaxZoom: true, chunkedLoading: true,
+    iconCreateFunction: c => { const n = c.getChildCount(), s = n < 10 ? 34 : n < 50 ? 42 : n < 150 ? 50 : 58;
+      return L.divIcon({ html: `<span>${n}</span>`, className: "ex-grappe", iconSize: [s, s] }); },
+  });
+  map.addLayer(grappes);
+  for (const t of DATA) {
+    if (t.lat == null || t.lon == null) continue;
+    const m = L.marker([t.lat, t.lon], { icon: iconePoint(t), keyboard: false, title: t.name });
+    m.on("click", () => {
+      const g = noteGlobale(t);
+      m.bindPopup(`<div class="ex-pop"><span class="p">${t.empty ? "—" : t.seniors || 0}</span><b>${esc(t.name)}</b>
+        <p>${esc(divKey(t))} · ${esc([t.city, t.state].filter(Boolean).join(", "))}${g ? " · note " + virg(g.n) : ""}<br>places 2027</p>
+        <button type="button" data-pop="${esc(t.name)}">Voir la fiche →</button></div>`).openPopup();
+    });
+    MARQ.set(t.name, m);
+  }
+  map.getContainer().addEventListener("click", e => { const b = e.target.closest("[data-pop]"); if (b) { map.closePopup(); ouvrir(b.dataset.pop); } });
+  // la liste suit la carte : zoomer ou déplacer la carte limite la liste à ce qu'on voit
+  map.on("moveend", () => { if (mouvementCode) { mouvementCode = false; return; } suivreCarte(); });
+  majCarte(true);
+}
+let cleCarte = "";
+function majCarte(force) {
+  if (!carteFaite) return;
+  const r = filtrer(false);
+  const cle = r.map(t => t.name).join("|");
+  if (!force && cle === cleCarte) return;
+  cleCarte = cle;
+  grappes.clearLayers();
+  grappes.addLayers(r.map(t => MARQ.get(t.name)).filter(Boolean));
+}
+function bougerCarte(f) { mouvementCode = true; f(); }
+function suivreCarte() {
+  const b = map.getBounds();
+  S.zone = b.contains(L.latLngBounds(USA_ENTIERS)) ? null : b;   // vue de tous les USA : pas de limite
+  LIM = 40; $("ex-liste").scrollTop = 0; render();
+}
+function toutLesUSA() { if (map) bougerCarte(() => map.fitBounds(USA)); }
+let survol = null;
+function surligner(nom) {
+  if (survol) { survol.classList.remove("choisi"); survol = null; }
+  if (!carteFaite || !nom) return;
+  const m = MARQ.get(nom); if (!m || !grappes.hasLayer(m)) return;
+  const p = grappes.getVisibleParent(m);
+  const el = p && (p._icon || (p.getElement && p.getElement()));
+  if (el) { el.classList.add("choisi"); survol = el; }
+}
+function montrerSurCarte(nom) {
+  const m = MARQ.get(nom); if (!m) return;
+  if (MOBILE.matches) vue("carte");
+  initCarte();
+  setTimeout(() => {
+    map.invalidateSize();
+    if (!grappes.hasLayer(m)) grappes.addLayer(m);
+    bougerCarte(() => grappes.zoomToShowLayer(m, () => m.fire("click")));
+  }, 60);
+}
+
+// ------------------------------------------------------------ fiche
+function axe(t, k, nom) {
+  const n = noteAxe(t, k);
+  return `<div class="fi-axe${n == null ? " nn" : ""}"><span>${nom}</span><div class="fi-jauge"><i style="width:${n == null ? 0 : Math.round(n / 5 * 100)}%"></i></div><b>${n == null ? "—" : virg(n)}</b></div>`;
+}
+function blocCout(t) {
+  const p = t.prix; if (!p || p.tot == null) return `<div class="fi-cout"><div class="l"><span>Coût pour un étranger</span><b>—</b></div><p>Prix non publié par la fac.</p></div>`;
+  const parts = [["Scolarité", p.scol], ["logement", p.log], ["assurance", p.ass]].filter(([, v]) => v);
+  const ecart = MON_BUDGET != null ? p.tot - MON_BUDGET : null;
+  return `<div class="fi-cout"><div class="l"><span>Coût pour un étranger</span><b>${fmt(p.tot)} $<small> / an</small></b></div>
+    ${parts.length ? `<div class="fi-barres">${parts.map(([, v]) => `<i style="flex:${v}"></i>`).join("")}</div>
+    <p>${parts.map(([k, v]) => `${k} ${fmt(v)}`).join(" · ")}${p.src === "estime" ? " · estimation" : ""} · avant bourse</p>` : ""}
+    ${ecart != null ? `<p class="ecart${ecart <= 0 ? " ok" : ""}">${ecart <= 0 ? `Dans ton budget (${fmt(-ecart)} $ de marge)` : `${fmt(ecart)} $ au-dessus de ton budget`}</p>` : ""}</div>`;
+}
+function blocEtudes(t) {
+  const etu = t.etu || {}, dip = t.etudes_dip || {};
+  if (!Object.keys(etu).length && !t.inge) return "";
+  const niv = c => [...c.replace("+", "")].map(x => NIV_ETU[x]).join(", ");
+  const ligne = k => { const c = etu[k];
+    return `<p class="ligne"><b>${esc(SPEC.get(k).nom)}</b><span>${esc(niv(c))}${c.includes("+") ? " · accrédité " + esc(REF[k]) : ""}${dip[k] ? ` · ${fmt(dip[k])} diplômés/an` : ""}</span></p>`; };
+  const h = [];
+  if (MES_SPECS.size) {
+    // le projet : spécialités visées présentes ; celles qu'on a cochées une à une et qui manquent
+    const oui = [...MES_SPECS].filter(k => etu[k]).sort((a, b) => valeurSpec(t, b) - valeurSpec(t, a));
+    h.push(`<p class="fi-titre">Ton projet d'études</p>`);
+    h.push(oui.length ? oui.map(ligne).join("") : `<p class="non">Aucune formation de ton projet ici.</p>`);
+    const manque = MES_ETUDES.filter(k => SPEC.has(k) && !etu[k]).map(k => SPEC.get(k).nom);
+    if (oui.length && manque.length) h.push(`<p class="non">Pas de : ${esc(manque.join(", "))}.</p>`);
+    if (t.juco) h.push(`<p class="note">Cursus de 2 ans : on y prépare un associate, puis on transfère vers une fac de 4 ans pour le bachelor${t.etu_gen ? " (tronc commun de transfert proposé)" : ""}.</p>`);
+    if (MES_SPECS.has("bio") || MES_SPECS.has("sante_autre")) h.push(`<p class="note">Médecine : aux USA, ce n'est pas un bachelor. On fait un « pre-med » (souvent en biologie), puis la medical school après.</p>`);
+    if (MES_SPECS.has("entrainement") && etu.entrainement) h.push(`<p class="note">Entraînement sportif : depuis 2022, le diplôme qui mène au métier (CAATE) se fait en master.</p>`);
+    if (FRANCE) {
+      const bach = oui.filter(k => etu[k].includes("b"));
+      h.push(`<p class="note"><b>Poursuivre en France :</b> ${bach.length ? `bachelor dans ton domaine ici (${esc(bach.map(k => SPEC.get(k).nom).join(", "))}). ` : t.juco ? "pas de bachelor ici (2 ans) : il se fera dans la fac de 4 ans après le transfert. " : "pas de bachelor dans ton domaine ici. "}L'équivalence (par exemple pour entrer en licence ou en master) est à faire valider par l'université française.</p>`);
+    }
+  } else {
+    // pas de projet : toute l'offre, bloc par bloc
+    h.push(`<p class="fi-titre">Études <small>· indique ton projet dans Mon profil</small></p>`);
+    for (const [b, nom, l] of BLOCS) {
+      const ks = l.map(([k]) => k).filter(k => etu[k] && (etu[k].includes("b") || (t.juco && etu[k].includes("a"))));
+      if (ks.length) h.push(`<p><b>${esc(nom)}</b> : ${ks.map(k => esc(SPEC.get(k).nom) + (etu[k].includes("+") ? ` (${esc(REF[k])})` : "")).join(", ")}</p>`);
+    }
+  }
+  if (t.inge) h.push(`<p><b>Ingénierie${t.juco ? "" : " (ABET)"}</b> : ${esc(t.inge)}</p>`);
+  const acc = (t.accr || []).filter(k => ACCR[k]);
+  if (acc.length) h.push(`<p class="acc">Accréditations : ${acc.map(k => `<a href="${ACCR[k][2]}" target="_blank" rel="noopener">${esc(ACCR[k][0])}</a> (${esc(ACCR[k][1])})`).join(" · ")}</p>`);
+  h.push(`<p class="acc">Offre de formation : College Scorecard (diplômes de la dernière année publiée).</p>`);
+  return `<div class="fi-etudes">${h.join("")}</div>`;
+}
+function texteFiche(v) { return typeof v === "string" && v.length > 4 ? v : ""; }   // « oui » = aperçu avant chargement
+function blocJoueurs(t) {
+  const js = (t.players || []).slice();
+  if (!js.length) return `<p class="fi-avert">${t.empty ? "Roster pas encore lu pour cette saison." : "Aucun joueur listé."}</p>`;
+  const partants = js.filter(p => p.dep).sort((a, b) => (a.score ?? 999) - (b.score ?? 999));
+  const montres = TOUT_EFFECTIF ? js.sort((a, b) => (b.dep || 0) - (a.dep || 0) || (a.score ?? 999) - (b.score ?? 999)) : partants.slice(0, 8);
+  const ligne = p => `<div class="fi-j${p.dep ? " sr" : ""}"><div>${p.year ? `<em>${esc(p.year)}</em>` : ""}<b>${esc(p.name)}</b>${p.hometown ? ` <span>· ${esc(p.hometown)}</span>` : ""}</div><b>${p.score != null ? virg(p.score) : ""}</b></div>`;
+  const reste = TOUT_EFFECTIF ? 0 : js.length - montres.length;
+  return `<p class="fi-titre">${TOUT_EFFECTIF ? `Effectif <small>(${js.length})</small>` : `Joueurs qui partent en 2027 <small>(${partants.length})</small>`}</p>
+    <div class="fi-joueurs">${montres.map(ligne).join("") || `<div class="fi-j"><div>Aucun départ prévu.</div><b></b></div>`}
+    ${reste > 0 || TOUT_EFFECTIF ? `<button type="button" id="fi-effectif">${TOUT_EFFECTIF ? "Revenir aux départs" : `Voir l'effectif complet (${js.length})`}</button>` : ""}</div>
+    <p class="fi-avert">Moyenne de score de la saison passée, quand l'université la publie.</p>`;
+}
+function dessinerFiche(t) {
+  const el = $("ex-fiche");
+  const g = noteGlobale(t), n = niveau(t), dans = SEL.has(t.name);
+  const effectif = (t.players || []).length;
+  const annees = ["fr", "so", "jr", "sr"].filter(k => t[k] != null).map(k => `${k.toUpperCase()} ${t[k]}`).join(" · ");
+  const resume = texteFiche(t.summary);
+  const tags = [
+    t.course ? `Parcours : ${esc(t.course)}${t.course_km != null ? ` (${virg(t.course_km, 0)} km)` : ""}` : "",
+    t.indoor_oui === true ? "Golf indoor" : "",
+    t.intl > 0 ? `${t.intl} internationa${t.intl > 1 ? "ux" : "l"}` : "",
+    (t.french_names || []).length ? `Français : ${esc(t.french_names.join(", "))}` : "",
+  ].filter(Boolean);
+  el.innerHTML = `<div class="fi-barre">
+      <button type="button" class="ex-btn" id="fi-retour"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>${MOBILE.matches ? "Retour" : "Revenir à la carte"}</button>
+      ${t.lat != null ? `<button type="button" class="ex-btn" id="fi-carte">Voir sur la carte</button>` : ""}
+      <button type="button" class="ex-btn" id="fi-detail" aria-pressed="${DETAIL}">Fiche détaillée</button>
+      <button type="button" class="ex-etoile" id="fi-etoile" aria-pressed="${dans}" aria-label="${dans ? "Retirer de" : "Ajouter à"} ma sélection">${ETOILE}</button>
+    </div>
+    <div class="fi-corps" id="fi-corps">
+      <div><div class="fi-sur">${esc(DIV_NOM[divKey(t)] || t.division)}${t.conf ? " · " + esc(t.conf) : ""}</div>
+        <h2 id="fi-nom" tabindex="-1">${esc(t.name)}</h2>
+        <div class="fi-lieu">${[[t.city, t.state].filter(Boolean).join(", "), t.size ? `environ ${fmt(t.size)} étudiants` : "", t.coach ? `coach ${t.coach}` : ""].filter(Boolean).map(esc).join(" · ")}</div></div>
+      <div class="fi-chiffres">
+        <div class="fi-ch fort"><span>Places 2027</span><b>${t.empty ? "—" : t.seniors || 0}</b><small>${t.dep2028 != null ? `${t.dep2028} de plus en 2028` : "départs probables"}</small></div>
+        <div class="fi-ch"><span>Effectif</span><b>${effectif || "—"}</b><small>${annees || "&nbsp;"}</small></div>
+        <div class="fi-ch"><span>Niveau de l'équipe</span><b>${t.team_avg != null ? virg(t.team_avg) : "—"}</b><small>${n ? `<b style="font:inherit;font-weight:700;color:var(--accent)">${NIV_TXT[n.k]}</b> · ${esc(n.txt)}` : MON_SCORE == null ? "moyenne · indique la tienne" : "moyenne de score"}</small></div>
+      </div>
+      ${blocFL(t)}
+      ${DETAIL ? `<div class="fi-detail">${t._complet ? CCFICHE.blocFac(t) : ""}</div>` : `<div class="fi-deux">
+        <div class="fi-col">
+          <div style="display:flex;flex-direction:column;gap:10px"><p class="fi-titre">Notes de la fac${g ? ` <small>· ${virg(g.n)} sur 5${g.partiel ? ", partielle" : ""}</small>` : ""}</p>${AXES.map(([k, nom]) => axe(t, k, nom)).join("")}</div>
+          ${blocCout(t)}
+          ${blocEtudes(t)}
+          ${tags.length ? `<div class="ex-badges">${tags.map(x => `<span class="ex-b">${x}</span>`).join("")}</div>` : ""}
+        </div>
+        <div class="fi-col">
+          ${resume ? `<div><p class="fi-titre">En bref</p><p class="fi-texte">${esc(resume)}</p></div>` : ""}
+          <div id="fi-joueurs">${blocJoueurs(t)}</div>
+          <div class="fi-actions">
+            ${t.coach_mail ? `<a class="principal" href="mailto:${esc(t.coach_mail)}">Écrire au coach</a>` : ""}
+            ${t.roster_url ? `<a class="second" href="${esc(t.roster_url)}" target="_blank" rel="noopener">Roster officiel ↗</a>` : ""}
+            ${t.site ? `<a class="second" href="${esc(t.site)}" target="_blank" rel="noopener">Site de l'université ↗</a>` : ""}
+          </div>
+          <p class="fi-avert">Projection, pas certitude : un senior est un départ probable. À confirmer avec le coach.</p>
+        </div>
+      </div>
+      <button type="button" class="ex-btn fi-plus" data-detail>Voir la fiche détaillée (tout ce que dit la page Programmes)</button>`}
+    </div>`;
+}
+function ouvrir(nom, depuisLien) {
+  const t = PAR_NOM.get(nom); if (!t) return;
+  FAC = nom; TOUT_EFFECTIF = false;
+  const el = $("ex-fiche");
+  dessinerFiche(t);
+  el.hidden = false;
+  document.body.classList.add("ex-fiche-ouverte");
+  if (!depuisLien) history.replaceState(null, "", "#fac=" + encodeURIComponent(nom));
+  document.querySelectorAll(".ex-carte-fac.ouverte").forEach(c => c.classList.remove("ouverte"));
+  const c = document.querySelector(`.ex-carte-fac[data-nom="${CSS.escape(nom)}"]`); if (c) c.classList.add("ouverte");
+  $("fi-nom").focus({ preventScroll: true });
+  if (window.ccCharger) ccCharger(nom, x => { if (FAC === x.name) { dessinerFiche(x); } }, $("fi-corps"));
+}
+function fermer() {
+  if (FAC == null) return;
+  const nom = FAC; FAC = null;
+  $("ex-fiche").hidden = true;
+  document.body.classList.remove("ex-fiche-ouverte");
+  history.replaceState(null, "", location.pathname);
+  document.querySelectorAll(".ex-carte-fac.ouverte").forEach(c => c.classList.remove("ouverte"));
+  if (map) setTimeout(() => map.invalidateSize(), 30);
+  const b = document.querySelector(`.ex-carte-fac[data-nom="${CSS.escape(nom)}"] [data-ouvrir]`); if (b) b.focus({ preventScroll: true });
+}
+function basculerSel(nom) {
+  if (SEL.has(nom)) SEL.delete(nom); else SEL.add(nom);
+  garderMeta({ selection: [...SEL] });
+  document.querySelectorAll(`.ex-carte-fac[data-nom="${CSS.escape(nom)}"] [data-etoile]`).forEach(b => {
+    const d = SEL.has(nom); b.setAttribute("aria-pressed", d); b.setAttribute("aria-label", `${d ? "Retirer" : "Ajouter"} ${nom} ${d ? "de" : "à"} ma sélection`); });
+  const fe = $("fi-etoile"); if (fe && FAC === nom) { fe.setAttribute("aria-pressed", SEL.has(nom)); fe.setAttribute("aria-label", `${SEL.has(nom) ? "Retirer de" : "Ajouter à"} ma sélection`); }
+  $("ex-nsel").textContent = SEL.size;
+  if (S.sel) render();
+}
+
+// ------------------------------------------------------------ vue téléphone : liste ⇄ carte
+function vue(v) {
+  document.body.classList.toggle("ex-vue-carte", v === "carte");
+  $("ex-bascule").innerHTML = v === "carte"
+    ? '<svg width="18" height="18" viewBox="0 0 22 22" aria-hidden="true"><path d="M4 6h14M4 11h14M4 16h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Voir la liste'
+    : '<svg width="18" height="18" viewBox="0 0 22 22" aria-hidden="true"><path d="M11 19s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="11" cy="9" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Voir sur la carte';
+  if (v === "carte") {
+    const premiere = !carteFaite; initCarte();
+    setTimeout(() => { if (!map) return; map.invalidateSize(); if (premiere) bougerCarte(() => map.fitBounds(USA)); }, 30);
+  }
+}
+
+// ------------------------------------------------------------ panneau des filtres
+const dlg = $("ex-filtres");
+function remplirPanneau() {
+  $("fl-score").value = (META.profil || {}).score || "";
+  $("fl-budget").value = (META.profil || {}).budget || "";
+  $("fl-france").checked = FRANCE;
+  dessinerEtudes();
+  majPanneau();
+}
+function majPanneau() {
+  document.querySelectorAll("#fl-niveaux button").forEach(b => { b.disabled = MON_SCORE == null; b.setAttribute("aria-pressed", S.niveaux.has(b.dataset.niv)); });
+  $("fl-niv-aide").textContent = MON_SCORE == null ? "Indique d'abord ta moyenne dans Mon profil."
+    : "À ta portée : tu serais dans les 5 premiers des joueurs qui restent (ou l'équipe joue 2 coups au-dessus de toi). Au niveau : 6e à 8e (ou ±2 coups).";
+  $("fl-dansbudget").disabled = MON_BUDGET == null; $("fl-budget-case").classList.toggle("off", MON_BUDGET == null);
+  $("fl-dansbudget").checked = S.dansBudget;
+  $("fl-domaine").disabled = !MES_SPECS.size; $("fl-domaine-case").classList.toggle("off", !MES_SPECS.size);
+  $("fl-domaine").checked = S.domaine;
+  document.querySelectorAll("#fl-note button").forEach(b => b.setAttribute("aria-pressed", b.dataset.note === S.note));
+  $("fl-etat").value = S.st;
+  for (const [id, k] of [["fl-places", "places"], ["fl-fr", "fr"], ["fl-intl", "intl"], ["fl-indoor", "indoor"], ["fl-proche", "proche"]]) $(id).checked = S[k];
+}
+function dessinerEtudes() {
+  const ouverts = new Set([...document.querySelectorAll("#fl-etudes details[open]")].map(d => d.dataset.bloc));
+  $("fl-etudes").innerHTML = BLOCS.map(([b, nom, l]) => {
+    const tout = MES_ETUDES.includes(b), n = l.filter(([k]) => MES_SPECS.has(k)).length;
+    return `<details data-bloc="${b}"${ouverts.has(b) ? " open" : ""}><summary>${esc(nom)}${n ? `<small>${tout ? "tout le domaine" : n + " choisi" + (n > 1 ? "s" : "")}</small>` : ""}</summary>
+      <div class="fl-puces"><button type="button" data-bloc="${b}" aria-pressed="${tout}">Tout le domaine</button>${l.map(([k, s]) => `<button type="button" data-spec="${k}" aria-pressed="${MES_SPECS.has(k)}">${esc(s)}</button>`).join("")}</div></details>`;
+  }).join("");
+}
+function choisirEtude(b) {
+  const bloc = b.dataset.bloc, spec = b.dataset.spec;
+  let l = MES_ETUDES.slice();
+  if (bloc) l = l.includes(bloc) ? l.filter(k => k !== bloc) : [...l.filter(k => !(SPEC.get(k) && SPEC.get(k).bloc === bloc)), bloc];
+  else {
+    const bl = SPEC.get(spec).bloc;
+    if (l.includes(bl)) l = [...l.filter(k => k !== bl), ...BLOCS.find(x => x[0] === bl)[2].map(([k]) => k).filter(k => k !== spec)];   // tout le domaine sauf celle-ci
+    else l = l.includes(spec) ? l.filter(k => k !== spec) : [...l, spec];
+  }
+  MES_ETUDES = l; MES_SPECS = specsVisees(l);
+  enregistrerProfil(); dessinerEtudes(); majPanneau(); renderBientot();
+  if (FAC != null) dessinerFiche(PAR_NOM.get(FAC));
+}
+function enregistrerProfil() {
+  META.profil = { score: $("fl-score").value.trim(), budget: $("fl-budget").value.trim(), etudes: MES_ETUDES, france: FRANCE };
+  garderMeta({ profil: META.profil });
+}
+function ouvrirFiltres(profil) {
+  remplirPanneau();
+  dlg.showModal();
+  if (profil) $("fl-score").focus();
+}
+function majProfil() {
+  MON_SCORE = lireScore($("fl-score").value); MON_BUDGET = lireBudget($("fl-budget").value);
+  $("fl-score").style.borderColor = $("fl-score").value.trim() && MON_SCORE == null ? "var(--h5)" : "";
+  $("fl-budget").style.borderColor = $("fl-budget").value.trim() && MON_BUDGET == null ? "var(--h5)" : "";
+  CCFICHE.monScore(MON_SCORE);
+  enregistrerProfil();
+  majPanneau(); renderBientot();
+}
+
+// ------------------------------------------------------------ événements
+$("ex-q").addEventListener("input", e => { S.q = e.target.value; renderBientot(); });
+$("ex-divs").addEventListener("click", e => {
+  const b = e.target.closest("[data-div]"); if (!b) return;
+  const d = b.dataset.div;
+  if (!d) S.divs = new Set(DIVK);
+  else if (S.divs.size === DIVK.length) S.divs = new Set([d]);
+  else { S.divs.has(d) ? S.divs.delete(d) : S.divs.add(d); if (!S.divs.size) S.divs = new Set(DIVK); }
+  const tout = S.divs.size === DIVK.length;
+  $("ex-divs").querySelectorAll("[data-div]").forEach(x => x.setAttribute("aria-pressed", x.dataset.div ? !tout && S.divs.has(x.dataset.div) : tout));
+  relancer();
 });
-document.getElementById('garderNonNotes').addEventListener('change',
-  e=>{state.gardeNN=e.target.checked;render();});
+$("ex-tri").addEventListener("change", e => { S.tri = e.target.value; relancer(); });
+$("ex-masel").addEventListener("click", () => { S.sel = !S.sel; relancer(); });
+$("ex-ouvrir-filtres").addEventListener("click", () => ouvrirFiltres(false));
+$("ex-liste").addEventListener("click", e => {
+  if (e.target.closest("#ex-plus")) { LIM += 40; render(); return; }
+  const c = e.target.closest(".ex-carte-fac"); if (!c) return;
+  if (e.target.closest("[data-etoile]")) { basculerSel(c.dataset.nom); return; }
+  ouvrir(c.dataset.nom);
+});
+$("ex-liste").addEventListener("mouseover", e => { const c = e.target.closest(".ex-carte-fac"); surligner(c ? c.dataset.nom : null); });
+$("ex-liste").addEventListener("mouseleave", () => surligner(null));
+$("ex-actifs").addEventListener("click", e => {
+  if (e.target.closest("#ex-profil")) return ouvrirFiltres(true);
+  if (e.target.closest("#ex-effacer")) { const tri = S.tri, q = S.q, divs = S.divs; S = DEF(); Object.assign(S, { tri, q, divs }); toutLesUSA(); return relancer(); }
+  const b = e.target.closest("[data-retirer]"); if (!b) return;
+  const k = b.dataset.retirer;
+  if (k === "niveaux") S.niveaux = new Set(); else if (k === "zone") { S.zone = null; toutLesUSA(); } else if (k === "note" || k === "st") S[k] = ""; else S[k] = false;
+  relancer();
+});
+$("ex-fiche").addEventListener("click", e => {
+  if (e.target.closest("#fi-retour")) return fermer();
+  if (e.target.closest("#fi-etoile")) return basculerSel(FAC);
+  if (e.target.closest("#fi-carte")) { const n = FAC; fermer(); return montrerSurCarte(n); }
+  if (e.target.closest("#fi-detail, [data-detail]")) {
+    DETAIL = !DETAIL; garderMeta({ fiche: DETAIL ? "detail" : "resume" });
+    dessinerFiche(PAR_NOM.get(FAC)); $("fi-corps").scrollTop = 0; return;
+  }
+  if (e.target.closest("#fi-effectif")) { TOUT_EFFECTIF = !TOUT_EFFECTIF; $("fi-joueurs").innerHTML = blocJoueurs(PAR_NOM.get(FAC)); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && FAC != null && !dlg.open && document.getElementById("cc-menu").hidden) fermer(); });
+$("ex-bascule").addEventListener("click", () => vue(document.body.classList.contains("ex-vue-carte") ? "liste" : "carte"));
+document.querySelector(".ex-basnav").addEventListener("click", e => {
+  const b = e.target.closest("[data-nav]"); if (!b) return;
+  if (b.dataset.nav === "profil") return ouvrirFiltres(true);
+  fermer();
+  S.sel = b.dataset.nav === "selection"; vue("liste"); relancer();
+});
+// panneau
+$("fl-fermer").addEventListener("click", () => dlg.close());
+$("fl-voir").addEventListener("click", () => dlg.close());
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });   // clic sur le fond
+$("fl-score").addEventListener("input", majProfil);
+$("fl-budget").addEventListener("input", majProfil);
+$("fl-niveaux").addEventListener("click", e => { const b = e.target.closest("[data-niv]"); if (!b || b.disabled) return;
+  S.niveaux.has(b.dataset.niv) ? S.niveaux.delete(b.dataset.niv) : S.niveaux.add(b.dataset.niv); majPanneau(); renderBientot(); });
+$("fl-note").addEventListener("click", e => { const b = e.target.closest("[data-note]"); if (!b) return; S.note = b.dataset.note; majPanneau(); renderBientot(); });
+$("fl-etat").addEventListener("change", e => { S.st = e.target.value; renderBientot(); });
+$("fl-dansbudget").addEventListener("change", e => { S.dansBudget = e.target.checked; renderBientot(); });
+$("fl-domaine").addEventListener("change", e => { S.domaine = e.target.checked; renderBientot(); });
+$("fl-france").addEventListener("change", e => { FRANCE = e.target.checked; enregistrerProfil(); if (FAC != null) dessinerFiche(PAR_NOM.get(FAC)); });
+$("fl-etudes").addEventListener("click", e => { const b = e.target.closest("button[data-bloc], button[data-spec]"); if (b) choisirEtude(b); });
+for (const [id, k] of [["fl-places", "places"], ["fl-fr", "fr"], ["fl-intl", "intl"], ["fl-indoor", "indoor"], ["fl-proche", "proche"]])
+  $(id).addEventListener("change", e => { S[k] = e.target.checked; renderBientot(); });
+$("fl-effacer").addEventListener("click", () => { const keep = { tri: S.tri, q: S.q, divs: S.divs, sel: S.sel, zone: S.zone }; S = Object.assign(DEF(), keep); majPanneau(); renderBientot(); });
+MOBILE.addEventListener("change", () => { if (!MOBILE.matches) { document.body.classList.remove("ex-vue-carte"); initCarte(); setTimeout(() => map && map.invalidateSize(), 30); } });
 
-document.getElementById('todofiche').addEventListener('change',e=>{state.todofiche=e.target.checked;render();});
-document.getElementById('indooronly').addEventListener('change',e=>{state.indooronly=e.target.checked;render();});
-document.getElementById('nearonly').addEventListener('change',e=>{state.nearonly=e.target.checked;render();});
-document.getElementById('voieonly').addEventListener('change',e=>{state.voieonly=e.target.checked;render();});
-// moyenne du joueur : gardée dans ce navigateur (la carte la lit aussi)
-(function(){const el=document.getElementById('monscore');
-  el.addEventListener('input',()=>{MON_SCORE=lireScore(el.value);
-    el.style.borderColor=(el.value.trim()&&MON_SCORE==null)?'var(--h1)':'';
-    render();});
-  const bu=document.getElementById('budget');
-  bu.addEventListener('input',()=>{MON_BUDGET=lireBudget(bu.value);
-    bu.style.borderColor=(bu.value.trim()&&MON_BUDGET==null)?'var(--h1)':'';
-    render();});
-  ['rangmax','ecartmax','bourseesp'].forEach(id=>document.getElementById(id).addEventListener('change',e=>{state[id]=e.target.value;render();}));})();
-// sous le budget : traduire le réglage en « prix avant bourse maximum »
-function majBudgetNote(){const el=document.getElementById('budgetnote'); if(!el) return;
-  const b=+state.bourseesp||0, f=n=>Math.round(n).toLocaleString('fr-FR')+' $';
-  el.innerHTML=MON_BUDGET==null
-    ? 'Le prix des fiches est <b>avant bourse</b>. Une fac est gardée si ce prix, moins la bourse espérée, tient dans ce que paie la famille.'
-    : b ? `<b>Calcul :</b> ${f(MON_BUDGET)} payés ÷ ${(1-b/100).toLocaleString('fr-FR')} (${b} % de bourse) = <b>${f(MON_BUDGET/(1-b/100))}</b> de prix avant bourse au plus, dont ${f(MON_BUDGET/(1-b/100)-MON_BUDGET)} de bourse.<br>Les facs plus chères sont écartées.`
-        : `<b>Calcul :</b> aucune bourse comptée, donc prix avant bourse au plus <b>${f(MON_BUDGET)}</b>.<br>Les facs plus chères sont écartées.`;}
-document.getElementById('more').addEventListener('input',majBudgetNote);
-document.getElementById('more').addEventListener('change',majBudgetNote);
-document.getElementById('q').addEventListener('input',e=>{state.q=e.target.value;FAC_FORCEE=null;render();});
-// remplit le menu État avec les états présents dans les données (triés)
-(function(){const sel=document.getElementById('statesel');
-  const states=[...new Set(DATA.map(t=>t.state).filter(Boolean))].sort();
-  sel.insertAdjacentHTML('beforeend',states.map(s=>`<option value="${s}">${s}</option>`).join(''));
-  sel.addEventListener('change',e=>{state.st=e.target.value;render();});})();
-// « Plus de filtres » : dire combien de réglages s'écartent du défaut, même replié
-const MORE_DEF={minnote:'',mingolf:'',minetudes:'',minsecurite:'',mincadre:'',
-  hideempty:false,saisoncourante:false,todofiche:false,voirnotes:false,garderNonNotes:false,
-  indooronly:false,nearonly:false,voieonly:false,monscore:'',rangmax:'',ecartmax:'',budget:'',bourseesp:'0'};
-// --- remise à zéro : une carte de filtres (data-reset) ou tout (#resetall) ---
-// chaque réglage repasse à sa valeur par défaut et prévient son propre écouteur
-// (même effet qu'un clic) ; on ne redessine qu'une fois à la fin
-const FILTRE_DEF={...MORE_DEF,minsel:'0',statesel:'',intlonly:false,fronly:false,q:''};
-function remettre(ids){
-  const vrai=render; render=()=>{};
-  try{ids.forEach(id=>{const e=document.getElementById(id), d=FILTRE_DEF[id]; if(!e||d===undefined) return;
-    if(typeof d==='boolean') e.checked=d; else e.value=d;
-    e.dispatchEvent(new Event(e.tagName==='INPUT'&&e.type!=='checkbox'?'input':'change',{bubbles:true}));});}
-  finally{render=vrai;}
-  render(); majMore(); if(typeof majBudgetNote==='function') majBudgetNote();
-}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-reset]'); if(b) remettre(b.dataset.reset.split(','));});
-document.getElementById('resetall').addEventListener('click',()=>{
-  FAC_FORCEE=null;
-  const vrai=render; render=()=>{}; try{setDivs(DIVDEF);}finally{render=vrai;}
-  remettre(Object.keys(FILTRE_DEF));});
-function majMore(){const n=Object.entries(MORE_DEF).filter(([id,d])=>{const e=document.getElementById(id);
-    return e&&(typeof d==='boolean'?e.checked!==d:e.value!==d);}).length;
-  document.getElementById('morecount').textContent=n?`· ${n} actif${n>1?'s':''}`:'';}
-const moreEl=document.getElementById('more');
-moreEl.addEventListener('change',majMore);moreEl.addEventListener('click',()=>setTimeout(majMore));
-// panneau des filtres toujours fermé à l'ouverture (on efface l'état gardé par les anciennes versions)
-try{localStorage.removeItem('more');}catch(err){}
-// --- liens directs : l'adresse de la page porte les filtres et la fac à ouvrir ----------
-// ex. index.html#div=NAIA,D2&st=MI&golf=3&fac=Aquinas  (copier l'adresse = partager la vue)
-const LIEN_SEL={bourse:'bourseesp',rang:'rangmax',ecart:'ecartmax',min:'minsel',note:'minnote',golf:'mingolf',etudes:'minetudes',securite:'minsecurite',cadre:'mincadre',st:'statesel'};
-const LIEN_STATE={bourse:'bourseesp',rang:'rangmax',ecart:'ecartmax',min:'min',note:'minnote',golf:'mingolf',etudes:'minetudes',securite:'minsecurite',cadre:'mincadre',st:'st'};
-const LIEN_CASE={fr:['fronly','fronly'],intl:['intlonly','intlonly'],afaire:['todofiche','todofiche'],
-  notes:['voirnotes','voirnotes'],masquervides:['hideempty','hideEmpty'],recentes:['saisoncourante','saisonCourante'],
-  indoor:['indooronly','indooronly'],parcours:['nearonly','nearonly'],voie:['voieonly','voieonly']};
-let facDemandee=null, lienLu=false;
-function lireLien(){
-  // « ?fac=… » (lien de PDF : certains lecteurs suppriment la partie « #… ») puis « #… »
-  const p=new URLSearchParams(location.search);
-  for(const [k,v] of new URLSearchParams(location.hash.slice(1))) p.set(k,v);
-  if(p.has('div')){const ds=p.get('div').split(',').filter(d=>DIVK.includes(d));
-    state.divs=new Set(ds);document.querySelectorAll('#divseg input').forEach(x=>{x.checked=state.divs.has(x.value);});}
-  for(const [k,id] of Object.entries(LIEN_SEL)) if(p.has(k)){const v=p.get(k);
-    state[LIEN_STATE[k]]=k==='min'?+v:v; const el=document.getElementById(id); if(el) el.value=v;}
-  for(const [k,[id,cle,inverse]] of Object.entries(LIEN_CASE)) if(p.has(k)){
-    const on=p.get(k)==='1', val=inverse?!on:on;
-    state[cle]=val; const el=document.getElementById(id); if(el) el.checked=val;}
-  if(p.has('q')){state.q=p.get('q');document.getElementById('q').value=state.q;}
-  if(p.has('budget')){const el=document.getElementById('budget');el.value=p.get('budget');MON_BUDGET=lireBudget(el.value);}
-  if(p.has('moy')){const el=document.getElementById('monscore');el.value=p.get('moy');MON_SCORE=lireScore(el.value);}
-  if(p.has('tri')){const [k,d]=p.get('tri').split(':');state.sort=k;state.dir=d==='asc'?1:-1;}
-  facDemandee=p.get('fac'); SEULE=p.get('seule')==='1';
-}
-// les filtres en cours, sans la fac ouverte (sert aussi aux liens liste <-> carte)
-function paramsFiltres(){
-  const p=new URLSearchParams();
-  const defs=[...DIVDEF].sort().join(','), cur=[...state.divs].sort().join(',');
-  if(cur!==defs) p.set('div',[...state.divs].join(','));
-  for(const k of Object.keys(LIEN_SEL)){const v=state[LIEN_STATE[k]]; if(v!==''&&v!==0&&v!=='0'&&v!=null) p.set(k,v);}
-  for(const [k,[,cle,inverse]] of Object.entries(LIEN_CASE)){const on=inverse?!state[cle]:state[cle]; if(on) p.set(k,'1');}
-  if(state.q) p.set('q',state.q);
-  const bv=document.getElementById('budget').value.trim(); if(bv&&MON_BUDGET!=null) p.set('budget',bv);
-  const ms=document.getElementById('monscore').value.trim(); if(ms&&MON_SCORE!=null) p.set('moy',ms);
-  if(state.sort!=='seniors'||state.dir!==-1) p.set('tri',state.sort+':'+(state.dir===1?'asc':'desc'));
-  return p;
-}
-const h_=p=>p.toString().replace(/\+/g,'%20');
-// adresse d'une autre page (liste / carte) avec les mêmes filtres, et la fac à ouvrir
-function lienVers(page,fac){const p=paramsFiltres(); if(fac){p.set('fac',fac); if(p.get('q')===fac) p.delete('q');} const h=h_(p); return page+(h?'#'+h:'');}
-// facOuverte() : définie par chaque page (liste : la ligne dépliée ; carte : la fiche affichée)
-function ecrireLien(){
-  const p=paramsFiltres(); const f=facOuverte(); if(f){p.set('fac',f); if(SEULE) p.set('seule','1');}
-  const h=h_(p);
-  if(lienLu) history.replaceState(null,'',location.pathname+(h?'#'+h:''));   // la recherche « ?… » est reprise dans le « #… »
-  document.querySelectorAll('a[data-lien-page]').forEach(a=>{a.href=lienVers(a.dataset.lienPage);});
-}
+// ------------------------------------------------------------ démarrage
+$("fl-etat").insertAdjacentHTML("beforeend", [...new Set(DATA.map(t => t.state).filter(Boolean))].sort().map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join(""));
+CCFICHE.monScore(MON_SCORE);
+$("ex").hidden = false;
+vue("liste");
+if (!MOBILE.matches) initCarte();
+render();
+const lien = new URLSearchParams(location.hash.slice(1)).get("fac");
+if (lien && PAR_NOM.has(lien)) ouvrir(lien, true);
+})();
 
-// l'adresse porte les filtres et la fac à ouvrir, comme sur la liste :
-// carte.html#budget=20000&rang=5&fac=Aquinas  (« ?fac=… » des anciens liens accepté aussi)
-function ouvrirSurCarte(){
-  if(!facDemandee) return;
-  const n=facDemandee.toLowerCase();
-  const t=DATA.find(x=>x.name===facDemandee)||DATA.find(x=>x.name.toLowerCase()===n)
-        ||DATA.find(x=>x.name.toLowerCase().startsWith(n));
-  if(!t) return;
-  FAC_FORCEE=t.name; draw();          // montrée même si un filtre l'écarte
-  map.setView([t.lat,t.lon],6);
-  showFiche(t,false);                 // à l'ouverture on reste sur la carte : la fiche est dessous
-  document.getElementById('map').scrollIntoView({block:'start'});
-  const m=markers.find(m=>m.getTooltip()&&m.getTooltip().getContent()===t.name); if(m) m.openTooltip();
-}
-lireLien(); majMore(); majBudgetNote(); draw();
-lienLu=true; if(facDemandee) ouvrirSurCarte(); else ecrireLien();
-window.addEventListener('hashchange',()=>{lireLien();draw();if(facDemandee)ouvrirSurCarte();});
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js"></script>
 <script>window.CC_PAGE="fieldlevel";
@@ -1164,7 +1764,7 @@ window.addEventListener('hashchange',()=>{lireLien();draw();if(facDemandee)ouvri
       }
       // la carte ne montre que les facs lues et localisées (comme write_map_report)
       window.CC_DATA = PAGE === "carte" ? facs.filter(t => !t.empty && t.lat != null)
-        : PAGE === "fieldlevel" ? facs.filter(t => t.lat != null)    // FieldLevel : aussi les facs au roster non lu
+        : PAGE === "fieldlevel" ? facs.filter(t => t.fl)             // FieldLevel : Explorer limité aux facs vues sur FieldLevel
         : facs;
       window.CC_FL_HORS = (pub && pub.fieldlevel && pub.fieldlevel.hors) || [];   // 003_fieldlevel.sql
       document.querySelectorAll(".cc-nteams").forEach(el => { el.textContent = facs.length; });
@@ -1190,4 +1790,5 @@ window.addEventListener('hashchange',()=>{lireLien();draw();if(facDemandee)ouvri
   sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_OUT") location.reload(); });
   demarrer();
 })();
-</script></body></html>
+</script>
+</body></html>

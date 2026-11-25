@@ -538,7 +538,7 @@ if (location.hash) { const c = document.getElementById(location.hash.slice(1)); 
       }
       // la carte ne montre que les facs lues et localisées (comme write_map_report)
       window.CC_DATA = PAGE === "carte" ? facs.filter(t => !t.empty && t.lat != null)
-        : PAGE === "fieldlevel" ? facs.filter(t => t.lat != null)    // FieldLevel : aussi les facs au roster non lu
+        : PAGE === "fieldlevel" ? facs.filter(t => t.fl)             // FieldLevel : Explorer limité aux facs vues sur FieldLevel
         : facs;
       window.CC_FL_HORS = (pub && pub.fieldlevel && pub.fieldlevel.hors) || [];   // 003_fieldlevel.sql
       document.querySelectorAll(".cc-nteams").forEach(el => { el.textContent = facs.length; });
